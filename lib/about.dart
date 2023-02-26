@@ -50,7 +50,7 @@ class _AboutScreenState extends State<AboutScreen> {
       "Yamimo",
       "application/vnd.android.package-archive",
       "$version",
-      "app-release.apk",
+      "Yamimo-${version}.apk",
     );
 
     setState(() {
