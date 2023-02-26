@@ -33,12 +33,12 @@ jobs:
         keyPassword: ${{ secrets.KEY_PASSWORD }}
     - run: | 
         set -e
-        mv build/app/outputs/apk/release/app-release-unsigned-signed.apk Yamimo-${{ env.VERSION_TAG }}.apk
+        mv build/app/outputs/apk/release/app-release-unsigned-signed.apk build/app/outputs/apk/release/Yamimo-${{ env.VERSION_TAG }}.apk
         
     - name: Create a Release APK
       uses: ncipollo/release-action@v1
       with:
         name: Yamimo ${{ env.VERSION_TAG }}
         artifacts: |
-          Yamimo-${{ env.VERSION_TAG }}.apk
+          build/app/outputs/apk/release/Yamimo-${{ env.VERSION_TAG }}.apk
         token: ${{ secrets.TOKEN }}
