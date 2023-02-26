@@ -1,35 +1,47 @@
-on: push
 name: Test, Build and Release apk
-jobs:
-  build:
-    name: Build APK
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-java@v2
-      with:
-        distribution: 'zulu'
-        java-version: '11'
-    - uses: subosito/flutter-action@v2
-      with:
-        channel: 'stable'
-    - run: flutter pub get
-    # - run: flutter test
-    - run: flutter build apk
-    - run: |
-        set -x
-        echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+on: 
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  jobs:
+    build:
+      name: Build APK
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - run: flutter pub get
+      # - run: flutter test
+      - run: flutter build apk
+      - run: |
+          set -x
+          echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
 
-    - uses: r0adkll/sign-android-release@v1
-      with:
-        releaseDirectory: "build/app/outputs/apk/release"
-        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-        alias: ${{ secrets.ALIAS }}
-        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-        keyPassword: ${{ secrets.KEY_PASSWORD }}
-    - name: Create a Release APK
-      uses: ncipollo/release-action@v1
-      with:
-        name: Yamimo ${{ env.VERSION_TAG }}
-        artifacts: "build/app/outputs/apk/release/*.apk"
-        token: ${{ secrets.TOKEN }}
+      - uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: "build/app/outputs/apk/release"
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - run: | 
+          set -e
+
+          mv build/app/outputs/apk/release/app-release-unsigned-signed.apk Yamimo-${{ env.VERSION_TAG }}.apk
+          
+      - name: Create a Release APK
+        uses: ncipollo/release-action@v1
+        with:
+          name: Yamimo ${{ env.VERSION_TAG }}
+          artifacts: |
+            Yamimo-${{ env.VERSION_TAG }}.apk
+          token: ${{ secrets.TOKEN }}
