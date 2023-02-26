@@ -174,7 +174,7 @@ class _AboutScreenState extends State<AboutScreen> {
                     AndroidIntent intent = AndroidIntent(
                       action: 'action_view',
                       package: 'com.github.android',
-                      data: 'https://github.com/BrumaMan',
+                      data: 'https://github.com/BrumaMan/Yamimo',
                     );
                     await intent.launch();
                   },
