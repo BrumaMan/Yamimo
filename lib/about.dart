@@ -22,6 +22,7 @@ class _AboutScreenState extends State<AboutScreen> {
       buildNumber: '0.1.0');
 
   Map<dynamic, dynamic> _updateInfo = {};
+  var version;
   @override
   void initState() {
     // TODO: implement initState
@@ -34,6 +35,12 @@ class _AboutScreenState extends State<AboutScreen> {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     setState(() {
       info = packageInfo;
+      List<String>? ver = info?.version.split('.');
+      if (ver?[2] == '0') {
+        version = '${ver?[0]}.${ver?[1]}';
+      } else {
+        version = info?.version;
+      }
     });
   }
 
