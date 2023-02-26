@@ -49,7 +49,7 @@ class _AboutScreenState extends State<AboutScreen> {
       "BrumaMan",
       "Yamimo",
       "application/vnd.android.package-archive",
-      "${info?.version}",
+      "$version",
       "app-release.apk",
     );
 
