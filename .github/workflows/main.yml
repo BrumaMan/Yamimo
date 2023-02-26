@@ -16,6 +16,12 @@ jobs:
     - run: flutter pub get
     # - run: flutter test
     - run: flutter build apk --release
+    - name: Get tag name
+        if: startsWith(github.ref, 'refs/tags/') && github.repository == 'BrumaMan/Yamimo'
+        run: |
+          set -x
+          echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+
     - uses: r0adkll/sign-android-release@v1
       with:
         releaseDirectory: "build/app/outputs/apk/release"
@@ -26,5 +32,6 @@ jobs:
     - name: Create a Release APK
       uses: ncipollo/release-action@v1
       with:
+        name: Yamimo ${{ env.VERSION_TAG }}
         artifacts: "build/app/outputs/apk/release/*.apk"
         token: ${{ secrets.TOKEN }}
