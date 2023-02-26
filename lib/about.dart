@@ -91,7 +91,7 @@ class _AboutScreenState extends State<AboutScreen> {
                     textColor: Colors.black,
                     fontSize: 16.0);
                 if (_updateInfo != null) {
-                  if (_updateInfo['assetUrl'] == "up-to-date") {
+                  if (_updateInfo['tag'] == "v$version") {
                     /* aplication is up-to-date */
                     Fluttertoast.showToast(
                         msg: 'No new update',
@@ -114,7 +114,7 @@ class _AboutScreenState extends State<AboutScreen> {
                         fontSize: 16.0);
                   } else {
                     /* update url found */
-                    // debugPrint("${_updateInfo}");
+                    debugPrint("${_updateInfo}");
                     Fluttertoast.showToast(
                         msg: 'New update available',
                         toastLength: Toast.LENGTH_SHORT,
@@ -135,7 +135,7 @@ class _AboutScreenState extends State<AboutScreen> {
                   action: 'action_view',
                   package: 'com.github.android',
                   data:
-                      'https://github.com/BrumaMan/Yamimo/releases/tag/v${info?.version}',
+                      'https://github.com/BrumaMan/Yamimo/releases/tag/v$version',
                 );
                 await intent.launch();
               },
