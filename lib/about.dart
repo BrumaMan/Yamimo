@@ -168,7 +168,6 @@ class _AboutScreenState extends State<AboutScreen> {
                     await intent.launch();
                   },
                 ),
-                LineIcon.discord(color: Colors.blue[400]),
                 GestureDetector(
                   child: LineIcon.github(color: Colors.blue[400]),
                   onTap: () async {
