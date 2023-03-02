@@ -30,15 +30,15 @@ class _ReaderSettingsState extends State<ReaderSettings> {
       ),
       body: Column(
         children: [
-          ListTileSwitch(
+          SwitchListTile(
               title: Text('Show reading mode'),
               value: showReaderMode,
-              onChanged: ((value) {
+              onChanged: (value) {
                 setState(() {
                   showReaderMode = value;
                 });
                 settingsBox.put('showReaderMode', value);
-              })),
+              }),
           ListTile(
             title: Text('Reader background color'),
             subtitle: Text('$readerBgColor'),

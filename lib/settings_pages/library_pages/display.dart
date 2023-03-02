@@ -87,8 +87,7 @@ class _DisplayState extends State<Display> {
                     }));
               },
             ),
-            ListTileSwitch(
-              switchInactiveColor: Colors.grey[700],
+            SwitchListTile(
               contentPadding: EdgeInsets.symmetric(horizontal: 0.0),
               title: Text('Jump to chapters on open'),
               value: switchValue,
