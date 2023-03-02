@@ -6,6 +6,8 @@ import 'package:android_intent_plus/flag.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:auto_update/fetch_github.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'dart:convert';
+import 'dart:io';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -49,8 +51,8 @@ class _AboutScreenState extends State<AboutScreen> {
       "BrumaMan",
       "Yamimo",
       "application/vnd.android.package-archive",
-      "$version",
-      "Yamimo-${version}.apk",
+      "v$version",
+      "Yamimo-v${version}.apk",
     );
 
     setState(() {
@@ -76,12 +78,10 @@ class _AboutScreenState extends State<AboutScreen> {
               color: Colors.grey[200],
             ),
             ListTile(
-              title: Text('Version'),
-              subtitle: Text('Stable ${info?.version}'),
-            ),
-            ListTile(
-              title: Text('Check for updates'),
+              title: Text('Version ${info?.version}'),
+              subtitle: Text('Check for updates'),
               onTap: () async {
+                debugPrint("$_updateInfo");
                 Fluttertoast.showToast(
                     msg: 'Checking',
                     toastLength: Toast.LENGTH_SHORT,
