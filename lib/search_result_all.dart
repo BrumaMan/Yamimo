@@ -69,7 +69,7 @@ class _SearchResultState extends State<SearchResultAll> {
         "api.mangadex.org",
         "/manga",
         widget.genre == ''
-            ? widget.author == ''
+            ? widget.author?.name == ''
                 ? {
                     'includes[]': ['cover_art', 'author'],
                     // 'includes[]': 'author',
@@ -126,7 +126,7 @@ class _SearchResultState extends State<SearchResultAll> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: widget.genre == ''
-          ? widget.author == ''
+          ? widget.author?.name == ''
               ? AppBar(
                   title: const Text('Manga List'),
                   scrolledUnderElevation: 4.0,

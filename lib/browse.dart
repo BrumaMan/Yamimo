@@ -168,6 +168,8 @@ class _BrowseState extends State<Browse> {
                   Navigator.of(context).push(CupertinoPageRoute(
                       builder: ((context) => SearchResultAll(
                             genre: '',
+                            author:
+                                Author(id: '', name: '', bio: '', imageUrl: ''),
                           ))));
                 } else if (index == 1) {
                   Navigator.of(context).push(CupertinoPageRoute(
