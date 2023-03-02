@@ -108,7 +108,7 @@ class _SearchResultState extends State<SearchResult> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Browse'),
+        title: Text(widget.searchTerm),
         scrolledUnderElevation: 4.0,
       ),
       body: FutureBuilder(
