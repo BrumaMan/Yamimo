@@ -165,6 +165,7 @@ class _SearchResultState extends State<SearchResult> {
                                 softWrap: true,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: Colors.white),
                               ),
                             ),
                             bottom: 0.0,
