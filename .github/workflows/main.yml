@@ -1,8 +1,6 @@
 name: Test, Build and Release apk
 on: 
   push:
-    branches:
-      - main
     tags:
       - v*
 jobs:
