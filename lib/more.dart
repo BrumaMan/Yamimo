@@ -24,7 +24,7 @@ class _MoreState extends State<More> {
           Align(
             child: Padding(
                 padding: EdgeInsets.only(top: 20.0, bottom: 20.0),
-                child: Image.asset("assets/icons8-comic-book-96.png")),
+                child: Image.asset("assets/Yamimo_ic_96.png")),
           ),
           Divider(
             color: Colors.grey,
