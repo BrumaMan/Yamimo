@@ -30,7 +30,13 @@ class _AboutScreenState extends State<AboutScreen> {
     // TODO: implement initState
     super.initState();
     getPackage();
-    getUpdate();
+    fetchGithub(
+      "BrumaMan",
+      "Yamimo",
+      "application/vnd.android.package-archive",
+      "v$version",
+      "Yamimo-v${version}.apk",
+    );
   }
 
   Future<void> getPackage() async {
@@ -46,19 +52,54 @@ class _AboutScreenState extends State<AboutScreen> {
     });
   }
 
-  Future<void> getUpdate() async {
-    Map<dynamic, dynamic> results = await fetchGithub(
-      "BrumaMan",
-      "Yamimo",
-      "application/vnd.android.package-archive",
-      "v$version",
-      "Yamimo-v${version}.apk",
-    );
+  Future<void> fetchGithub(String user, String packageName, String type,
+      String version, String appName) async {
+    Map<String, String> results = {"assetUrl": ""};
+    final client = HttpClient();
+    client.userAgent = "auto_update";
+
+    final request = await client.getUrl(Uri.parse(
+        "https://api.github.com/repos/$user/$packageName/releases/latest"));
+    final response = await request.close();
+
+    if (response.statusCode == 200) {
+      final contentAsString = await utf8.decodeStream(response);
+      final Map<dynamic, dynamic> map = json.decode(contentAsString);
+      // print(map);
+      if (map["tag_name"] != null &&
+          map["tag_name"] != version &&
+          map["assets"] != null) {
+        for (Map<dynamic, dynamic> asset in map["assets"]) {
+          if ((asset["content_type"] != null &&
+                  asset["content_type"] == type) &&
+              (asset["name"] != null && asset["name"] != appName)) {
+            print("here");
+            results["assetUrl"] = asset["browser_download_url"] ?? '';
+            results["body"] = map["body"] ?? '';
+            results["tag"] = map["tag_name"] ?? '';
+          }
+        }
+      }
+    }
 
     setState(() {
       _updateInfo = results;
     });
   }
+
+  // Future<void> getUpdate() async {
+  //   Map<dynamic, dynamic> results = await fetchGithub(
+  //     "BrumaMan",
+  //     "Yamimo",
+  //     "application/vnd.android.package-archive",
+  //     "v$version",
+  //     "Yamimo-v${version}.apk",
+  //   );
+
+  //   setState(() {
+  //     _updateInfo = results;
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -71,8 +112,7 @@ class _AboutScreenState extends State<AboutScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.all(20.0),
-              child:
-                  Align(child: Image.asset("assets/icons8-comic-book-96.png")),
+              child: Align(child: Image.asset("assets/Yamimo_ic_96.png")),
             ),
             Divider(
               color: Colors.grey[200],
