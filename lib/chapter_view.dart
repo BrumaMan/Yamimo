@@ -54,10 +54,10 @@ class _ChapterViewState extends State<ChapterView>
     MenuItems.webtoon: Icons.system_security_update_outlined,
     MenuItems.continuousVertical: Icons.system_security_update_outlined,
   };
-  int chapterInitialPage = 0;
+  var chapterInitialPage = 0;
   bool visible = true;
   int order = 0;
-  int pageCount = 0;
+  int pageCount = 1;
   int chapterOffset = 0;
   int chapterNumber = 0;
   bool hasNextChapter = true;
@@ -283,7 +283,10 @@ class _ChapterViewState extends State<ChapterView>
           builder: (context, child) => Transform.translate(
             offset: Offset(0, -_controller.value * 140),
             child: Container(
-              decoration: BoxDecoration(color: Colors.white),
+              decoration: BoxDecoration(
+                  color: settingsBox.get('darkMode', defaultValue: false)
+                      ? Colors.black
+                      : Colors.white),
               padding: EdgeInsets.only(top: 50.0),
               child: AppBar(
                 // titleTextStyle: TextStyle(color: Colors.white, fontSize: 16.0),
@@ -320,43 +323,44 @@ class _ChapterViewState extends State<ChapterView>
       ),
       body: NotificationListener<ScrollNotification>(
           onNotification: (ScrollNotification scrollInfo) {
-            try {
-              if (scrollController.position.userScrollDirection ==
-                  ScrollDirection.reverse) {
-                setState(() {
-                  visible = false;
-                });
-                hideStatusBar();
+            // try {
+            //   if (scrollController.position.userScrollDirection ==
+            //       ScrollDirection.reverse) {
+            //     setState(() {
+            //       visible = false;
+            //     });
+            //     hideStatusBar();
 
-                _controller.forward();
-              }
-            } catch (e) {
-              setState(() {
-                visible = false;
-              });
-              hideStatusBar();
+            //     _controller.forward();
+            //   }
+            // } catch (e) {
+            //   setState(() {
+            //     visible = false;
+            //   });
+            //   hideStatusBar();
 
-              _controller.forward();
-            }
+            //   _controller.forward();
+            // }
 
-            try {
-              if (scrollController.position.userScrollDirection ==
-                  ScrollDirection.forward) {
-                setState(() {
-                  visible = false;
-                });
-                hideStatusBar();
+            // try {
+            //   if (scrollController.position.userScrollDirection ==
+            //       ScrollDirection.forward) {
+            //     setState(() {
+            //       visible = false;
+            //     });
+            //     hideStatusBar();
 
-                _controller.forward();
-              }
-            } catch (e) {
-              setState(() {
-                visible = false;
-              });
-              hideStatusBar();
+            //     _controller.forward();
+            //   }
+            // } catch (e) {
+            //   // setState(() {
+            //   //   visible = false;
+            //   // });
+            //   // hideStatusBar();
+            //   // debugPrint('here');
 
-              _controller.forward();
-            }
+            //   // _controller.forward();
+            // }
             return true;
           },
           child: FutureBuilder<List<String>>(
@@ -493,6 +497,7 @@ class _ChapterViewState extends State<ChapterView>
           offset: Offset(0, _controller.value * 120),
           child: BottomAppBar(
             color: Colors.black.withOpacity(0.7),
+            surfaceTintColor: Colors.black.withOpacity(0.7),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -575,12 +580,26 @@ class _ChapterViewState extends State<ChapterView>
                   ],
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 16.0),
-                  child: Text(
-                    '${widget.chapterCount - widget.order - chapterNumber} Chapters',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
+                    padding: const EdgeInsets.only(left: 16.0),
+                    child: Visibility(
+                      visible: selectedMenu == MenuItems.webtoon ||
+                              selectedMenu == MenuItems.continuousVertical
+                          ? false
+                          : true,
+                      child: Slider(
+                        value: chapterInitialPage.toDouble(),
+                        label: '${chapterInitialPage + 1}',
+                        divisions: pageCount,
+                        min: 0.0,
+                        max: pageViews.length.toDouble(),
+                        onChanged: (value) {
+                          setState(() {
+                            chapterInitialPage = value.toInt();
+                          });
+                          pageController.jumpToPage(chapterInitialPage);
+                        },
+                      ),
+                    )),
                 Row(
                   children: [
                     IconButton(
