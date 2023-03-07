@@ -2,12 +2,14 @@ import 'dart:ui';
 
 import 'package:first_app/chapter_view.dart';
 import 'package:first_app/search_result.dart';
+import 'package:first_app/util/theme.dart';
 import 'package:first_app/webview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:date_time_format/date_time_format.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
@@ -54,7 +56,7 @@ class Chapter {
   final String? publishAt;
   final String? readableAt;
   final String? scanGroup;
-  // final String? prev;
+  final bool? officialScan;
 
   Chapter({
     required this.id,
@@ -66,7 +68,7 @@ class Chapter {
     required this.publishAt,
     required this.readableAt,
     required this.scanGroup,
-    // required this.prev,
+    required this.officialScan,
   });
 }
 
@@ -90,8 +92,11 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    chaptersRead =
-        chaptersReadBox.get(widget.id, defaultValue: {'chapter': 0, 'page': 0});
+    chaptersRead = chaptersReadBox.get(widget.id, defaultValue: {});
+    if (chaptersRead['chapter'] != null) {
+      chaptersReadBox.delete(widget.id);
+      chaptersRead = chaptersReadBox.get(widget.id, defaultValue: {});
+    }
     getTags();
     scrollViewController = ScrollController();
     _tabController = TabController(length: 3, vsync: this);
@@ -109,17 +114,19 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   }
 
   void getTags() {
-    widget.tags!
-        .removeWhere((element) => element["attributes"]["group"] != 'genre');
+    // widget.tags!
+    //     .removeWhere((element) => element["attributes"]["group"] != 'genre');
     for (var tag in widget.tags!) {
       tags.add(Container(
         decoration: BoxDecoration(
-            color: Colors.grey.withOpacity(0.8),
+            border: Border.all(color: Colors.grey.withOpacity(0.8)),
             borderRadius: BorderRadius.all(Radius.circular(8.0))),
         padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
-        margin: EdgeInsets.symmetric(vertical: 8.0),
+        margin: EdgeInsets.symmetric(vertical: 4.0),
         child: Text(tag["attributes"]["name"]["en"],
-            style: TextStyle(fontSize: 12, color: Colors.white)),
+            style: TextStyle(
+              fontSize: 12,
+            )),
       ));
     }
   }
@@ -142,23 +149,24 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
     int index = 0;
     for (var singleComic in responseData) {
       Chapter chapter = Chapter(
-          id: singleComic["id"],
-          title: singleComic["attributes"]["title"],
-          volume: singleComic["attributes"]["volume"],
-          chapter: singleComic["attributes"]["Chapter"],
-          pages: singleComic["attributes"]["pages"],
-          url: singleComic["attributes"]["externalUrl"],
-          publishAt: singleComic["attributes"]["publishAt"],
-          readableAt: singleComic["attributes"]["readableAt"],
-          scanGroup: singleComic["relationships"]?[0]?["attributes"]?["name"]
-          // prev: singleComic["ChapterPrevSlug"],
-          );
+        id: singleComic["id"],
+        title: singleComic["attributes"]["title"],
+        volume: singleComic["attributes"]["volume"],
+        chapter: singleComic["attributes"]["chapter"],
+        pages: singleComic["attributes"]["pages"],
+        url: singleComic["attributes"]["externalUrl"],
+        publishAt: singleComic["attributes"]["publishAt"],
+        readableAt: singleComic["attributes"]["readableAt"],
+        scanGroup: singleComic["relationships"]?[0]?["attributes"]?["name"],
+        officialScan: singleComic["relationships"]?[0]?["attributes"]
+            ?["official"],
+      );
 
       //Adding user to the list.
       chapters.add(chapter);
       index + 1;
     }
-    chapters.sort((a, b) => b.publishAt!.compareTo(a.publishAt!));
+    chapters.sort((a, b) => b.readableAt!.compareTo(a.readableAt!));
     // chapters.reversed;
     setState(() {
       chapterCount = chapters.length;
@@ -212,6 +220,30 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
     }
   }
 
+  String getChapterPagesRead(String id, int numPages) {
+    var pagesRead = chaptersReadBox.get(widget.id, defaultValue: {});
+
+    // debugPrint('$pagesRead');
+
+    return pagesRead.containsKey(id)
+        ? pagesRead[id]['page'] > 1 && pagesRead[id]['page'] < numPages
+            ? " | Page: ${pagesRead?[id]?['page']}"
+            : ''
+        : '';
+  }
+
+  bool getChaptersRead(String id) {
+    var pagesRead = chaptersReadBox.get(widget.id, defaultValue: {});
+
+    return pagesRead.containsKey(id) ? pagesRead[id]['read'] : false;
+  }
+
+  String getChapterDate(String chapterDate) {
+    DateTime date = DateTime.parse(chapterDate);
+
+    return DateTimeFormat.format(date, format: ' | j M Y');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -257,100 +289,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                 // title: Text(widget.title),
                 pinned: true,
                 // surfaceTintColor: Color(999),
-                iconTheme: IconThemeData(color: Colors.white),
-                expandedHeight: 230.0 +
-                    kToolbarHeight +
-                    MediaQuery.of(context).viewPadding.top,
-                flexibleSpace: FlexibleSpaceBar(
-                  collapseMode: CollapseMode.parallax,
-                  // title: Text(widget.title),
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.network(
-                        'https://uploads.mangadex.org/covers/${widget.id}/${widget.cover}',
-                        fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
-                      ),
-                      Container(
-                        padding: EdgeInsets.all(8.0),
-                        decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
-                                colors: [
-                              Colors.black.withOpacity(0.7),
-                              Colors.black.withOpacity(0.4)
-                            ])),
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                              top: kToolbarHeight +
-                                  MediaQuery.of(context).viewPadding.top),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                'By ${widget.author}',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 8.0),
-                                child: GestureDetector(
-                                  child: Text(
-                                    widget.synopsis,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  onTap: () {
-                                    showModalBottomSheet(
-                                        backgroundColor:
-                                            Colors.black.withOpacity(0.8),
-                                        context: context,
-                                        builder: (context) {
-                                          return Container(
-                                            margin:
-                                                EdgeInsets.only(bottom: 16.0),
-                                            padding: EdgeInsets.all(12.0),
-                                            child: Text(
-                                              widget.synopsis,
-                                              softWrap: true,
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                            ),
-                                          );
-                                        });
-                                  },
-                                ),
-                              ),
-                              Text(
-                                '${widget.status} · ${widget.year}',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              Wrap(
-                                spacing: 3.0,
-                                runSpacing: 5.0,
-                                children: tags,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                // iconTheme: IconThemeData(color: Colors.white),
                 actions: [
                   // IconButton(
                   //     onPressed: () {
@@ -413,285 +352,247 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Row(
-                      //   // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      //   children: [
-                      //     // Card(
-                      //     //   clipBehavior: Clip.hardEdge,
-                      //     //   child: Image.network(
-                      //     //       'https://uploads.mangadex.org/covers/${widget.id}/${widget.cover}',
-                      //     //       height: 150,
-                      //     //       width: 100,
-                      //     //       fit: BoxFit.cover),
-                      //     // ),
-                      //     Expanded(
-                      //       child: Column(
-                      //           crossAxisAlignment: CrossAxisAlignment.start,
-                      //           children: [
-                      //             // Container(
-                      //             //   padding: const EdgeInsets.only(left: 8.0),
-                      //             //   width: MediaQuery.of(context).size.width /
-                      //             //           1.3 -
-                      //             //       16,
-                      //             //   child: Text(
-                      //             //     widget.title,
-                      //             //     softWrap: true,
-                      //             //     overflow: TextOverflow.ellipsis,
-                      //             //     maxLines: 5,
-                      //             //     style: const TextStyle(fontSize: 18.0),
-                      //             //   ),
-                      //             // ),
-                      //             // Padding(
-                      //             //   padding: const EdgeInsets.only(
-                      //             //       left: 8.0, right: 8.0, top: 8.0),
-                      //             //   child: Text('By ${widget.author}'),
-                      //             // ),
-                      //             // Padding(
-                      //             //   padding: const EdgeInsets.symmetric(
-                      //             //       horizontal: 8.0, vertical: 8.0),
-                      //             //   child: Text(
-                      //             //     '${widget.status} · ${widget.year}',
-                      //             //     style:
-                      //             //         const TextStyle(color: Colors.grey),
-                      //             //   ),
-                      //             // ),
-                      //             Padding(
-                      //               padding: const EdgeInsets.all(8.0),
-                      //               child: Row(
-                      //                 mainAxisAlignment:
-                      //                     MainAxisAlignment.spaceBetween,
-                      //                 children: [
-                      //                   // MaterialButton(
-                      //                   //     shape: RoundedRectangleBorder(
-                      //                   //         borderRadius: BorderRadius.all(
-                      //                   //             Radius.circular(8.0))),
-                      //                   //     color: Colors.blue[400],
-                      //                   //     onPressed: () {
-                      //                   //       chaptersReadBox.put(widget.id, {
-                      //                   //         'chapter':
-                      //                   //             chaptersRead["chapter"] + 1,
-                      //                   //         'page': 0
-                      //                   //       });
-                      //                   //       chaptersRead =
-                      //                   //           chaptersReadBox.get(widget.id);
-                      //                   //       Navigator.of(context).push(
-                      //                   //         MaterialPageRoute(
-                      //                   //             builder: (context) {
-                      //                   //           return ChapterView(
-                      //                   //             id: nextChapters[
-                      //                   //                     chapterCount -
-                      //                   //                         chaptersRead[
-                      //                   //                             "chapter"]]
-                      //                   //                 .id,
-                      //                   //             title: nextChapters[chapterCount -
-                      //                   //                             chaptersRead[
-                      //                   //                                 "chapter"]]
-                      //                   //                         .title ==
-                      //                   //                     null
-                      //                   //                 ? nextChapters[chapterCount -
-                      //                   //                                 chaptersRead[
-                      //                   //                                     "chapter"]]
-                      //                   //                             .volume ==
-                      //                   //                         null
-                      //                   //                     ? "chapter ${chaptersRead['chapter']}"
-                      //                   //                     : "Vol. ${nextChapters[chapterCount - chaptersRead["chapter"]].volume} ch. ${chaptersRead['chapter']}"
-                      //                   //                 : nextChapters[chapterCount -
-                      //                   //                                 chaptersRead[
-                      //                   //                                     "chapter"]]
-                      //                   //                             .volume ==
-                      //                   //                         null
-                      //                   //                     ? "ch. ${chaptersRead['chapter']} - ${nextChapters[chapterCount - chaptersRead["chapter"]].title}"
-                      //                   //                     : "Vol. ${nextChapters[chapterCount - chaptersRead["chapter"]].volume} ch. ${chaptersRead['chapter']} - ${nextChapters[chapterCount - chaptersRead["chapter"]].title}",
-                      //                   //             chapterCount: chapterCount,
-                      //                   //             order:
-                      //                   //                 chaptersRead['chapter'],
-                      //                   //             chapters: chaptersPassed,
-                      //                   //             index:
-                      //                   //                 chaptersRead['chapter'],
-                      //                   //             url: nextChapters[chapterCount -
-                      //                   //                             chaptersRead[
-                      //                   //                                 "chapter"]]
-                      //                   //                         .url ==
-                      //                   //                     null
-                      //                   //                 ? ""
-                      //                   //                 : nextChapters[
-                      //                   //                         chapterCount -
-                      //                   //                             chaptersRead[
-                      //                   //                                 "chapter"]]
-                      //                   //                     .url,
-                      //                   //           );
-                      //                   //         }),
-                      //                   //       );
-                      //                   //     },
-                      //                   //     child: Text(
-                      //                   //         chaptersRead["chapter"] == 0
-                      //                   //             ? 'Read'
-                      //                   //             : 'Continue')),
-                      //                   ValueListenableBuilder(
-                      //                     valueListenable:
-                      //                         libraryBox.listenable(),
-                      //                     builder: (context, value, child) =>
-                      //                         IconButton(
-                      //                       onPressed: () {
-                      //                         onLibraryPress(
-                      //                             widget.id,
-                      //                             widget.title,
-                      //                             widget.cover,
-                      //                             widget.synopsis,
-                      //                             widget.type,
-                      //                             widget.year,
-                      //                             widget.status,
-                      //                             widget.tags,
-                      //                             widget.author);
-                      //                         updateChapterNumber(widget.id);
-                      //                       },
-                      //                       icon: getIcons(widget.id),
-                      //                     ),
-                      //                   ),
-                      //                   IconButton(
-                      //                       onPressed: () {
-                      //                         Navigator.of(context)
-                      //                             .push(MaterialPageRoute(
-                      //                           builder: (context) {
-                      //                             return WebView(
-                      //                               url:
-                      //                                   'https://mangadex.org/title/${widget.id}/${widget.title.toLowerCase()}',
-                      //                               title: widget.title,
-                      //                             );
-                      //                           },
-                      //                         ));
-                      //                       },
-                      //                       icon: Icon(Icons.public_outlined)),
-                      //                   IconButton(
-                      //                       onPressed: () {
-                      //                         Share.share(
-                      //                             'https://mangadex.org/title/${widget.id}/${widget.title.toLowerCase()}');
-                      //                       },
-                      //                       icon: Icon(Icons.share_outlined)),
-                      //                 ],
-                      //               ),
-                      //             )
-                      //           ]),
-                      //     ),
-                      //   ],
-                      // ),
-                      // Padding(
-                      //   padding: EdgeInsets.only(top: 8.0),
-                      //   child: Row(
-                      //       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      //       children: [
-                      //         ValueListenableBuilder(
-                      //             valueListenable: libraryBox.listenable(),
-                      //             builder: (context, value, child) {
-                      //               return GestureDetector(
-                      //                 behavior: HitTestBehavior.opaque,
-                      //                 child: Column(
-                      //                   children: [
-                      //                     getIcons(widget.id),
-                      //                     libraryBox.containsKey(widget.id)
-                      //                         ? Text(
-                      //                             'In library',
-                      //                             style: TextStyle(
-                      //                                 color: Colors.blue[300]),
-                      //                           )
-                      //                         : const Text('Add to library')
-                      //                   ],
-                      //                 ),
-                      //                 onTap: () {
-                      //                   debugPrint('here');
-                      //                   onLibraryPress(
-                      //                       widget.id,
-                      //                       widget.title,
-                      //                       widget.cover,
-                      //                       widget.synopsis,
-                      //                       widget.type,
-                      //                       widget.year,
-                      //                       widget.status,
-                      //                       widget.tags);
-                      //                   updateChapterNumber(widget.id);
-                      //                 },
-                      //               );
-                      //             }),
-                      //         GestureDetector(
-                      //           child: Column(
-                      //             children: [
-                      //               const Icon(Icons.public_outlined),
-                      //               const Text('Webview')
-                      //             ],
-                      //           ),
-                      //           onTap: () {
-                      //             Navigator.of(context).push(MaterialPageRoute(
-                      //               builder: (context) {
-                      //                 return WebView(
-                      //                   url:
-                      //                       'https://mangadex.org/title/${widget.id}/${widget.title.toLowerCase()}',
-                      //                   title: widget.title,
-                      //                 );
-                      //               },
-                      //             ));
-                      //           },
-                      //         ),
-                      //       ]),
-                      // ),
-                      // Container(
-                      //   width: MediaQuery.of(context).size.width,
-                      //   decoration: BoxDecoration(
-                      //       color: Colors.white.withOpacity(0.2),
-                      //       borderRadius:
-                      //           BorderRadius.all(Radius.circular(5.0))),
-                      //   margin: EdgeInsets.symmetric(vertical: 8.0),
-                      //   padding: const EdgeInsets.all(8.0),
-                      //   child: Column(
-                      //     crossAxisAlignment: CrossAxisAlignment.start,
-                      //     children: [
-                      //       Text(
-                      //         'Synopsis',
-                      //         style: TextStyle(
-                      //             fontWeight: FontWeight.bold, fontSize: 18.0),
-                      //       ),
-                      //       GestureDetector(
-                      //         child: Text(
-                      //           widget.synopsis,
-                      //           maxLines: 3,
-                      //           overflow: TextOverflow.ellipsis,
-                      //         ),
-                      //         onTap: () {
-                      //           showModalBottomSheet(
-                      //               backgroundColor:
-                      //                   Colors.black.withOpacity(0.8),
-                      //               context: context,
-                      //               builder: (context) {
-                      //                 return Container(
-                      //                   margin: EdgeInsets.only(bottom: 16.0),
-                      //                   padding: EdgeInsets.all(12.0),
-                      //                   child: Text(
-                      //                     widget.synopsis,
-                      //                     softWrap: true,
-                      //                   ),
-                      //                 );
-                      //               });
-                      //         },
-                      //       ),
-                      //       // Text('More'),
-                      //     ],
-                      //   ),
-                      // ),
-                      // Wrap(
-                      //   spacing: 5.0,
-                      //   runSpacing: 5.0,
-                      //   children: tags,
-                      // ),
+                      Row(
+                        // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Card(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4.0)),
+                            clipBehavior: Clip.hardEdge,
+                            child: CachedNetworkImage(
+                                imageUrl:
+                                    'https://uploads.mangadex.org/covers/${widget.id}/${widget.cover}',
+                                height: 150,
+                                width: 100,
+                                fit: BoxFit.cover),
+                          ),
+                          Expanded(
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    width: MediaQuery.of(context).size.width /
+                                            1.3 -
+                                        16,
+                                    child: Text(
+                                      widget.title,
+                                      softWrap: true,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 5,
+                                      style: const TextStyle(fontSize: 22.0),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 8.0, right: 8.0, top: 8.0),
+                                    child: Text(
+                                      'By ${widget.author}',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  // Padding(
+                                  //   padding: const EdgeInsets.all(8.0),
+                                  //   child: Row(
+                                  //     mainAxisAlignment:
+                                  //         MainAxisAlignment.spaceBetween,
+                                  //     children: [
+                                  //       // MaterialButton(
+                                  //       //     shape: RoundedRectangleBorder(
+                                  //       //         borderRadius: BorderRadius.all(
+                                  //       //             Radius.circular(8.0))),
+                                  //       //     color: Colors.blue[400],
+                                  //       //     onPressed: () {
+                                  //       //       chaptersReadBox.put(widget.id, {
+                                  //       //         'chapter':
+                                  //       //             chaptersRead["chapter"] + 1,
+                                  //       //         'page': 0
+                                  //       //       });
+                                  //       //       chaptersRead =
+                                  //       //           chaptersReadBox.get(widget.id);
+                                  //       //       Navigator.of(context).push(
+                                  //       //         MaterialPageRoute(
+                                  //       //             builder: (context) {
+                                  //       //           return ChapterView(
+                                  //       //             id: nextChapters[
+                                  //       //                     chapterCount -
+                                  //       //                         chaptersRead[
+                                  //       //                             "chapter"]]
+                                  //       //                 .id,
+                                  //       //             title: nextChapters[chapterCount -
+                                  //       //                             chaptersRead[
+                                  //       //                                 "chapter"]]
+                                  //       //                         .title ==
+                                  //       //                     null
+                                  //       //                 ? nextChapters[chapterCount -
+                                  //       //                                 chaptersRead[
+                                  //       //                                     "chapter"]]
+                                  //       //                             .volume ==
+                                  //       //                         null
+                                  //       //                     ? "chapter ${chaptersRead['chapter']}"
+                                  //       //                     : "Vol. ${nextChapters[chapterCount - chaptersRead["chapter"]].volume} ch. ${chaptersRead['chapter']}"
+                                  //       //                 : nextChapters[chapterCount -
+                                  //       //                                 chaptersRead[
+                                  //       //                                     "chapter"]]
+                                  //       //                             .volume ==
+                                  //       //                         null
+                                  //       //                     ? "ch. ${chaptersRead['chapter']} - ${nextChapters[chapterCount - chaptersRead["chapter"]].title}"
+                                  //       //                     : "Vol. ${nextChapters[chapterCount - chaptersRead["chapter"]].volume} ch. ${chaptersRead['chapter']} - ${nextChapters[chapterCount - chaptersRead["chapter"]].title}",
+                                  //       //             chapterCount: chapterCount,
+                                  //       //             order:
+                                  //       //                 chaptersRead['chapter'],
+                                  //       //             chapters: chaptersPassed,
+                                  //       //             index:
+                                  //       //                 chaptersRead['chapter'],
+                                  //       //             url: nextChapters[chapterCount -
+                                  //       //                             chaptersRead[
+                                  //       //                                 "chapter"]]
+                                  //       //                         .url ==
+                                  //       //                     null
+                                  //       //                 ? ""
+                                  //       //                 : nextChapters[
+                                  //       //                         chapterCount -
+                                  //       //                             chaptersRead[
+                                  //       //                                 "chapter"]]
+                                  //       //                     .url,
+                                  //       //           );
+                                  //       //         }),
+                                  //       //       );
+                                  //       //     },
+                                  //       //     child: Text(
+                                  //       //         chaptersRead["chapter"] == 0
+                                  //       //             ? 'Read'
+                                  //       //             : 'Continue')),
+                                  //       // ValueListenableBuilder(
+                                  //       //   valueListenable:
+                                  //       //       libraryBox.listenable(),
+                                  //       //   builder: (context, value, child) =>
+                                  //       //       IconButton(
+                                  //       //     onPressed: () {
+                                  //       //       onLibraryPress(
+                                  //       //           widget.id,
+                                  //       //           widget.title,
+                                  //       //           widget.cover,
+                                  //       //           widget.synopsis,
+                                  //       //           widget.type,
+                                  //       //           widget.year,
+                                  //       //           widget.status,
+                                  //       //           widget.tags,
+                                  //       //           widget.author);
+                                  //       //       updateChapterNumber(widget.id);
+                                  //       //     },
+                                  //       //     icon: getIcons(widget.id),
+                                  //       //   ),
+                                  //       // ),
+                                  //       // IconButton(
+                                  //       //     onPressed: () {
+                                  //       //       Navigator.of(context)
+                                  //       //           .push(MaterialPageRoute(
+                                  //       //         builder: (context) {
+                                  //       //           return WebView(
+                                  //       //             url:
+                                  //       //                 'https://mangadex.org/title/${widget.id}/${widget.title.toLowerCase()}',
+                                  //       //             title: widget.title,
+                                  //       //           );
+                                  //       //         },
+                                  //       //       ));
+                                  //       //     },
+                                  //       //     icon: Icon(Icons.public_outlined)),
+                                  //       // IconButton(
+                                  //       //     onPressed: () {
+                                  //       //       Share.share(
+                                  //       //           'https://mangadex.org/title/${widget.id}/${widget.title.toLowerCase()}');
+                                  //       //     },
+                                  //       //     icon: Icon(Icons.share_outlined)),
+                                  //     ],
+                                  //   ),
+                                  // )
+                                ]),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 8.0),
+                        child: IntrinsicHeight(
+                          child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Column(
+                                  children: [
+                                    Icon(widget.status == 'completed'
+                                        ? Icons.done_all
+                                        : Icons.schedule_outlined),
+                                    Text('${widget.status}')
+                                  ],
+                                ),
+                                VerticalDivider(
+                                  // width: 20,
+                                  thickness: 1,
+                                  color: Colors.grey,
+                                ),
+                                Column(
+                                  children: [
+                                    const Icon(Icons.new_releases_outlined),
+                                    Text('${widget.year}')
+                                  ],
+                                ),
+                              ]),
+                        ),
+                      ),
+                      Container(
+                        width: MediaQuery.of(context).size.width,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GestureDetector(
+                              child: Text(
+                                widget.synopsis,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              onTap: () {
+                                showModalBottomSheet(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(0.0)),
+                                    backgroundColor:
+                                        Colors.black.withOpacity(0.8),
+                                    context: context,
+                                    builder: (context) {
+                                      return Container(
+                                        margin: EdgeInsets.only(bottom: 16.0),
+                                        padding: EdgeInsets.all(12.0),
+                                        child: Text(
+                                          widget.synopsis,
+                                          softWrap: true,
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      );
+                                    });
+                              },
+                            ),
+                            // Text('More'),
+                          ],
+                        ),
+                      ),
+                      Wrap(
+                        spacing: 5.0,
+                        runSpacing: 0.0,
+                        children: tags,
+                      ),
                       Padding(
                         padding: const EdgeInsets.only(top: 16.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Chapter Name',
+                            Text('$chapterCount Chapters',
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold)),
-                            Text('Uploaded',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold)),
+                            // Text('Uploaded',
+                            //     style: const TextStyle(
+                            //         fontWeight: FontWeight.bold)),
                           ],
                         ),
                       )
@@ -735,65 +636,105 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                     builder: (context, value, child) => Text(
                                       snapshot.data[index].title == null
                                           ? snapshot.data[index].volume == null
-                                              ? "chapter ${chapterCount - index}"
-                                              : "Vol. ${snapshot.data[index].volume} ch. ${chapterCount - index}"
+                                              ? "ch. ${snapshot.data[index].chapter}"
+                                              : "Vol. ${snapshot.data[index].volume} ch. ${snapshot.data[index].chapter}"
                                           : snapshot.data[index].volume == null
-                                              ? "ch. ${chapterCount - index} - ${snapshot.data[index].title}"
-                                              : "Vol. ${snapshot.data[index].volume} ch. ${chapterCount - index} - ${snapshot.data[index].title}",
+                                              ? "ch. ${snapshot.data[index].chapter} - ${snapshot.data[index].title}"
+                                              : "Vol. ${snapshot.data[index].volume} ch. ${snapshot.data[index].chapter} - ${snapshot.data[index].title}",
                                       overflow: TextOverflow.ellipsis,
                                       softWrap: true,
                                       style: TextStyle(
-                                          color: chaptersRead["chapter"] >=
-                                                  chapterCount - index
-                                              ? Colors.grey[700]
+                                          color: getChaptersRead(
+                                                  snapshot.data[index].id)
+                                              ? settingsBox.get('darkMode',
+                                                      defaultValue: false)
+                                                  ? Colors.grey[700]
+                                                  : Colors.grey[500]
                                               : null),
                                     ),
                                   ),
                                 ),
-                                Text(
-                                  '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago',
-                                  style: TextStyle(
-                                      color: chaptersRead["chapter"] >=
-                                              chapterCount - index
-                                          ? Colors.grey[700]
-                                          : null),
-                                ),
+                                // Text(
+                                //   '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago',
+                                //   style: TextStyle(
+                                //       color: chaptersRead["chapter"] >=
+                                //               chapterCount - index
+                                //           ? Colors.grey[700]
+                                //           : null),
+                                // ),
                               ],
                             ),
                             subtitle: Row(
                               children: [
                                 // Text(
                                 //     '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago '),
-                                // Icon(
-                                //   Icons.person_outline,
-                                //   color: chaptersRead["chapter"] >=
-                                //           chapterCount - index
-                                //       ? Colors.grey[700]
-                                //       : null,
-                                // ),
+                                snapshot.data[index].officialScan == true
+                                    ? Icon(
+                                        Icons.done_all,
+                                        color: getChaptersRead(
+                                                snapshot.data[index].id)
+                                            ? settingsBox.get('darkMode',
+                                                    defaultValue: false)
+                                                ? Colors.grey[700]
+                                                : Colors.grey[500]
+                                            : null,
+                                      )
+                                    : Text(''),
                                 Text(
-                                  '${snapshot.data[index].scanGroup == null ? "Unknown group" : snapshot.data[index].scanGroup}',
+                                  ' ${snapshot.data[index].scanGroup == null ? "Unknown group" : snapshot.data[index].scanGroup}',
                                   style: TextStyle(
-                                      color: chaptersRead["chapter"] >=
-                                              chapterCount - index
-                                          ? Colors.grey[700]
+                                      color: getChaptersRead(
+                                              snapshot.data[index].id)
+                                          ? settingsBox.get('darkMode',
+                                                  defaultValue: false)
+                                              ? Colors.grey[700]
+                                              : Colors.grey[500]
+                                          : null),
+                                ),
+                                Text(getChapterPagesRead(
+                                    snapshot.data[index].id,
+                                    snapshot.data[index].pages)),
+                                Text(
+                                  DateTime.now()
+                                              .difference(DateTime.parse(
+                                                  snapshot
+                                                      .data[index].readableAt))
+                                              .inDays <=
+                                          7
+                                      ? ' | ${DateTimeFormat.relative(
+                                          DateTime.parse(
+                                              snapshot.data[index].readableAt),
+                                        )}'
+                                      : getChapterDate(
+                                          snapshot.data[index].readableAt),
+                                  style: TextStyle(
+                                      color: getChaptersRead(
+                                              snapshot.data[index].id)
+                                          ? settingsBox.get('darkMode',
+                                                  defaultValue: false)
+                                              ? Colors.grey[700]
+                                              : Colors.grey[500]
                                           : null),
                                 ),
                               ],
                             ),
                             onTap: () {
-                              if (chapterCount - index >
-                                  chaptersRead["chapter"]) {
-                                chaptersReadBox.put(widget.id, {
-                                  'chapter': chapterCount - index,
-                                  'page': 0
+                              if (!chaptersRead
+                                  .containsKey('${snapshot.data[index].id}')) {
+                                chaptersRead.addAll({
+                                  snapshot.data[index].id: {
+                                    'read': false,
+                                    'page': 0
+                                  }
                                 });
+                                chaptersReadBox.put(widget.id, chaptersRead);
                                 chaptersRead = chaptersReadBox.get(widget.id);
                               }
                               Navigator.of(context).push(
                                 MaterialPageRoute(builder: (context) {
                                   return ChapterView(
                                     id: snapshot.data[index].id,
+                                    mangaId: widget.id,
                                     title: snapshot.data[index].title == null
                                         ? snapshot.data[index].volume == null
                                             ? "chapter ${chapterCount - index}"
