@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:page_animation_transition/animations/fade_animation_transition.dart';
 import 'package:page_animation_transition/page_animation_transition.dart';
+import 'package:transparent_image/transparent_image.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -17,7 +19,7 @@ class _HomeState extends State<Home> {
   Box settingsBox = Hive.box('settings');
   Box chapterBox = Hive.box('chapters');
   Box chaptersReadBox = Hive.box('chaptersRead');
-  var libraryItems;
+  late List<dynamic> libraryItems;
   List<dynamic> mangaChapters = [];
   late int itemsPerRow;
   @override
@@ -26,6 +28,7 @@ class _HomeState extends State<Home> {
     super.initState();
     itemsPerRow = settingsBox.get('rowItems', defaultValue: 2);
     libraryItems = getLibraryItems();
+
     // debugPrint('$libraryItems');
   }
 
@@ -42,6 +45,41 @@ class _HomeState extends State<Home> {
     // mangaChapters = chapterBox.values;
 
     return libraryItems;
+  }
+
+  int chaptersRead(String id) {
+    var chaptersRead = chaptersReadBox.get(id, defaultValue: {});
+
+    if (chaptersRead['chapter'] != null) {
+      chaptersReadBox.delete(id);
+      chaptersRead = chaptersReadBox.get(id, defaultValue: {});
+    }
+
+    // debugPrint('$chaptersRead');
+    int numRead = 0;
+
+    chaptersRead.forEach((key, value) {
+      if (value['read'] == true) {
+        numRead++;
+      }
+    });
+
+    return numRead;
+  }
+
+  void deleteFromLibrary(int index) {
+    libraryItems.removeAt(index);
+    mangaChapters.removeAt(index);
+    int count = 0;
+
+    for (var comic in libraryItems) {
+      libraryBox.put(comic['id'], comic);
+    }
+
+    for (var chapters in mangaChapters) {
+      chapterBox.put(libraryItems[count]['id'], chapters);
+      count++;
+    }
   }
 
   @override
@@ -70,16 +108,21 @@ class _HomeState extends State<Home> {
                     itemBuilder: ((context, index) {
                       return GestureDetector(
                         child: Card(
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(4.0))),
                           clipBehavior: Clip.hardEdge,
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
                               Hero(
                                 tag: libraryItems[index]["cover"],
-                                child: Image.network(
-                                  'https://uploads.mangadex.org/covers/${libraryItems[index]["id"]}/${libraryItems[index]["cover"]}',
+                                child: CachedNetworkImage(
+                                  placeholder: (context, url) => Container(),
+                                  imageUrl:
+                                      'https://uploads.mangadex.org/covers/${libraryItems[index]["id"]}/${libraryItems[index]["cover"]}',
                                   fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
+                                  errorWidget: (context, error, stackTrace) =>
                                       Center(
                                     child: Text("Can't load cover"),
                                   ),
@@ -98,10 +141,7 @@ class _HomeState extends State<Home> {
                                     // clipBehavior: Clip.hardEdge,
                                     // color: Colors.blue,
                                     child: Text(
-                                      '${mangaChapters[index] - chaptersReadBox.get(libraryItems[index]["id"], defaultValue: {
-                                                'chapter': 0,
-                                                'page': 0
-                                              })["chapter"]}',
+                                      '${mangaChapters[index] - chaptersRead(libraryItems[index]["id"])}',
                                       style: TextStyle(color: Colors.black),
                                     ),
                                   )),
@@ -155,8 +195,7 @@ class _HomeState extends State<Home> {
                               pageAnimationType: FadeAnimationTransition()));
                         },
                         onLongPress: () {
-                          chapterBox.deleteAt(index);
-                          libraryBox.deleteAt(index);
+                          deleteFromLibrary(index);
                         },
                       );
                     }));
