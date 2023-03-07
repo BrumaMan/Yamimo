@@ -19,6 +19,7 @@ class ChapterView extends StatefulWidget {
   const ChapterView(
       {super.key,
       required this.id,
+      required this.mangaId,
       required this.title,
       required this.chapterCount,
       required this.order,
@@ -27,6 +28,7 @@ class ChapterView extends StatefulWidget {
       required this.url});
 
   final String id;
+  final String mangaId;
   final String title;
   final int chapterCount;
   final int order;
@@ -46,6 +48,7 @@ class _ChapterViewState extends State<ChapterView>
   // late double height = MediaQuery.of(context).padding.top;
   var pages;
   Box settingsBox = Hive.box('settings');
+  Box chaptersReadBox = Hive.box('chaptersRead');
   List<Widget> pageViews = [];
   Map<MenuItems, IconData> readerIcons = {
     MenuItems.Default: Icons.app_settings_alt_outlined,
@@ -55,6 +58,7 @@ class _ChapterViewState extends State<ChapterView>
     MenuItems.continuousVertical: Icons.system_security_update_outlined,
   };
   var chapterInitialPage = 0;
+  var chaptersRead;
   bool visible = true;
   int order = 0;
   int pageCount = 1;
@@ -78,6 +82,8 @@ class _ChapterViewState extends State<ChapterView>
     // SystemChrome.setEnabledSystemUIMode(
     //   SystemUiMode.leanBack,
     // );
+    chaptersRead = chaptersReadBox.get(widget.mangaId);
+    addChapterToRead(widget.id);
     pageController = PreloadPageController(initialPage: chapterInitialPage);
     _controller = AnimationController(
       vsync: this,
@@ -148,7 +154,7 @@ class _ChapterViewState extends State<ChapterView>
   Future<List<String>> getRequest() async {
     //replace your restFull API here.
     String id = widget.chapters![widget.index + chapterOffset].id;
-    chapterInitialPage = 0;
+    // chapterInitialPage = 0;
     Uri url = Uri.https("api.mangadex.org", "/at-home/server/$id");
     final response = await http.get(url);
 
@@ -206,10 +212,14 @@ class _ChapterViewState extends State<ChapterView>
         hasPrevChapter = true;
       });
       debugPrint('two');
+      pageViews = [];
       pages = getRequest();
+      addChapterToRead(widget.chapters![widget.index + chapterOffset].id);
     } else {
+      pageViews = [];
       pages = getRequest();
-      debugPrint('${pageViews.length}');
+      addChapterToRead(widget.chapters![widget.index + chapterOffset].id);
+      // debugPrint('${pageViews.length}');
     }
   }
 
@@ -228,10 +238,14 @@ class _ChapterViewState extends State<ChapterView>
         hasNextChapter = true;
       });
       debugPrint('two');
+      pageViews = [];
       pages = getRequest();
+      addChapterToRead(widget.chapters![widget.index + chapterOffset].id);
     } else {
+      pageViews = [];
       pages = getRequest();
-      debugPrint('${pageViews.length}');
+      addChapterToRead(widget.chapters![widget.index + chapterOffset].id);
+      // debugPrint('${pageViews.length}');
     }
   }
 
@@ -269,6 +283,34 @@ class _ChapterViewState extends State<ChapterView>
     }
   }
 
+  void addChapterToRead(String id) {
+    if (!chaptersRead.containsKey(id)) {
+      chaptersRead.addAll({
+        id: {'read': false, 'page': 0}
+      });
+    }
+    chapterInitialPage = chaptersRead[id]['page'] == 0
+        ? chaptersRead[id]['page']
+        : chaptersRead[id]['page'] - 1;
+  }
+
+  void updateChapter() {
+    if (chapterInitialPage + 1 > 1 &&
+        chapterInitialPage + 1 <= pageCount &&
+        !chaptersRead[widget.chapters![widget.index + chapterOffset].id]
+            ['read']) {
+      chaptersRead.update(
+          widget.chapters![widget.index + chapterOffset].id,
+          (value) => {
+                'read': chapterInitialPage + 1 < pageCount ? false : true,
+                'page': chapterInitialPage + 1 < pageCount
+                    ? chapterInitialPage + 1
+                    : 0
+              });
+      chaptersReadBox.put(widget.mangaId, chaptersRead);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // hideAppBar();
@@ -291,9 +333,12 @@ class _ChapterViewState extends State<ChapterView>
               child: AppBar(
                 // titleTextStyle: TextStyle(color: Colors.white, fontSize: 16.0),
                 // iconTheme: IconThemeData(color: Colors.white),
-                // backgroundColor: Colors.transparent,
-                // surfaceTintColor: Color.fromARGB(255, 76, 64, 64),
-                title: Text(widget.title),
+                backgroundColor: Colors.transparent,
+                surfaceTintColor: Colors.white.withOpacity(0.7),
+                title: Text(
+                    widget.chapters!.length - 1 < widget.index + chapterOffset
+                        ? 'No title'
+                        : widget.chapters![widget.index + chapterOffset].title),
                 // toolbarOpacity: opacity,
                 toolbarHeight: kToolbarHeight,
                 // flexibleSpace: Container(
@@ -303,7 +348,7 @@ class _ChapterViewState extends State<ChapterView>
                   IconButton(
                       onPressed: () {
                         Share.share(
-                            'https://mangadex.org/chapter/${widget.id}/1');
+                            'https://mangadex.org/chapter/${widget.chapters![widget.index + chapterOffset].id}/1');
                       },
                       icon: Icon(Icons.share_outlined)),
                   IconButton(
@@ -311,8 +356,10 @@ class _ChapterViewState extends State<ChapterView>
                         Navigator.of(context).push(MaterialPageRoute(
                             builder: (context) => WebView(
                                 url:
-                                    'https://mangadex.org/chapter/${widget.id}/1',
-                                title: widget.title)));
+                                    'https://mangadex.org/chapter/${widget.chapters![widget.index + chapterOffset].id}/1',
+                                title: widget
+                                    .chapters![widget.index + chapterOffset]
+                                    .title)));
                       },
                       icon: Icon(Icons.public_outlined)),
                 ],
@@ -372,123 +419,160 @@ class _ChapterViewState extends State<ChapterView>
                   );
                 } else {
                   return !hasNextChapter || !hasPrevChapter
-                      ? const Center(
-                          child: Text('No more chapters'),
+                      ? Center(
+                          child: Text(
+                            'No more chapters',
+                            style: TextStyle(
+                                color: settingsBox.get('readerBgColor',
+                                                defaultValue: 'Black') ==
+                                            'Black' ||
+                                        settingsBox.get('readerBgColor') ==
+                                            'Gray'
+                                    ? Colors.white
+                                    : Colors.black),
+                          ),
                         )
-                      : selectedMenu == MenuItems.webtoon ||
-                              selectedMenu == MenuItems.continuousVertical
-                          ? Column(
-                              children: [
-                                Expanded(
-                                  child: ListView.builder(
-                                      addAutomaticKeepAlives: false,
-                                      controller: scrollController,
-                                      itemCount: pageCount,
-                                      itemBuilder: (context, index) {
-                                        return GestureDetector(
-                                          child: Column(
-                                            children: [
-                                              InteractiveViewer(
-                                                child: Image.network(
-                                                  snapshot.data![index],
-                                                  fit: BoxFit.cover,
-                                                  width: MediaQuery.of(context)
-                                                      .size
-                                                      .width,
-                                                ),
-                                              ),
-                                              Padding(
-                                                  padding: EdgeInsets.all(
-                                                      selectedMenu ==
-                                                              MenuItems.webtoon
-                                                          ? 0.0
-                                                          : 12.0),
-                                                  child: Visibility(
-                                                      visible: index + 1 ==
-                                                          snapshot.data!.length,
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(16.0),
+                      : GestureDetector(
+                          child: Stack(
+                            children: [
+                              pageViews.isNotEmpty
+                                  ? InteractiveViewer(
+                                      child: PreloadPageView.builder(
+                                        preloadPagesCount: 3,
+                                        itemCount: pageViews.length,
+                                        controller: pageController,
+                                        pageSnapping: selectedMenu ==
+                                                    MenuItems.webtoon ||
+                                                selectedMenu ==
+                                                    MenuItems.continuousVertical
+                                            ? false
+                                            : true,
+                                        reverse: selectedMenu ==
+                                                MenuItems.leftToRight
+                                            ? false
+                                            : selectedMenu ==
+                                                        MenuItems.vertical ||
+                                                    selectedMenu ==
+                                                        MenuItems.webtoon ||
+                                                    selectedMenu ==
+                                                        MenuItems
+                                                            .continuousVertical
+                                                ? false
+                                                : true,
+                                        scrollDirection: selectedMenu ==
+                                                    MenuItems.vertical ||
+                                                selectedMenu ==
+                                                    MenuItems.webtoon ||
+                                                selectedMenu ==
+                                                    MenuItems.continuousVertical
+                                            ? Axis.vertical
+                                            : Axis.horizontal,
+                                        onPageChanged: (value) => setState(() {
+                                          chapterInitialPage = value;
+                                          updateChapter();
+                                        }),
+                                        itemBuilder: (context, index) {
+                                          try {
+                                            return Column(
+                                              children: [
+                                                Expanded(
+                                                  child: Image.network(
+                                                    snapshot.data![index],
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .width,
+                                                    fit: selectedMenu ==
+                                                                MenuItems
+                                                                    .webtoon ||
+                                                            selectedMenu ==
+                                                                MenuItems
+                                                                    .continuousVertical
+                                                        ? BoxFit.fill
+                                                        : BoxFit.contain,
+                                                    errorBuilder: (context,
+                                                        error, stackTrace) {
+                                                      return const Center(
                                                         child: Text(
-                                                          'End of chapter',
-                                                          style: TextStyle(
-                                                              fontSize: 18.0),
-                                                        ),
-                                                      ))),
-                                            ],
-                                          ),
-                                          onTap: () {
-                                            setState(() {
-                                              visible = !visible;
-                                              visible
-                                                  ? showStatusBar()
-                                                  : hideStatusBar();
-                                              if (_controller.isCompleted) {
-                                                _controller.reverse();
-                                              } else {
-                                                _controller.forward();
-                                              }
-                                            });
-                                          },
-                                        );
-                                      }),
-                                ),
-                              ],
-                            )
-                          : GestureDetector(
-                              child: Column(
-                                children: [
-                                  Expanded(
-                                    child: PreloadPageView.builder(
-                                      preloadPagesCount: 3,
-                                      itemCount: pageViews.length,
-                                      controller: pageController,
-                                      reverse: selectedMenu ==
-                                              MenuItems.leftToRight
-                                          ? false
-                                          : selectedMenu == MenuItems.vertical
-                                              ? false
-                                              : true,
-                                      scrollDirection:
-                                          selectedMenu == MenuItems.vertical
-                                              ? Axis.vertical
-                                              : Axis.horizontal,
-                                      onPageChanged: (value) => setState(() {
-                                        chapterInitialPage = value;
-                                      }),
-                                      itemBuilder: (context, index) {
-                                        try {
-                                          return pageViews[index];
-                                        } catch (e) {
-                                          return Center(
-                                            child: Text("Can't load page"),
-                                          );
-                                        }
-                                      },
+                                                            "Can't load page"),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                                Visibility(
+                                                  visible: selectedMenu ==
+                                                          MenuItems.webtoon ||
+                                                      selectedMenu ==
+                                                          MenuItems
+                                                              .continuousVertical,
+                                                  child: Padding(
+                                                      padding: EdgeInsets.all(
+                                                          selectedMenu ==
+                                                                  MenuItems
+                                                                      .webtoon
+                                                              ? 0.0
+                                                              : 12.0)),
+                                                )
+                                              ],
+                                            );
+                                          } catch (e) {
+                                            return Center(
+                                              child: Text("Can't load page"),
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    )
+                                  : Center(
+                                      child: CircularProgressIndicator(),
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.only(bottom: 20),
-                                    child: Text(
+                              Positioned(
+                                bottom: 20.0,
+                                width: MediaQuery.of(context).size.width,
+                                child: Stack(
+                                    alignment:
+                                        AlignmentDirectional.bottomCenter,
+                                    children: [
+                                      Text(
                                         '${chapterInitialPage + 1}/${pageViews.length}',
+                                        textAlign: TextAlign.center,
                                         style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                  )
-                                ],
-                              ),
-                              onTap: () {
-                                setState(() {
-                                  visible = !visible;
-                                  visible ? showStatusBar() : hideStatusBar();
-                                  if (_controller.isCompleted) {
-                                    _controller.reverse();
-                                  } else {
-                                    _controller.forward();
-                                  }
-                                });
-                              },
-                            );
+                                            foreground: Paint()
+                                              ..style = PaintingStyle.stroke
+                                              ..strokeWidth = 2
+                                              ..color = Colors.black),
+                                      ),
+                                      Text(
+                                          '${chapterInitialPage + 1}/${pageViews.length}',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: settingsBox.get(
+                                                              'readerBgColor',
+                                                              defaultValue:
+                                                                  'Black') ==
+                                                          'Black' ||
+                                                      settingsBox.get(
+                                                              'readerBgColor') ==
+                                                          'Gray'
+                                                  ? Colors.white
+                                                  : Colors.black)),
+                                    ]),
+                              )
+                            ],
+                          ),
+                          onTap: () {
+                            setState(() {
+                              visible = !visible;
+                              visible ? showStatusBar() : hideStatusBar();
+                              if (_controller.isCompleted) {
+                                _controller.reverse();
+                              } else {
+                                _controller.forward();
+                              }
+                            });
+                          },
+                        );
                 }
               }))),
       bottomNavigationBar: AnimatedBuilder(
@@ -496,8 +580,8 @@ class _ChapterViewState extends State<ChapterView>
         builder: (context, child) => Transform.translate(
           offset: Offset(0, _controller.value * 120),
           child: BottomAppBar(
-            color: Colors.black.withOpacity(0.7),
-            surfaceTintColor: Colors.black.withOpacity(0.7),
+            color: Colors.black,
+            surfaceTintColor: Colors.transparent,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -527,6 +611,8 @@ class _ChapterViewState extends State<ChapterView>
                           onSelected: (MenuItems item) {
                             if (item == MenuItems.Default) {}
                             setState(() {
+                              debugPrint(
+                                  Theme.of(context).useMaterial3.toString());
                               selectedMenu = item;
                               settingsBox.put('readerMode', '$selectedMenu');
                             });
@@ -582,16 +668,18 @@ class _ChapterViewState extends State<ChapterView>
                 Padding(
                     padding: const EdgeInsets.only(left: 16.0),
                     child: Visibility(
-                      visible: selectedMenu == MenuItems.webtoon ||
-                              selectedMenu == MenuItems.continuousVertical
-                          ? false
-                          : true,
+                      visible:
+                          !hasNextChapter || !hasPrevChapter ? false : true,
                       child: Slider(
                         value: chapterInitialPage.toDouble(),
                         label: '${chapterInitialPage + 1}',
-                        divisions: pageCount,
+                        divisions: pageViews.isEmpty
+                            ? pageViews.length + 1
+                            : pageViews.length - 1,
                         min: 0.0,
-                        max: pageViews.length.toDouble(),
+                        max: pageViews.isEmpty
+                            ? chapterInitialPage.toDouble()
+                            : pageViews.length.toDouble() - 1.0,
                         onChanged: (value) {
                           setState(() {
                             chapterInitialPage = value.toInt();
