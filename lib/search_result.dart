@@ -133,6 +133,8 @@ class _SearchResultState extends State<SearchResult> {
                 try {
                   return GestureDetector(
                     child: Card(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4.0)),
                       clipBehavior: Clip.hardEdge,
                       child: Stack(
                         fit: StackFit.expand,
