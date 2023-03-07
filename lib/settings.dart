@@ -1,3 +1,4 @@
+import 'package:first_app/settings_pages/advanced_pages/advanced_settings.dart';
 import 'package:first_app/settings_pages/appearance_pages/apearance_settings.dart';
 import 'package:first_app/settings_pages/general_pages/general_settings.dart';
 import 'package:first_app/settings_pages/library_pages/library_settings.dart';
@@ -46,10 +47,14 @@ class Settings extends StatelessWidget {
                   CupertinoPageRoute(builder: ((context) => ReaderSettings())));
             },
           ),
-          // ListTile(
-          //   title: Text("Downloads"),
-          //   leading: Icon(Icons.download_outlined, color: Colors.blue),
-          // ),
+          ListTile(
+            title: Text("Advanced"),
+            leading: Icon(Icons.data_object, color: Colors.blue),
+            onTap: () {
+              Navigator.of(context).push(CupertinoPageRoute(
+                  builder: ((context) => AdvancedSettings())));
+            },
+          ),
           // ListTile(
           //   title: Text("Tracking"),
           //   leading: Icon(Icons.sync_outlined, color: Colors.blue),
