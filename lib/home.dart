@@ -72,14 +72,17 @@ class _HomeState extends State<Home> {
     mangaChapters.removeAt(index);
     int count = 0;
 
-    for (var comic in libraryItems) {
-      libraryBox.put(comic['id'], comic);
-    }
+    libraryBox.delete(libraryItems[index]['id']);
+    chapterBox.delete(libraryItems[index]['id']);
 
-    for (var chapters in mangaChapters) {
-      chapterBox.put(libraryItems[count]['id'], chapters);
-      count++;
-    }
+    // for (var comic in libraryItems) {
+    //   libraryBox.put(comic['id'], comic);
+    // }
+
+    // for (var chapters in mangaChapters) {
+    //   chapterBox.put(libraryItems[count]['id'], chapters);
+    //   count++;
+    // }
   }
 
   @override
