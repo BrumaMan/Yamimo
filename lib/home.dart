@@ -100,7 +100,7 @@ class _HomeState extends State<Home> {
                     padding: const EdgeInsets.symmetric(horizontal: 5.0),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: itemsPerRow,
-                      childAspectRatio: 0.7,
+                      childAspectRatio: 0.67,
                       mainAxisSpacing: 5.0,
                       crossAxisSpacing: 2.5,
                     ),
@@ -153,7 +153,7 @@ class _HomeState extends State<Home> {
                                           begin: Alignment.bottomCenter,
                                           end: Alignment.topCenter,
                                           colors: [
-                                        Colors.black.withOpacity(0.7),
+                                        Colors.black.withOpacity(0.8),
                                         Colors.black.withOpacity(0.0)
                                       ])),
                                   padding: EdgeInsets.all(5.0),
@@ -166,7 +166,14 @@ class _HomeState extends State<Home> {
                                     softWrap: true,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(color: Colors.white),
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        shadows: [
+                                          Shadow(
+                                              color:
+                                                  Colors.black.withOpacity(0.8),
+                                              offset: Offset(0, 1))
+                                        ]),
                                   ),
                                 ),
                                 bottom: 0.0,
