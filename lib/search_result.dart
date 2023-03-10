@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:first_app/item_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -96,8 +97,8 @@ class _SearchResultState extends State<SearchResult> {
                 .indexWhere((element) => element["type"] == "author")]
             ["attributes"]["name"],
       );
-      debugPrint('${comic.id}');
-      //Adding user to the list.
+      // debugPrint('${comic.id}');
+      //Adding comic to the list.
       comics.add(comic);
       index + 1;
     }
@@ -139,11 +140,11 @@ class _SearchResultState extends State<SearchResult> {
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          Image.network(
-                            'https://uploads.mangadex.org/covers/${snapshot.data[index].id}/${snapshot.data[index].cover}',
+                          CachedNetworkImage(
+                            imageUrl:
+                                'https://uploads.mangadex.org/covers/${snapshot.data[index].id}/${snapshot.data[index].cover}',
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Center(
+                            errorWidget: (context, error, stackTrace) => Center(
                               child: Text("Can't load cover"),
                             ),
                             // height: 60.0,

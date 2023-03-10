@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:first_app/authors.dart';
 import 'package:first_app/item_view.dart';
 import 'package:flutter/material.dart';
@@ -154,77 +155,73 @@ class _SearchResultState extends State<SearchResultAll> {
               ),
               itemCount: snapshot.data.length,
               itemBuilder: (ctx, index) {
-                try {
-                  return GestureDetector(
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4.0)),
-                      clipBehavior: Clip.hardEdge,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.network(
-                            'https://uploads.mangadex.org/covers/${snapshot.data[index].id}/${snapshot.data[index].cover}',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Center(
-                              child: Text("Can't load cover"),
-                            ),
-                            // height: 60.0,
+                return GestureDetector(
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4.0)),
+                    clipBehavior: Clip.hardEdge,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        CachedNetworkImage(
+                          imageUrl:
+                              'https://uploads.mangadex.org/covers/${snapshot.data[index].id}/${snapshot.data[index].cover}',
+                          fit: BoxFit.cover,
+                          errorWidget: (context, error, stackTrace) => Center(
+                            child: Text("Can't load cover"),
                           ),
-                          Positioned(
-                            child: Container(
-                              alignment: Alignment.bottomLeft,
-                              decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                      begin: Alignment.bottomCenter,
-                                      end: Alignment.topCenter,
-                                      colors: [
-                                    Colors.black.withOpacity(0.7),
-                                    Colors.black.withOpacity(0.0)
-                                  ])),
-                              padding: EdgeInsets.all(5.0),
-                              height: 80,
-                              width: MediaQuery.of(context).size.width / 2 - 14,
-                              child: Text(
-                                snapshot.data[index].title,
-                                softWrap: true,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(color: Colors.white),
-                              ),
+                          // height: 60.0,
+                        ),
+                        Positioned(
+                          child: Container(
+                            alignment: Alignment.bottomLeft,
+                            decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [
+                                  Colors.black.withOpacity(0.7),
+                                  Colors.black.withOpacity(0.0)
+                                ])),
+                            padding: EdgeInsets.all(5.0),
+                            height: 80,
+                            width: MediaQuery.of(context).size.width / 2 - 14,
+                            child: Text(
+                              snapshot.data[index].title ?? 'Unknown title',
+                              softWrap: true,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(color: Colors.white),
                             ),
-                            bottom: 0.0,
                           ),
-                        ],
-                      ),
+                          bottom: 0.0,
+                        ),
+                      ],
                     ),
-                    onTap: () {
-                      Navigator.of(context)
-                          .push(CupertinoPageRoute(builder: (context) {
-                        return ItemView(
-                          id: snapshot.data[index].id,
-                          title: snapshot.data[index].title,
-                          cover: snapshot.data[index].cover,
-                          url: snapshot.data[index].url,
-                          synopsis: snapshot.data[index].synopsis == null
-                              ? "No description"
-                              : snapshot.data[index].synopsis,
-                          type: snapshot.data[index].type,
-                          year: snapshot.data[index].year == 'null'
-                              ? 'Year unknown'
-                              : snapshot.data[index].year,
-                          status: snapshot.data[index].status,
-                          tags: snapshot.data[index].tags,
-                          author: snapshot.data[index].author,
-                          // scrapeDate: snapshot.data[index].scrapeDate,
-                        );
-                      }));
-                    },
-                  );
-                } catch (e) {
-                  return const Card();
-                }
+                  ),
+                  onTap: () {
+                    Navigator.of(context)
+                        .push(CupertinoPageRoute(builder: (context) {
+                      return ItemView(
+                        id: snapshot.data[index].id,
+                        title: snapshot.data[index].title,
+                        cover: snapshot.data[index].cover,
+                        url: snapshot.data[index].url,
+                        synopsis: snapshot.data[index].synopsis == null
+                            ? "No description"
+                            : snapshot.data[index].synopsis,
+                        type: snapshot.data[index].type,
+                        year: snapshot.data[index].year == 'null'
+                            ? 'Year unknown'
+                            : snapshot.data[index].year,
+                        status: snapshot.data[index].status,
+                        tags: snapshot.data[index].tags,
+                        author: snapshot.data[index].author,
+                        // scrapeDate: snapshot.data[index].scrapeDate,
+                      );
+                    }));
+                  },
+                );
               },
             );
           }
