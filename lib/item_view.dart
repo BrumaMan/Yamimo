@@ -83,9 +83,11 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   var chapters;
   var nextChapters;
   var chaptersPassed;
+  int missingChapters = 0;
   int chapterCount = 0;
   double position = 0.0;
   bool isUp = true;
+  bool fetchingData = true;
   bool started = false;
 
   double sensitivityFactor = 20.0;
@@ -167,12 +169,21 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       chapters.add(chapter);
       index + 1;
     }
-    chapters.sort((a, b) => b.readableAt!.compareTo(a.readableAt!));
+    chapters.sort((a, b) {
+      if (b.chapter! is int || a.chapter! is int) {
+        return int.parse(b.chapter!).compareTo(int.parse(a.chapter!));
+      } else {
+        return double.parse(b.chapter!).compareTo(double.parse(a.chapter!));
+      }
+    });
     // chapters.reversed;
     setState(() {
       chapterCount = chapters.length;
       chaptersPassed = chapters;
-      started = getChaptersRead('${chapters[chapters.length - 1].id}');
+      started = getChaptersRead(
+          '${chapterCount == 0 ? '' : chapters[chapterCount - 1].id}');
+      missingChapters = getMissingChaptersCount(chapters);
+      fetchingData = false;
     });
     updateChapterNumber(widget.id);
     return chapters;
@@ -220,6 +231,29 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       chapterBox.put(id, chapterCount);
       return;
     }
+  }
+
+  int getMissingChaptersCount(List<Chapter> allChapters) {
+    List<int> list = [];
+    if (chapterCount != 0) {
+      num previous = int.tryParse(allChapters[0].chapter!) ??
+          double.parse(allChapters[0].chapter!);
+      num current = 0;
+
+      for (var chapter in allChapters) {
+        current = chapter.chapter! is int
+            ? int.parse(chapter.chapter!)
+            : double.parse(chapter.chapter!);
+
+        if (previous - current > 1) {
+          for (var i = 0; i < previous - 1 - current + 1; i++) {
+            list.add(i);
+          }
+        }
+        previous = current;
+      }
+    }
+    return list.length;
   }
 
   String getChapterPagesRead(String id, int numPages) {
@@ -340,6 +374,13 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                 pinned: true,
                 // surfaceTintColor: Color(999),
                 // iconTheme: IconThemeData(color: Colors.white),
+                bottom: PreferredSize(
+                    preferredSize: Size.fromHeight(4.0),
+                    child: Visibility(
+                        visible: fetchingData,
+                        child: LinearProgressIndicator(
+                          minHeight: 4.0,
+                        ))),
                 actions: [
                   // IconButton(
                   //     onPressed: () {
@@ -443,122 +484,25 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                           fontWeight: FontWeight.bold),
                                     ),
                                   ),
-                                  // Padding(
-                                  //   padding: const EdgeInsets.all(8.0),
-                                  //   child: Row(
-                                  //     mainAxisAlignment:
-                                  //         MainAxisAlignment.spaceBetween,
-                                  //     children: [
-                                  //       // MaterialButton(
-                                  //       //     shape: RoundedRectangleBorder(
-                                  //       //         borderRadius: BorderRadius.all(
-                                  //       //             Radius.circular(8.0))),
-                                  //       //     color: Colors.blue[400],
-                                  //       //     onPressed: () {
-                                  //       //       chaptersReadBox.put(widget.id, {
-                                  //       //         'chapter':
-                                  //       //             chaptersRead["chapter"] + 1,
-                                  //       //         'page': 0
-                                  //       //       });
-                                  //       //       chaptersRead =
-                                  //       //           chaptersReadBox.get(widget.id);
-                                  //       //       Navigator.of(context).push(
-                                  //       //         MaterialPageRoute(
-                                  //       //             builder: (context) {
-                                  //       //           return ChapterView(
-                                  //       //             id: nextChapters[
-                                  //       //                     chapterCount -
-                                  //       //                         chaptersRead[
-                                  //       //                             "chapter"]]
-                                  //       //                 .id,
-                                  //       //             title: nextChapters[chapterCount -
-                                  //       //                             chaptersRead[
-                                  //       //                                 "chapter"]]
-                                  //       //                         .title ==
-                                  //       //                     null
-                                  //       //                 ? nextChapters[chapterCount -
-                                  //       //                                 chaptersRead[
-                                  //       //                                     "chapter"]]
-                                  //       //                             .volume ==
-                                  //       //                         null
-                                  //       //                     ? "chapter ${chaptersRead['chapter']}"
-                                  //       //                     : "Vol. ${nextChapters[chapterCount - chaptersRead["chapter"]].volume} ch. ${chaptersRead['chapter']}"
-                                  //       //                 : nextChapters[chapterCount -
-                                  //       //                                 chaptersRead[
-                                  //       //                                     "chapter"]]
-                                  //       //                             .volume ==
-                                  //       //                         null
-                                  //       //                     ? "ch. ${chaptersRead['chapter']} - ${nextChapters[chapterCount - chaptersRead["chapter"]].title}"
-                                  //       //                     : "Vol. ${nextChapters[chapterCount - chaptersRead["chapter"]].volume} ch. ${chaptersRead['chapter']} - ${nextChapters[chapterCount - chaptersRead["chapter"]].title}",
-                                  //       //             chapterCount: chapterCount,
-                                  //       //             order:
-                                  //       //                 chaptersRead['chapter'],
-                                  //       //             chapters: chaptersPassed,
-                                  //       //             index:
-                                  //       //                 chaptersRead['chapter'],
-                                  //       //             url: nextChapters[chapterCount -
-                                  //       //                             chaptersRead[
-                                  //       //                                 "chapter"]]
-                                  //       //                         .url ==
-                                  //       //                     null
-                                  //       //                 ? ""
-                                  //       //                 : nextChapters[
-                                  //       //                         chapterCount -
-                                  //       //                             chaptersRead[
-                                  //       //                                 "chapter"]]
-                                  //       //                     .url,
-                                  //       //           );
-                                  //       //         }),
-                                  //       //       );
-                                  //       //     },
-                                  //       //     child: Text(
-                                  //       //         chaptersRead["chapter"] == 0
-                                  //       //             ? 'Read'
-                                  //       //             : 'Continue')),
-                                  //       // ValueListenableBuilder(
-                                  //       //   valueListenable:
-                                  //       //       libraryBox.listenable(),
-                                  //       //   builder: (context, value, child) =>
-                                  //       //       IconButton(
-                                  //       //     onPressed: () {
-                                  //       //       onLibraryPress(
-                                  //       //           widget.id,
-                                  //       //           widget.title,
-                                  //       //           widget.cover,
-                                  //       //           widget.synopsis,
-                                  //       //           widget.type,
-                                  //       //           widget.year,
-                                  //       //           widget.status,
-                                  //       //           widget.tags,
-                                  //       //           widget.author);
-                                  //       //       updateChapterNumber(widget.id);
-                                  //       //     },
-                                  //       //     icon: getIcons(widget.id),
-                                  //       //   ),
-                                  //       // ),
-                                  //       // IconButton(
-                                  //       //     onPressed: () {
-                                  //       //       Navigator.of(context)
-                                  //       //           .push(MaterialPageRoute(
-                                  //       //         builder: (context) {
-                                  //       //           return WebView(
-                                  //       //             url:
-                                  //       //                 'https://mangadex.org/title/${widget.id}/${widget.title.toLowerCase()}',
-                                  //       //             title: widget.title,
-                                  //       //           );
-                                  //       //         },
-                                  //       //       ));
-                                  //       //     },
-                                  //       //     icon: Icon(Icons.public_outlined)),
-                                  //       // IconButton(
-                                  //       //     onPressed: () {
-                                  //       //       Share.share(
-                                  //       //           'https://mangadex.org/title/${widget.id}/${widget.title.toLowerCase()}');
-                                  //       //     },
-                                  //       //     icon: Icon(Icons.share_outlined)),
-                                  //     ],
-                                  //   ),
-                                  // )
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: 8.0,
+                                      right: 8.0,
+                                    ),
+                                    child: Visibility(
+                                      visible: missingChapters != 0,
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.warning,
+                                            size: 16,
+                                          ),
+                                          Text(
+                                              ' Missing ~ $missingChapters chapter(s)'),
+                                        ],
+                                      ),
+                                    ),
+                                  )
                                 ]),
                           ),
                         ],
@@ -646,27 +590,34 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                       ),
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('$chapterCount Chapters',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold)),
-                            FilledButton(
-                                onPressed: () {
-                                  continueReading(context);
-                                },
-                                child: Row(
-                                  children: [
-                                    Padding(
-                                      padding:
-                                          const EdgeInsets.only(right: 8.0),
-                                      child: Icon(Icons.play_arrow),
-                                    ),
-                                    started ? Text('Continue') : Text('Start'),
-                                  ],
-                                ))
-                          ],
+                        child: Visibility(
+                          visible: !fetchingData,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('$chapterCount Chapters',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold)),
+                              FilledButton(
+                                  onPressed: chapterCount == 0
+                                      ? null
+                                      : () {
+                                          continueReading(context);
+                                        },
+                                  child: Row(
+                                    children: [
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 8.0),
+                                        child: Icon(Icons.play_arrow),
+                                      ),
+                                      started
+                                          ? Text('Continue')
+                                          : Text('Start'),
+                                    ],
+                                  ))
+                            ],
+                          ),
                         ),
                       )
                     ],
@@ -677,11 +628,12 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                   future: chapters,
                   builder: (BuildContext ctx, AsyncSnapshot snapshot) {
                     if (snapshot.data == null) {
-                      return const SliverToBoxAdapter(
-                        child: Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
+                      return SliverToBoxAdapter();
+                      // const SliverToBoxAdapter(
+                      //   child: Center(
+                      //     child: CircularProgressIndicator(),
+                      //   ),
+                      // );
                     } else {
                       return SliverList(
                         delegate: SliverChildBuilderDelegate(
