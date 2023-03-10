@@ -18,10 +18,10 @@ class AboutScreen extends StatefulWidget {
 
 class _AboutScreenState extends State<AboutScreen> {
   PackageInfo? info = PackageInfo(
-      appName: 'Mangalux',
-      packageName: 'Mangalux',
-      version: '0.1.0',
-      buildNumber: '0.1.0');
+      appName: 'Yamimo',
+      packageName: 'com.app.yamimo',
+      version: '1.0.0',
+      buildNumber: '1.0.0');
 
   Map<dynamic, dynamic> _updateInfo = {};
   var version;
@@ -118,7 +118,7 @@ class _AboutScreenState extends State<AboutScreen> {
               color: Colors.grey[200],
             ),
             ListTile(
-              title: Text('Version ${info?.version}'),
+              title: Text('Version ${version}'),
               subtitle: Text('Check for updates'),
               onTap: () async {
                 debugPrint("$_updateInfo");
@@ -127,7 +127,7 @@ class _AboutScreenState extends State<AboutScreen> {
                     toastLength: Toast.LENGTH_SHORT,
                     gravity: ToastGravity.BOTTOM,
                     timeInSecForIosWeb: 1,
-                    backgroundColor: Colors.white,
+                    backgroundColor: Colors.grey.withOpacity(0.4),
                     textColor: Colors.black,
                     fontSize: 16.0);
                 if (_updateInfo != null) {
