@@ -47,7 +47,7 @@ class ItemView extends StatefulWidget {
 }
 
 class Chapter {
-  final String? id;
+  final String id;
   final String? title;
   final String? volume;
   final String? chapter;
@@ -86,6 +86,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   int chapterCount = 0;
   double position = 0.0;
   bool isUp = true;
+  bool started = false;
 
   double sensitivityFactor = 20.0;
 
@@ -171,6 +172,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
     setState(() {
       chapterCount = chapters.length;
       chaptersPassed = chapters;
+      started = getChaptersRead('${chapters[chapters.length - 1].id}');
     });
     updateChapterNumber(widget.id);
     return chapters;
@@ -215,7 +217,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
     if (libraryBox.containsKey(id)) {
       int chapterNumber = chapterBox.get(id, defaultValue: chapterCount);
       int newChaptersNum = chapterNumber - chapterCount;
-      chapterBox.put(id, chapterNumber + newChaptersNum);
+      chapterBox.put(id, chapterCount);
       return;
     }
   }
@@ -242,6 +244,54 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
     DateTime date = DateTime.parse(chapterDate);
 
     return DateTimeFormat.format(date, format: ' | j M Y');
+  }
+
+  void continueReading(BuildContext context) {
+    List<Chapter> allChapters = chaptersPassed;
+    List<Chapter> tempChapters = List.from(chaptersPassed);
+    Map<dynamic, dynamic> chaptersRead = chaptersReadBox.get(widget.id);
+    int index = 0;
+    int pageIndex = chapterCount - 1;
+
+    // tempChapters.removeWhere((element) => chaptersRead.containsKey(element.id));
+
+    for (var chapter in allChapters) {
+      if (chaptersRead.containsKey(chapter.id)) {
+        chaptersRead[chapter.id]['read'] ? tempChapters.removeAt(index) : null;
+        chaptersRead[chapter.id]['read'] ? pageIndex-- : null;
+      }
+      index++;
+    }
+    Chapter last = tempChapters.last;
+    // index--;
+
+    if (!chaptersRead.containsKey(last.id)) {
+      chaptersRead.addAll({
+        last.id: {'read': false, 'page': 0}
+      });
+      chaptersReadBox.put(widget.id, chaptersRead);
+      chaptersRead = chaptersReadBox.get(widget.id);
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) {
+        return ChapterView(
+          id: last.id,
+          mangaId: widget.id,
+          title: last.title == null
+              ? last.volume == null
+                  ? "chapter ${chapterCount - pageIndex}"
+                  : "Vol. ${last.volume} ch. ${chapterCount - pageIndex}"
+              : last.volume == null
+                  ? "ch. ${chapterCount - pageIndex} - ${last.title}"
+                  : "Vol. ${last.volume} ch. ${chapterCount - pageIndex} - ${last.title}",
+          chapterCount: chapterCount,
+          order: chapterCount - pageIndex,
+          chapters: List.from(chaptersPassed),
+          index: pageIndex,
+          url: last.url ?? "",
+        );
+      }),
+    );
   }
 
   @override
@@ -347,7 +397,8 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.only(
+                      top: 8.0, left: 8.0, bottom: 0.0, right: 8.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -387,7 +438,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                     padding: const EdgeInsets.only(
                                         left: 8.0, right: 8.0, top: 8.0),
                                     child: Text(
-                                      'By ${widget.author}',
+                                      '${widget.author}',
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold),
                                     ),
@@ -533,6 +584,17 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                 ),
                                 Column(
                                   children: [
+                                    const Icon(Icons.language),
+                                    Text('Mangadex')
+                                  ],
+                                ),
+                                VerticalDivider(
+                                  // width: 20,
+                                  thickness: 1,
+                                  color: Colors.grey,
+                                ),
+                                Column(
+                                  children: [
                                     const Icon(Icons.new_releases_outlined),
                                     Text('${widget.year}')
                                   ],
@@ -583,16 +645,27 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                         children: tags,
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(top: 16.0),
+                        padding: const EdgeInsets.only(top: 8.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text('$chapterCount Chapters',
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold)),
-                            // Text('Uploaded',
-                            //     style: const TextStyle(
-                            //         fontWeight: FontWeight.bold)),
+                            FilledButton(
+                                onPressed: () {
+                                  continueReading(context);
+                                },
+                                child: Row(
+                                  children: [
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(right: 8.0),
+                                      child: Icon(Icons.play_arrow),
+                                    ),
+                                    started ? Text('Continue') : Text('Start'),
+                                  ],
+                                ))
                           ],
                         ),
                       )

@@ -32,7 +32,7 @@ class ChapterView extends StatefulWidget {
   final String title;
   final int chapterCount;
   final int order;
-  final List<dynamic>? chapters;
+  final List<dynamic> chapters;
   final int index;
   final String url;
 
@@ -153,7 +153,7 @@ class _ChapterViewState extends State<ChapterView>
 
   Future<List<String>> getRequest() async {
     //replace your restFull API here.
-    String id = widget.chapters![widget.index + chapterOffset].id;
+    String id = widget.chapters[widget.index + chapterOffset].id;
     // chapterInitialPage = 0;
     Uri url = Uri.https("api.mangadex.org", "/at-home/server/$id");
     final response = await http.get(url);
@@ -214,11 +214,11 @@ class _ChapterViewState extends State<ChapterView>
       debugPrint('two');
       pageViews = [];
       pages = getRequest();
-      addChapterToRead(widget.chapters![widget.index + chapterOffset].id);
+      addChapterToRead(widget.chapters[widget.index + chapterOffset].id);
     } else {
       pageViews = [];
       pages = getRequest();
-      addChapterToRead(widget.chapters![widget.index + chapterOffset].id);
+      addChapterToRead(widget.chapters[widget.index + chapterOffset].id);
       // debugPrint('${pageViews.length}');
     }
   }
@@ -240,11 +240,11 @@ class _ChapterViewState extends State<ChapterView>
       debugPrint('two');
       pageViews = [];
       pages = getRequest();
-      addChapterToRead(widget.chapters![widget.index + chapterOffset].id);
+      addChapterToRead(widget.chapters[widget.index + chapterOffset].id);
     } else {
       pageViews = [];
       pages = getRequest();
-      addChapterToRead(widget.chapters![widget.index + chapterOffset].id);
+      addChapterToRead(widget.chapters[widget.index + chapterOffset].id);
       // debugPrint('${pageViews.length}');
     }
   }
@@ -289,6 +289,7 @@ class _ChapterViewState extends State<ChapterView>
         id: {'read': false, 'page': 0}
       });
     }
+    debugPrint('${widget.index}');
     chapterInitialPage = chaptersRead[id]['page'] == 0
         ? chaptersRead[id]['page']
         : chaptersRead[id]['page'] - 1;
@@ -297,10 +298,10 @@ class _ChapterViewState extends State<ChapterView>
   void updateChapter() {
     if (chapterInitialPage + 1 > 1 &&
         chapterInitialPage + 1 <= pageCount &&
-        !chaptersRead[widget.chapters![widget.index + chapterOffset].id]
+        !chaptersRead[widget.chapters[widget.index + chapterOffset].id]
             ['read']) {
       chaptersRead.update(
-          widget.chapters![widget.index + chapterOffset].id,
+          widget.chapters[widget.index + chapterOffset].id,
           (value) => {
                 'read': chapterInitialPage + 1 < pageCount ? false : true,
                 'page': chapterInitialPage + 1 < pageCount
@@ -335,10 +336,10 @@ class _ChapterViewState extends State<ChapterView>
                 // iconTheme: IconThemeData(color: Colors.white),
                 backgroundColor: Colors.transparent,
                 surfaceTintColor: Colors.white.withOpacity(0.7),
-                title: Text(
-                    widget.chapters!.length - 1 < widget.index + chapterOffset
-                        ? 'No title'
-                        : widget.chapters![widget.index + chapterOffset].title),
+                title: Text(widget.chapters.length - 1 <
+                        widget.index + chapterOffset
+                    ? 'No title'
+                    : 'ch. ${widget.chapters[widget.index + chapterOffset].chapter} ${widget.chapters[widget.index + chapterOffset].title}'),
                 // toolbarOpacity: opacity,
                 toolbarHeight: kToolbarHeight,
                 // flexibleSpace: Container(
@@ -348,7 +349,7 @@ class _ChapterViewState extends State<ChapterView>
                   IconButton(
                       onPressed: () {
                         Share.share(
-                            'https://mangadex.org/chapter/${widget.chapters![widget.index + chapterOffset].id}/1');
+                            'https://mangadex.org/chapter/${widget.chapters[widget.index + chapterOffset].id}/1');
                       },
                       icon: Icon(Icons.share_outlined)),
                   IconButton(
@@ -356,9 +357,9 @@ class _ChapterViewState extends State<ChapterView>
                         Navigator.of(context).push(MaterialPageRoute(
                             builder: (context) => WebView(
                                 url:
-                                    'https://mangadex.org/chapter/${widget.chapters![widget.index + chapterOffset].id}/1',
+                                    'https://mangadex.org/chapter/${widget.chapters[widget.index + chapterOffset].id}/1',
                                 title: widget
-                                    .chapters![widget.index + chapterOffset]
+                                    .chapters[widget.index + chapterOffset]
                                     .title)));
                       },
                       icon: Icon(Icons.public_outlined)),
@@ -438,7 +439,7 @@ class _ChapterViewState extends State<ChapterView>
                               pageViews.isNotEmpty
                                   ? InteractiveViewer(
                                       child: PreloadPageView.builder(
-                                        preloadPagesCount: 3,
+                                        preloadPagesCount: 5,
                                         itemCount: pageViews.length,
                                         controller: pageController,
                                         pageSnapping: selectedMenu ==
