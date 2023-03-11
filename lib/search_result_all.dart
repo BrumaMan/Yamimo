@@ -217,6 +217,7 @@ class _SearchResultState extends State<SearchResultAll> {
                         status: snapshot.data[index].status,
                         tags: snapshot.data[index].tags,
                         author: snapshot.data[index].author,
+                        source: 'MangaDex',
                         // scrapeDate: snapshot.data[index].scrapeDate,
                       );
                     }));

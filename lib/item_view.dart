@@ -15,20 +15,21 @@ import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 
 class ItemView extends StatefulWidget {
-  const ItemView({
-    super.key,
-    required this.id,
-    required this.title,
-    required this.cover,
-    required this.url,
-    required this.synopsis,
-    required this.type,
-    required this.year,
-    required this.status,
-    required this.tags,
-    required this.author,
-    // required this.scrapeDate,
-  });
+  const ItemView(
+      {super.key,
+      required this.id,
+      required this.title,
+      required this.cover,
+      required this.url,
+      required this.synopsis,
+      required this.type,
+      required this.year,
+      required this.status,
+      required this.tags,
+      required this.author,
+      required this.source
+      // required this.scrapeDate,
+      });
 
   final String id;
   final String title;
@@ -40,6 +41,7 @@ class ItemView extends StatefulWidget {
   final String? status;
   final List<dynamic>? tags;
   final String author;
+  final String source;
   // final String scrapeDate;
 
   @override
@@ -205,7 +207,9 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       String? year,
       String? status,
       List<dynamic>? tags,
-      String author) {
+      String author,
+      DateTime addedAt,
+      String source) {
     if (libraryBox.containsKey(id)) {
       chapterBox.delete(id);
       libraryBox.delete(id);
@@ -221,6 +225,8 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       'status': status,
       'tags': tags,
       'author': author,
+      'addedAt': addedAt,
+      'source': source
     });
   }
 
@@ -283,7 +289,8 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   void continueReading(BuildContext context) {
     List<Chapter> allChapters = chaptersPassed;
     List<Chapter> tempChapters = List.from(chaptersPassed);
-    Map<dynamic, dynamic> chaptersRead = chaptersReadBox.get(widget.id);
+    Map<dynamic, dynamic> chaptersRead =
+        chaptersReadBox.get(widget.id, defaultValue: {});
     int index = 0;
     int pageIndex = chapterCount - 1;
 
@@ -409,7 +416,9 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                             widget.year,
                             widget.status,
                             widget.tags,
-                            widget.author);
+                            widget.author,
+                            DateTime.now(),
+                            widget.source);
                         updateChapterNumber(widget.id);
                       },
                       icon: getIcons(widget.id),
@@ -529,7 +538,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                 Column(
                                   children: [
                                     const Icon(Icons.language),
-                                    Text('Mangadex')
+                                    Text(widget.source)
                                   ],
                                 ),
                                 VerticalDivider(
