@@ -48,10 +48,10 @@ class _HomeState extends State<Home> {
       libraryItems.add(comic);
     }
 
-    for (var chapters in chapterBox.values) {
-      mangaChapters.add(chapters);
-    }
-    // mangaChapters = chapterBox.values;
+    // for (var chapters in chapterBox.values) {
+    //   mangaChapters.add(chapters);
+    // }
+    libraryItems.sort((a, b) => a['addedAt'].compareTo(b['addedAt']));
 
     return libraryItems;
   }
@@ -76,14 +76,16 @@ class _HomeState extends State<Home> {
     return numRead;
   }
 
-  void deleteFromLibrary(int index) {
+  void deleteFromLibrary(String id) {
     // libraryDeleteNotifier.increment();
-    libraryItems.removeAt(index);
-    mangaChapters.removeAt(index);
+    // libraryItems.removeAt(index);
+    // mangaChapters.removeAt(index);
     int count = 0;
 
-    libraryBox.deleteAt(index);
-    chapterBox.deleteAt(index);
+    libraryBox.delete(id);
+    chapterBox.delete(id);
+
+    libraryItems = getLibraryItems();
 
     // for (var comic in libraryItems) {
     //   libraryBox.put(comic['id'], comic);
@@ -102,14 +104,14 @@ class _HomeState extends State<Home> {
           title: const Text('Library'),
         ),
         body: ValueListenableBuilder(
-            valueListenable: libraryDeleteNotifier.itemDeleted,
+            valueListenable: chaptersReadBox.listenable(),
             builder: (context, value, child) {
               return ValueListenableBuilder(
                   valueListenable: libraryBox.listenable(),
                   builder: ((context, value, child) {
                     if (libraryBox.isEmpty) {
                       return Center(
-                        child: Text("Press 'Add to library' to see it here"),
+                        child: Text("No manga in library"),
                       );
                     } else {
                       return GridView.builder(
@@ -148,23 +150,30 @@ class _HomeState extends State<Home> {
                                         // height: 60.0,
                                       ),
                                     ),
-                                    Positioned(
-                                        top: 0.0,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                              color: Colors.blue[400],
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(5.0))),
-                                          margin: EdgeInsets.all(8.0),
-                                          padding: EdgeInsets.all(3.0),
-                                          // clipBehavior: Clip.hardEdge,
-                                          // color: Colors.blue,
-                                          child: Text(
-                                            '${mangaChapters[index] - chaptersRead(libraryItems[index]["id"])}',
-                                            style:
-                                                TextStyle(color: Colors.black),
-                                          ),
-                                        )),
+                                    Visibility(
+                                      visible: chapterBox.get(
+                                                  libraryItems[index]['id']) -
+                                              chaptersRead(
+                                                  libraryItems[index]["id"]) !=
+                                          0,
+                                      child: Positioned(
+                                          top: 0.0,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                                color: Colors.blue[400],
+                                                borderRadius: BorderRadius.all(
+                                                    Radius.circular(5.0))),
+                                            margin: EdgeInsets.all(8.0),
+                                            padding: EdgeInsets.all(3.0),
+                                            // clipBehavior: Clip.hardEdge,
+                                            // color: Colors.blue,
+                                            child: Text(
+                                              "${chapterBox.get(libraryItems[index]['id']) - chaptersRead(libraryItems[index]["id"])}",
+                                              style: TextStyle(
+                                                  color: Colors.black),
+                                            ),
+                                          )),
+                                    ),
                                     Positioned(
                                       child: Container(
                                         alignment: Alignment.bottomLeft,
@@ -220,13 +229,14 @@ class _HomeState extends State<Home> {
                                           status: libraryItems[index]["status"],
                                           tags: libraryItems[index]["tags"],
                                           author: libraryItems[index]["author"],
+                                          source: 'MangaDex',
                                           // scrapeDate: snapshot.data[index].scrapeDate,
                                         ),
                                         pageAnimationType:
                                             FadeAnimationTransition()));
                               },
                               onLongPress: () {
-                                deleteFromLibrary(index);
+                                deleteFromLibrary(libraryItems[index]["id"]);
                                 // debugPrint(index.toString());
                               },
                             );
