@@ -310,6 +310,18 @@ class _ChapterViewState extends State<ChapterView>
               });
       chaptersReadBox.put(widget.mangaId, chaptersRead);
     }
+
+    if (chapterInitialPage + 1 == pageCount) {
+      setState(() {
+        visible = !visible;
+        visible ? showStatusBar() : hideStatusBar();
+        if (_controller.isCompleted) {
+          _controller.reverse();
+        } else {
+          _controller.forward();
+        }
+      });
+    }
   }
 
   @override
