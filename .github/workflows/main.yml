@@ -5,7 +5,7 @@ on:
       - v*
 jobs:
   build:
-    name: Build APK
+    name: Build and Release APK
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -33,10 +33,25 @@ jobs:
         set -e
         mv build/app/outputs/apk/release/app-release-unsigned-signed.apk build/app/outputs/apk/release/Yamimo-${{ env.VERSION_TAG }}.apk
         
-    - name: Create a Release APK
-      uses: ncipollo/release-action@v1
+    - name: Create a Release
+      id: create_release
+      uses: fregante/release-with-changelog@v3
       with:
-        name: Yamimo ${{ env.VERSION_TAG }}
-        artifacts: |
-          build/app/outputs/apk/release/Yamimo-${{ env.VERSION_TAG }}.apk
+        title: Yamimo ${{ env.VERSION_TAG }}
+        commit-template: '- {title} ← {hash}'
+        template: |
+          ### Changelog
+
+          {commits}
         token: ${{ secrets.TOKEN }}
+
+    - name: Upload Release APK
+      id: upload-release-apk
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/app/outputs/apk/release/Yamimo-${{ env.VERSION_TAG }}.apk
+        asset_name: Yamimo-${{ env.VERSION_TAG }}.apk
+        asset_content_type: application/vnd.android.package-archive
