@@ -6,11 +6,13 @@ import 'package:first_app/more.dart';
 import 'package:first_app/responsive/desktop_layout.dart';
 import 'package:first_app/responsive/responsive_layout.dart';
 import 'package:first_app/search_result.dart';
+import 'package:first_app/util/globals.dart';
 import 'package:first_app/util/theme.dart';
 import 'package:status_bar_control/status_bar_control.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:bottom_bar_page_transition/bottom_bar_page_transition.dart';
 
 void main() async {
   await Hive.initFlutter();
@@ -49,6 +51,7 @@ class MyApp extends StatelessWidget {
       builder: (context, value, child) {
         return MaterialApp(
             title: 'Flutter Demo',
+            scaffoldMessengerKey: snackbarKey,
             scrollBehavior: MyCustomScrollBehavior(),
             theme: lightTheme,
             darkTheme: darkTheme,
@@ -87,9 +90,15 @@ class _MyHomePageState extends State<MyHomePage> {
   int currentIndex = 0;
   final List<String> _screenNames = ['Library', 'Explore', 'More'];
   final List<Widget> _screens = const [
-    Home(),
-    Browse(),
-    More(),
+    Home(
+      key: Key('Home'),
+    ),
+    Browse(
+      key: Key('Browse'),
+    ),
+    More(
+      key: Key('More'),
+    ),
   ];
 
   @override
@@ -126,7 +135,13 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-      body: _screens[currentIndex],
+      body: BottomBarPageTransition(
+        builder: (context, index) => _screens[index],
+        currentIndex: currentIndex,
+        totalLength: _screens.length,
+        transitionType: TransitionType.fade,
+        transitionDuration: Duration(milliseconds: 100),
+      ),
       bottomNavigationBar: Theme(
         data: ThemeData(splashColor: Colors.transparent),
         child: NavigationBarTheme(
