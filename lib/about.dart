@@ -1,4 +1,5 @@
 import 'package:auto_update/auto_update.dart';
+import 'package:filesize/filesize.dart';
 import 'package:flutter/material.dart';
 import 'package:line_icons/line_icon.dart';
 import 'package:android_intent_plus/android_intent.dart';
@@ -54,7 +55,7 @@ class _AboutScreenState extends State<AboutScreen> {
 
   Future<void> fetchGithub(String user, String packageName, String type,
       String version, String appName) async {
-    Map<String, String> results = {"assetUrl": ""};
+    Map<String, dynamic> results = {"assetUrl": ""};
     final client = HttpClient();
     client.userAgent = "auto_update";
 
@@ -77,6 +78,7 @@ class _AboutScreenState extends State<AboutScreen> {
             results["assetUrl"] = asset["browser_download_url"] ?? '';
             results["body"] = map["body"] ?? '';
             results["tag"] = map["tag_name"] ?? '';
+            results['size'] = asset["size"] ?? 0;
           }
         }
       }
@@ -120,7 +122,7 @@ class _AboutScreenState extends State<AboutScreen> {
             ListTile(
               title: Text('Version ${version}'),
               subtitle: Text('Check for updates'),
-              onTap: () async {
+              onTap: () {
                 debugPrint("$_updateInfo");
                 Fluttertoast.showToast(
                     msg: 'Checking',
@@ -155,15 +157,37 @@ class _AboutScreenState extends State<AboutScreen> {
                   } else {
                     /* update url found */
                     debugPrint("${_updateInfo}");
-                    Fluttertoast.showToast(
-                        msg: 'New update available',
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        timeInSecForIosWeb: 1,
-                        backgroundColor: Colors.white,
-                        textColor: Colors.black,
-                        fontSize: 16.0);
-                    await AutoUpdate.downloadAndUpdate(_updateInfo['assetUrl']);
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            icon: Icon(Icons.system_security_update),
+                            title: Text(
+                              'New version available',
+                              style: TextStyle(fontSize: 16.0),
+                            ),
+                            actions: [
+                              TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text('Close')),
+                              TextButton(
+                                  onPressed: () async {
+                                    await AutoUpdate.downloadAndUpdate(
+                                        _updateInfo['assetUrl']);
+                                  },
+                                  child: Text('Download'))
+                            ],
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                    "New version: ${_updateInfo['tag'].split('v')[1]}"),
+                                Text('Size: ${filesize(_updateInfo['size'])}')
+                              ],
+                            ),
+                          );
+                        });
                   }
                 }
               },
