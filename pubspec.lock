@@ -65,6 +65,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
+  bottom_bar_page_transition:
+    dependency: "direct main"
+    description:
+      name: bottom_bar_page_transition
+      sha256: "31c336240bbe9c1486c67fd3aec8b27c7d126de78ec9094e64c57117d338b0ad"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
   build:
     dependency: transitive
     description:
