@@ -1,4 +1,5 @@
 import 'package:first_app/about.dart';
+import 'package:first_app/overview.dart';
 import 'package:first_app/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -58,6 +59,17 @@ class _MoreState extends State<More> {
           //   color: Colors.grey,
           //   thickness: 0.7,
           // ),
+          ListTile(
+            title: Text('Overview'),
+            leading: Icon(Icons.bar_chart, color: Colors.blue[400]),
+            onTap: () {
+              Navigator.of(context).push(CupertinoPageRoute(
+                builder: (context) {
+                  return Overview();
+                },
+              ));
+            },
+          ),
           ListTile(
             title: Text('Settings'),
             leading: Icon(Icons.settings_outlined, color: Colors.blue[400]),
