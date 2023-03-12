@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:first_app/chapter_view.dart';
 import 'package:first_app/search_result.dart';
+import 'package:first_app/util/globals.dart';
 import 'package:first_app/util/theme.dart';
 import 'package:first_app/webview.dart';
 import 'package:flutter/material.dart';
@@ -115,6 +116,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   void dispose() {
     // textController.dispose();
     scrollViewController.dispose();
+    snackbarKey.currentState?.clearSnackBars();
     super.dispose();
   }
 
@@ -188,6 +190,12 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       fetchingData = false;
     });
     updateChapterNumber(widget.id);
+    chapterCount == 0
+        ? snackbarKey.currentState?.showSnackBar(SnackBar(
+            content: Text('No chapters have been found'),
+            behavior: SnackBarBehavior.floating,
+          ))
+        : null;
     return chapters;
   }
 
@@ -636,13 +644,8 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
               FutureBuilder(
                   future: chapters,
                   builder: (BuildContext ctx, AsyncSnapshot snapshot) {
-                    if (snapshot.data == null) {
+                    if (!snapshot.hasData) {
                       return SliverToBoxAdapter();
-                      // const SliverToBoxAdapter(
-                      //   child: Center(
-                      //     child: CircularProgressIndicator(),
-                      //   ),
-                      // );
                     } else {
                       return SliverList(
                         delegate: SliverChildBuilderDelegate(
@@ -683,7 +686,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                               ? settingsBox.get('darkMode',
                                                       defaultValue: false)
                                                   ? Colors.grey[700]
-                                                  : Colors.grey[500]
+                                                  : Colors.grey[400]
                                               : null),
                                     ),
                                   ),
@@ -710,7 +713,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                             ? settingsBox.get('darkMode',
                                                     defaultValue: false)
                                                 ? Colors.grey[700]
-                                                : Colors.grey[500]
+                                                : Colors.grey[400]
                                             : null,
                                       )
                                     : Text(''),
@@ -722,7 +725,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                           ? settingsBox.get('darkMode',
                                                   defaultValue: false)
                                               ? Colors.grey[700]
-                                              : Colors.grey[500]
+                                              : Colors.grey[400]
                                           : null),
                                 ),
                                 Text(getChapterPagesRead(
@@ -747,7 +750,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                           ? settingsBox.get('darkMode',
                                                   defaultValue: false)
                                               ? Colors.grey[700]
-                                              : Colors.grey[500]
+                                              : Colors.grey[400]
                                           : null),
                                 ),
                               ],
