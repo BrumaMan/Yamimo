@@ -61,7 +61,7 @@ class _GenresScreenState extends State<GenresScreen> {
       tabs.add(Tab(
         text: tab.name,
       ));
-      tabViews.add(SearchResultAll(genre: tab.id));
+      // tabViews.add(SearchResultAll(genre: tab.id));
     }
     setState(() {
       tagCount = tags.length;

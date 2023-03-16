@@ -101,13 +101,13 @@ class _AuthorsScreenState extends State<AuthorsScreen> {
                           ),
                         ),
                       ),
-                      onTap: () {
-                        Navigator.of(context).push(CupertinoPageRoute(
-                            builder: ((context) => SearchResultAll(
-                                  genre: '',
-                                  author: snapshot.data?[index],
-                                ))));
-                      },
+                      // onTap: () {
+                      //   Navigator.of(context).push(CupertinoPageRoute(
+                      //       builder: ((context) => SearchResultAll(
+                      //             genre: '',
+                      //             author: snapshot.data?[index],
+                      //           ))));
+                      // },
                     );
                   }));
             }
