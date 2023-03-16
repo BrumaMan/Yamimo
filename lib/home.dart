@@ -139,8 +139,7 @@ class _HomeState extends State<Home> {
                                       child: CachedNetworkImage(
                                         placeholder: (context, url) =>
                                             Container(),
-                                        imageUrl:
-                                            'https://uploads.mangadex.org/covers/${libraryItems[index]["id"]}/${libraryItems[index]["cover"]}',
+                                        imageUrl: libraryItems[index]["cover"],
                                         fit: BoxFit.cover,
                                         errorWidget:
                                             (context, error, stackTrace) =>
@@ -190,7 +189,7 @@ class _HomeState extends State<Home> {
                                         width:
                                             MediaQuery.of(context).size.width /
                                                     itemsPerRow -
-                                                14,
+                                                13,
                                         child: Text(
                                           libraryItems[index]["title"],
                                           softWrap: true,
@@ -229,7 +228,7 @@ class _HomeState extends State<Home> {
                                           status: libraryItems[index]["status"],
                                           tags: libraryItems[index]["tags"],
                                           author: libraryItems[index]["author"],
-                                          source: 'MangaDex',
+                                          source: libraryItems[index]["source"],
                                           // scrapeDate: snapshot.data[index].scrapeDate,
                                         ),
                                         pageAnimationType:
