@@ -39,4 +39,5 @@ jobs:
         name: Yamimo ${{ env.VERSION_TAG }}
         artifacts: |
           build/app/outputs/apk/release/Yamimo-${{ env.VERSION_TAG }}.apk
+        draft: true
         token: ${{ secrets.TOKEN }}
