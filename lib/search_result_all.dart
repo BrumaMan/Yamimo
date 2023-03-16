@@ -4,16 +4,20 @@ import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:first_app/authors.dart';
 import 'package:first_app/item_view.dart';
+import 'package:first_app/source/manga_source.dart';
+import 'package:first_app/source/model/manga.dart';
+import 'package:first_app/source/source_helper.dart';
+import 'package:first_app/widgets/cached_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 
 class SearchResultAll extends StatefulWidget {
-  const SearchResultAll({super.key, required this.genre, this.author});
+  const SearchResultAll({super.key, required this.name, required this.sort});
 
-  final String? genre;
-  final Author? author;
+  final String name;
+  final String sort;
 
   @override
   State<SearchResultAll> createState() => _SearchResultState();
@@ -47,14 +51,20 @@ class Comic {
   });
 }
 
-class _SearchResultState extends State<SearchResultAll> {
+class _SearchResultState extends State<SearchResultAll>
+    with AutomaticKeepAliveClientMixin {
   // late TextEditingController textController;
+  late var source;
   var comics;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
     // textController = TextEditingController(text: widget.searchTerm);
+    source = SourceHelper().getSource(widget.name);
     comics = getRequest();
   }
 
@@ -64,79 +74,47 @@ class _SearchResultState extends State<SearchResultAll> {
     super.dispose();
   }
 
-  Future<List<Comic>> getRequest() async {
+  Future<List<Manga>> getRequest() async {
     //replace your restFull API here.
-    Uri url = Uri.https(
-        "api.mangadex.org",
-        "/manga",
-        widget.genre == ''
-            ? widget.author?.name == ''
-                ? {
-                    'includes[]': ['cover_art', 'author'],
-                    // 'includes[]': 'author',
-                    'limit': '100'
-                  }
-                : {
-                    'authors[]': widget.author?.id,
-                    'includes[]': ['cover_art', 'author'],
-                    // 'includes[]': 'author',
-                    'limit': '100'
-                  }
-            : {
-                'includedTags[]': widget.genre,
-                'includes[]': ['cover_art', 'author'],
-                // 'includes[]': 'author',
-                'limit': '100'
-              });
-    final response = await http.get(url);
-
-    var responseData = convert.jsonDecode(response.body)["data"];
-
-    // print(responseData);
-
-    //Creating a list to store input data;
-    List<Comic> comics = [];
-    int index = 0;
-    for (var singleComic in responseData) {
-      Comic comic = Comic(
-        id: singleComic["id"],
-        title: singleComic["attributes"]["title"]["en"],
-        altTitles: singleComic["attributes"]["altTitles"],
-        cover: singleComic["relationships"][singleComic["relationships"]
-                .indexWhere((element) => element["type"] == "cover_art")]
-            ["attributes"]["fileName"],
-        url: singleComic["attributes"]["title"]["en"],
-        synopsis: singleComic["attributes"]["description"]["en"],
-        type: singleComic["type"],
-        year: '${singleComic["attributes"]["year"]}',
-        status: singleComic["attributes"]["status"],
-        tags: singleComic["attributes"]["tags"],
-        author: singleComic["relationships"][singleComic["relationships"]
-                .indexWhere((element) => element["type"] == "author")]
-            ["attributes"]["name"],
-      );
-      // debugPrint('${comic.author}');
-      //Adding user to the list.
-      comics.add(comic);
-      index + 1;
+    late http.Response response;
+    if (widget.sort == 'Latest') {
+      response = await source.latestMangaRequest(1);
+      return source.latestMangaParse(response);
+    } else {
+      response = await source.popularMangaRequest(1);
+      return source.popularMangaParse(response);
     }
-    return comics;
+
+    List<Manga> comics = [];
+    // comics = source.popularMangaParse(response);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: widget.genre == ''
-          ? widget.author?.name == ''
-              ? AppBar(
-                  title: const Text('Manga List'),
-                  scrolledUnderElevation: 4.0,
-                )
-              : AppBar(
-                  title: Text('${widget.author?.name}'),
-                  scrolledUnderElevation: 4.0,
-                )
-          : null,
+      appBar: AppBar(
+        title: Text(widget.name),
+        scrolledUnderElevation: 4.0,
+        // bottom: PreferredSize(
+        //     preferredSize: Size.fromHeight(kTextTabBarHeight),
+        //     child: Padding(
+        //       padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        //       child: Row(
+        //         children: [
+        //           ActionChip(
+        //             avatar: Icon(Icons.favorite),
+        //             label: Text('Popular'),
+        //             onPressed: () {},
+        //           ),
+        //           ActionChip(
+        //             avatar: Icon(Icons.new_releases),
+        //             label: Text('Latest'),
+        //             onPressed: () {},
+        //           ),
+        //         ],
+        //       ),
+        //     )),
+      ),
       body: FutureBuilder(
         future: comics,
         builder: (BuildContext ctx, AsyncSnapshot snapshot) {
@@ -148,7 +126,7 @@ class _SearchResultState extends State<SearchResultAll> {
             return GridView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 5.0),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+                crossAxisCount: 3,
                 childAspectRatio: 0.7,
                 mainAxisSpacing: 5.0,
                 crossAxisSpacing: 2.5,
@@ -163,14 +141,8 @@ class _SearchResultState extends State<SearchResultAll> {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        CachedNetworkImage(
-                          imageUrl:
-                              'https://uploads.mangadex.org/covers/${snapshot.data[index].id}/${snapshot.data[index].cover}',
-                          fit: BoxFit.cover,
-                          errorWidget: (context, error, stackTrace) => Center(
-                            child: Text("Can't load cover"),
-                          ),
-                          // height: 60.0,
+                        CachedImage(
+                          cover: snapshot.data[index].cover,
                         ),
                         Positioned(
                           child: Container(
@@ -185,7 +157,7 @@ class _SearchResultState extends State<SearchResultAll> {
                                 ])),
                             padding: EdgeInsets.all(5.0),
                             height: 80,
-                            width: MediaQuery.of(context).size.width / 2 - 14,
+                            width: MediaQuery.of(context).size.width / 3 - 14,
                             child: Text(
                               snapshot.data[index].title ?? 'Unknown title',
                               softWrap: true,
@@ -204,7 +176,7 @@ class _SearchResultState extends State<SearchResultAll> {
                         .push(CupertinoPageRoute(builder: (context) {
                       return ItemView(
                         id: snapshot.data[index].id,
-                        title: snapshot.data[index].title,
+                        title: snapshot.data[index].title ?? 'Unknown title',
                         cover: snapshot.data[index].cover,
                         url: snapshot.data[index].url,
                         synopsis: snapshot.data[index].synopsis == null
@@ -217,7 +189,7 @@ class _SearchResultState extends State<SearchResultAll> {
                         status: snapshot.data[index].status,
                         tags: snapshot.data[index].tags,
                         author: snapshot.data[index].author,
-                        source: 'MangaDex',
+                        source: widget.name,
                         // scrapeDate: snapshot.data[index].scrapeDate,
                       );
                     }));
@@ -228,6 +200,8 @@ class _SearchResultState extends State<SearchResultAll> {
           }
         },
       ),
+      floatingActionButton: FloatingActionButton(
+          child: Icon(Icons.filter_list), onPressed: () {}),
     );
   }
 }
