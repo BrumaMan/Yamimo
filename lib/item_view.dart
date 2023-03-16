@@ -2,6 +2,9 @@ import 'dart:ui';
 
 import 'package:first_app/chapter_view.dart';
 import 'package:first_app/search_result.dart';
+import 'package:first_app/source/manga_source.dart';
+import 'package:first_app/source/model/chapter.dart';
+import 'package:first_app/source/source_helper.dart';
 import 'package:first_app/util/globals.dart';
 import 'package:first_app/util/theme.dart';
 import 'package:first_app/webview.dart';
@@ -49,32 +52,6 @@ class ItemView extends StatefulWidget {
   State<ItemView> createState() => _ItemViewState();
 }
 
-class Chapter {
-  final String id;
-  final String? title;
-  final String? volume;
-  final String? chapter;
-  final int? pages;
-  final String? url;
-  final String? publishAt;
-  final String? readableAt;
-  final String? scanGroup;
-  final bool? officialScan;
-
-  Chapter({
-    required this.id,
-    required this.title,
-    required this.volume,
-    required this.chapter,
-    required this.pages,
-    required this.url,
-    required this.publishAt,
-    required this.readableAt,
-    required this.scanGroup,
-    required this.officialScan,
-  });
-}
-
 class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   late ScrollController scrollViewController;
   late TabController _tabController;
@@ -92,6 +69,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   bool isUp = true;
   bool fetchingData = true;
   bool started = false;
+  late MangaSource source;
 
   double sensitivityFactor = 20.0;
 
@@ -103,10 +81,11 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       chaptersReadBox.delete(widget.id);
       chaptersRead = chaptersReadBox.get(widget.id, defaultValue: {});
     }
-    getTags();
     scrollViewController = ScrollController();
     _tabController = TabController(length: 3, vsync: this);
     // textController = TextEditingController(text: widget.searchTerm);
+    source = SourceHelper().getSource(widget.source);
+    tags = getTags();
     chapters = getRequest();
     // nextChapters = chapters as List<Chapter>;
     // debugPrint('${scrollViewController.positions}');
@@ -120,66 +99,21 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  void getTags() {
+  List<Widget> getTags() {
     // widget.tags!
     //     .removeWhere((element) => element["attributes"]["group"] != 'genre');
-    for (var tag in widget.tags!) {
-      tags.add(Container(
-        decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.withOpacity(0.8)),
-            borderRadius: BorderRadius.all(Radius.circular(8.0))),
-        padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
-        margin: EdgeInsets.symmetric(vertical: 4.0),
-        child: Text(tag["attributes"]["name"]["en"],
-            style: TextStyle(
-              fontSize: 12,
-            )),
-      ));
-    }
+    List<Widget> tags = [];
+    tags = source.getGenres(widget.tags!);
+    return tags;
   }
 
   Future<List<Chapter>> getRequest() async {
     //replace your restFull API here.
-    Uri url = Uri.https("api.mangadex.org", "/manga/${widget.id}/feed", {
-      'translatedLanguage[]': "en",
-      'includes[]': 'scanlation_group',
-      'limit': '450'
-    });
-    final response = await http.get(url);
+    final response = await source.chapterListRequest(widget.id);
 
-    var responseData = convert.jsonDecode(response.body)["data"];
-
-    // print(responseData);
-
-    //Creating a list to store input data;
     List<Chapter> chapters = [];
-    int index = 0;
-    for (var singleComic in responseData) {
-      Chapter chapter = Chapter(
-        id: singleComic["id"],
-        title: singleComic["attributes"]["title"],
-        volume: singleComic["attributes"]["volume"],
-        chapter: singleComic["attributes"]["chapter"],
-        pages: singleComic["attributes"]["pages"],
-        url: singleComic["attributes"]["externalUrl"],
-        publishAt: singleComic["attributes"]["publishAt"],
-        readableAt: singleComic["attributes"]["readableAt"],
-        scanGroup: singleComic["relationships"]?[0]?["attributes"]?["name"],
-        officialScan: singleComic["relationships"]?[0]?["attributes"]
-            ?["official"],
-      );
+    chapters = await source.chapterListParse(response);
 
-      //Adding user to the list.
-      chapters.add(chapter);
-      index + 1;
-    }
-    chapters.sort((a, b) {
-      if (b.chapter! is int || a.chapter! is int) {
-        return int.parse(b.chapter!).compareTo(int.parse(a.chapter!));
-      } else {
-        return double.parse(b.chapter!).compareTo(double.parse(a.chapter!));
-      }
-    });
     // chapters.reversed;
     setState(() {
       chapterCount = chapters.length;
@@ -255,9 +189,11 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       num current = 0;
 
       for (var chapter in allChapters) {
-        current = chapter.chapter! is int
-            ? int.parse(chapter.chapter!)
-            : double.parse(chapter.chapter!);
+        current = chapter.chapter != null
+            ? chapter.chapter is int
+                ? int.parse(chapter.chapter!)
+                : double.parse(chapter.chapter!)
+            : previous;
 
         if (previous - current > 1) {
           for (var i = 0; i < previous - 1 - current + 1; i++) {
@@ -276,7 +212,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
     // debugPrint('$pagesRead');
 
     return pagesRead.containsKey(id)
-        ? pagesRead[id]['page'] > 1 && pagesRead[id]['page'] < numPages
+        ? pagesRead[id]['page'] > 1
             ? " | Page: ${pagesRead?[id]?['page']}"
             : ''
         : '';
@@ -326,18 +262,13 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
         return ChapterView(
           id: last.id,
           mangaId: widget.id,
-          title: last.title == null
-              ? last.volume == null
-                  ? "chapter ${chapterCount - pageIndex}"
-                  : "Vol. ${last.volume} ch. ${chapterCount - pageIndex}"
-              : last.volume == null
-                  ? "ch. ${chapterCount - pageIndex} - ${last.title}"
-                  : "Vol. ${last.volume} ch. ${chapterCount - pageIndex} - ${last.title}",
+          title: last.title,
           chapterCount: chapterCount,
           order: chapterCount - pageIndex,
           chapters: List.from(chaptersPassed),
           index: pageIndex,
           url: last.url ?? "",
+          source: widget.source,
         );
       }),
     );
@@ -437,8 +368,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                         Navigator.of(context).push(MaterialPageRoute(
                           builder: (context) {
                             return WebView(
-                              url:
-                                  'https://mangadex.org/title/${widget.id}/${widget.title.toLowerCase()}',
+                              url: widget.url,
                               title: widget.title,
                             );
                           },
@@ -447,8 +377,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                       icon: Icon(Icons.public_outlined)),
                   IconButton(
                       onPressed: () {
-                        Share.share(
-                            'https://mangadex.org/title/${widget.id}/${widget.title.toLowerCase()}');
+                        Share.share(widget.url);
                       },
                       icon: Icon(Icons.share_outlined)),
                 ],
@@ -469,8 +398,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                 borderRadius: BorderRadius.circular(4.0)),
                             clipBehavior: Clip.hardEdge,
                             child: CachedNetworkImage(
-                                imageUrl:
-                                    'https://uploads.mangadex.org/covers/${widget.id}/${widget.cover}',
+                                imageUrl: widget.cover,
                                 height: 150,
                                 width: 100,
                                 fit: BoxFit.cover),
@@ -671,13 +599,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                     valueListenable:
                                         chaptersReadBox.listenable(),
                                     builder: (context, value, child) => Text(
-                                      snapshot.data[index].title == null
-                                          ? snapshot.data[index].volume == null
-                                              ? "ch. ${snapshot.data[index].chapter}"
-                                              : "Vol. ${snapshot.data[index].volume} ch. ${snapshot.data[index].chapter}"
-                                          : snapshot.data[index].volume == null
-                                              ? "ch. ${snapshot.data[index].chapter} - ${snapshot.data[index].title}"
-                                              : "Vol. ${snapshot.data[index].volume} ch. ${snapshot.data[index].chapter} - ${snapshot.data[index].title}",
+                                      snapshot.data[index].title,
                                       overflow: TextOverflow.ellipsis,
                                       softWrap: true,
                                       style: TextStyle(
@@ -702,6 +624,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                               ],
                             ),
                             subtitle: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 // Text(
                                 //     '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago '),
@@ -719,6 +642,9 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                     : Text(''),
                                 Text(
                                   ' ${snapshot.data[index].scanGroup == null ? "Unknown group" : snapshot.data[index].scanGroup}',
+                                  softWrap: true,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
                                   style: TextStyle(
                                       color: getChaptersRead(
                                               snapshot.data[index].id)
@@ -772,13 +698,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                   return ChapterView(
                                     id: snapshot.data[index].id,
                                     mangaId: widget.id,
-                                    title: snapshot.data[index].title == null
-                                        ? snapshot.data[index].volume == null
-                                            ? "chapter ${chapterCount - index}"
-                                            : "Vol. ${snapshot.data[index].volume} ch. ${chapterCount - index}"
-                                        : snapshot.data[index].volume == null
-                                            ? "ch. ${chapterCount - index} - ${snapshot.data[index].title}"
-                                            : "Vol. ${snapshot.data[index].volume} ch. ${chapterCount - index} - ${snapshot.data[index].title}",
+                                    title: snapshot.data[index].title,
                                     chapterCount: chapterCount,
                                     order: chapterCount - index,
                                     chapters: chaptersPassed,
@@ -786,6 +706,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                     url: snapshot.data[index].url == null
                                         ? ""
                                         : snapshot.data[index].url,
+                                    source: widget.source,
                                   );
                                 }),
                               );

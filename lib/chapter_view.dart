@@ -1,6 +1,9 @@
 import 'dart:io';
 
 import 'package:first_app/item_view.dart';
+import 'package:first_app/source/manga_source.dart';
+import 'package:first_app/source/model/chapter.dart';
+import 'package:first_app/source/source_helper.dart';
 import 'package:first_app/webview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -25,7 +28,8 @@ class ChapterView extends StatefulWidget {
       required this.order,
       required this.chapters,
       required this.index,
-      required this.url});
+      required this.url,
+      required this.source});
 
   final String id;
   final String mangaId;
@@ -35,6 +39,7 @@ class ChapterView extends StatefulWidget {
   final List<dynamic> chapters;
   final int index;
   final String url;
+  final String source;
 
   @override
   State<ChapterView> createState() => _ChapterViewState();
@@ -49,7 +54,7 @@ class _ChapterViewState extends State<ChapterView>
   var pages;
   Box settingsBox = Hive.box('settings');
   Box chaptersReadBox = Hive.box('chaptersRead');
-  List<Widget> pageViews = [];
+  List<String> pageViews = [];
   Map<MenuItems, IconData> readerIcons = {
     MenuItems.Default: Icons.app_settings_alt_outlined,
     MenuItems.leftToRight: Icons.send_to_mobile_outlined,
@@ -67,6 +72,7 @@ class _ChapterViewState extends State<ChapterView>
   bool hasNextChapter = true;
   bool hasPrevChapter = true;
   MenuItems? selectedMenu;
+  late MangaSource source;
 
   @override
   void initState() {
@@ -89,6 +95,7 @@ class _ChapterViewState extends State<ChapterView>
       vsync: this,
       duration: Duration(milliseconds: 300),
     );
+    source = SourceHelper().getSource(widget.source);
     pages = getRequest();
     settingsBox.get('showReaderMode', defaultValue: true) && !Platform.isWindows
         ? Fluttertoast.showToast(
@@ -106,11 +113,11 @@ class _ChapterViewState extends State<ChapterView>
   @override
   void dispose() {
     // TODO: implement dispose
+    StatusBarControl.setTranslucent(false);
     scrollController.dispose();
     _controller.dispose();
     pageController.dispose();
     showStatusBar();
-    StatusBarControl.setTranslucent(false);
     // SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
     //     overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom]);
     super.dispose();
@@ -153,45 +160,17 @@ class _ChapterViewState extends State<ChapterView>
 
   Future<List<String>> getRequest() async {
     //replace your restFull API here.
-    String id = widget.chapters[widget.index + chapterOffset].id;
+    Chapter chapter = widget.chapters[widget.index + chapterOffset];
     // chapterInitialPage = 0;
-    Uri url = Uri.https("api.mangadex.org", "/at-home/server/$id");
-    final response = await http.get(url);
+    final response = await source.pageListRequest(chapter);
 
-    var responseData = convert.jsonDecode(response.body);
-    String? baseUrl = responseData["baseUrl"];
-    String? hash = responseData["chapter"]?["hash"];
-
-    // print(responseData);
-
-    //Creating a list to store input data;
     List<String> pages = [];
     List<Widget> tempPageViews = [];
-    int index = 0;
-    try {
-      for (var page in responseData["chapter"]["data"]) {
-        //Adding user to the list.
-        pages.add('$baseUrl/data/$hash/$page');
-        tempPageViews.add(InteractiveViewer(
-          clipBehavior: Clip.none,
-          child: Image.network(
-            '$baseUrl/data/$hash/$page',
-            errorBuilder: (context, error, stackTrace) {
-              return const Center(
-                child: Text("Can't load page"),
-              );
-            },
-          ),
-        ));
-        // index + 1;
-      }
-    } catch (e) {
-      pages.add('https://icons8.com/icon/21066/unavailable');
-    }
+    pages = source.pageListParse(response);
     // chapters.reversed;
     setState(() {
       pageCount = pages.length;
-      pageViews = tempPageViews;
+      pageViews = pages;
     });
     return pages;
   }
@@ -351,7 +330,7 @@ class _ChapterViewState extends State<ChapterView>
                 title: Text(widget.chapters.length - 1 <
                         widget.index + chapterOffset
                     ? 'No title'
-                    : 'ch. ${widget.chapters[widget.index + chapterOffset].chapter} ${widget.chapters[widget.index + chapterOffset].title}'),
+                    : '${widget.chapters[widget.index + chapterOffset].title}'),
                 // toolbarOpacity: opacity,
                 toolbarHeight: kToolbarHeight,
                 // flexibleSpace: Container(
