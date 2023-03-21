@@ -115,91 +115,95 @@ class _SearchResultState extends State<SearchResultAll>
         //       ),
         //     )),
       ),
-      body: FutureBuilder(
-        future: comics,
-        builder: (BuildContext ctx, AsyncSnapshot snapshot) {
-          if (snapshot.data == null) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          } else {
-            return GridView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 5.0),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                childAspectRatio: 0.7,
-                mainAxisSpacing: 5.0,
-                crossAxisSpacing: 2.5,
-              ),
-              itemCount: snapshot.data.length,
-              itemBuilder: (ctx, index) {
-                return GestureDetector(
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4.0)),
-                    clipBehavior: Clip.hardEdge,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        CachedImage(
-                          cover: snapshot.data[index].cover,
-                        ),
-                        Positioned(
-                          child: Container(
-                            alignment: Alignment.bottomLeft,
-                            decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                    begin: Alignment.bottomCenter,
-                                    end: Alignment.topCenter,
-                                    colors: [
-                                  Colors.black.withOpacity(0.7),
-                                  Colors.black.withOpacity(0.0)
-                                ])),
-                            padding: EdgeInsets.all(5.0),
-                            height: 80,
-                            width: MediaQuery.of(context).size.width / 3 - 14,
-                            child: Text(
-                              snapshot.data[index].title ?? 'Unknown title',
-                              softWrap: true,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(color: Colors.white),
-                            ),
+      body: CustomScrollView(slivers: [
+        FutureBuilder(
+          future: comics,
+          builder: (BuildContext ctx, AsyncSnapshot snapshot) {
+            if (snapshot.data == null) {
+              return SliverToBoxAdapter(
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            } else {
+              return SliverGrid.builder(
+                // padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  childAspectRatio: 0.7,
+                  mainAxisSpacing: 5.0,
+                  crossAxisSpacing: 2.5,
+                ),
+                itemCount: snapshot.data.length,
+                itemBuilder: (ctx, index) {
+                  return GestureDetector(
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4.0)),
+                      clipBehavior: Clip.hardEdge,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          CachedImage(
+                            cover: snapshot.data[index].cover,
                           ),
-                          bottom: 0.0,
-                        ),
-                      ],
+                          Positioned(
+                            child: Container(
+                              alignment: Alignment.bottomLeft,
+                              decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                      colors: [
+                                    Colors.black.withOpacity(0.7),
+                                    Colors.black.withOpacity(0.0)
+                                  ])),
+                              padding: EdgeInsets.all(5.0),
+                              height: 80,
+                              width: MediaQuery.of(context).size.width / 3 - 14,
+                              child: Text(
+                                snapshot.data[index].title ?? 'Unknown title',
+                                softWrap: true,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                            bottom: 0.0,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  onTap: () {
-                    Navigator.of(context)
-                        .push(CupertinoPageRoute(builder: (context) {
-                      return ItemView(
-                        id: snapshot.data[index].id,
-                        title: snapshot.data[index].title ?? 'Unknown title',
-                        cover: snapshot.data[index].cover,
-                        url: snapshot.data[index].url,
-                        synopsis: snapshot.data[index].synopsis == null
-                            ? "No description"
-                            : snapshot.data[index].synopsis,
-                        type: snapshot.data[index].type,
-                        year: snapshot.data[index].year == 'null'
-                            ? 'Year unknown'
-                            : snapshot.data[index].year,
-                        status: snapshot.data[index].status,
-                        tags: snapshot.data[index].tags,
-                        author: snapshot.data[index].author,
-                        source: widget.name,
-                        // scrapeDate: snapshot.data[index].scrapeDate,
-                      );
-                    }));
-                  },
-                );
-              },
-            );
-          }
-        },
-      ),
+                    onTap: () {
+                      Navigator.of(context)
+                          .push(CupertinoPageRoute(builder: (context) {
+                        return ItemView(
+                          id: snapshot.data[index].id,
+                          title: snapshot.data[index].title ?? 'Unknown title',
+                          cover: snapshot.data[index].cover,
+                          url: snapshot.data[index].url,
+                          synopsis: snapshot.data[index].synopsis == null
+                              ? "No description"
+                              : snapshot.data[index].synopsis,
+                          type: snapshot.data[index].type,
+                          year: snapshot.data[index].year == 'null'
+                              ? 'Year unknown'
+                              : snapshot.data[index].year,
+                          status: snapshot.data[index].status,
+                          tags: snapshot.data[index].tags,
+                          author: snapshot.data[index].author,
+                          source: widget.name,
+                          // scrapeDate: snapshot.data[index].scrapeDate,
+                        );
+                      }));
+                    },
+                  );
+                },
+              );
+            }
+          },
+        ),
+      ]),
       floatingActionButton: FloatingActionButton(
           child: Icon(Icons.filter_list), onPressed: () {}),
     );
