@@ -183,25 +183,32 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
 
   int getMissingChaptersCount(List<Chapter> allChapters) {
     List<int> list = [];
-    if (chapterCount != 0) {
-      num previous = int.tryParse(allChapters[0].chapter!) ??
-          double.parse(allChapters[0].chapter!);
-      num current = 0;
+    try {
+      if (chapterCount != 0) {
+        num previous = int.tryParse(allChapters[0].chapter!) ??
+            double.parse(allChapters[0].chapter!);
+        num current = 0;
 
-      for (var chapter in allChapters) {
-        current = chapter.chapter != null
-            ? chapter.chapter is int
-                ? int.parse(chapter.chapter!)
-                : double.parse(chapter.chapter!)
-            : previous;
+        for (var chapter in allChapters) {
+          current = chapter.chapter != null
+              ? chapter.chapter is int
+                  ? int.parse(chapter.chapter!)
+                  : double.parse(chapter.chapter!)
+              : previous;
 
-        if (previous - current > 1) {
-          for (var i = 0; i < previous - 1 - current + 1; i++) {
-            list.add(i);
+          if (previous - current > 1) {
+            for (var i = 0; i < previous - 1 - current + 1; i++) {
+              list.add(i);
+            }
           }
+          previous = current;
         }
-        previous = current;
       }
+    } catch (e) {
+      snackbarKey.currentState?.showSnackBar(SnackBar(
+        content: Text('Unable to parse missing chapters'),
+        behavior: SnackBarBehavior.floating,
+      ));
     }
     return list.length;
   }
