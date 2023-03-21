@@ -232,17 +232,17 @@ class _ChapterViewState extends State<ChapterView>
     // StatusBarControl.setHidden(true);
     // StatusBarControl.setTranslucent(true);
     // StatusBarControl.setNavigationBarColor(Color(0x00FFFFFF));
-    !Platform.isWindows
+    getBgColor() == Colors.white
         ? StatusBarControl.setStyle(StatusBarStyle.DARK_CONTENT)
-        : null;
+        : StatusBarControl.setStyle(StatusBarStyle.LIGHT_CONTENT);
   }
 
   void showStatusBar() {
     // StatusBarControl.setHidden(false);
     // StatusBarControl.setTranslucent(false);
-    !Platform.isWindows
+    settingsBox.get('darkMode', defaultValue: false)
         ? StatusBarControl.setStyle(StatusBarStyle.LIGHT_CONTENT)
-        : null;
+        : StatusBarControl.setStyle(StatusBarStyle.DARK_CONTENT);
   }
 
   Color getBgColor() {
