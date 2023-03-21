@@ -7,3 +7,5 @@ List<String> sources = [
   'MangaDex',
   'Comick',
 ];
+
+final ScrollController homeScrollController = ScrollController();
