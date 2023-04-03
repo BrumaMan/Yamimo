@@ -59,6 +59,7 @@ dependencies:
   filesize: ^2.0.1
   bottom_bar_page_transition: ^2.0.0
   hidable: ^1.0.3
+  flutter_markdown: ^0.6.14
 
 
 
