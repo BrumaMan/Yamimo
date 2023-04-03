@@ -19,14 +19,26 @@ class SourceImage extends StatelessWidget {
     return colors[index];
   }
 
+  Widget getSourceImage() {
+    try {
+      return Image.asset(
+        "assets/${sourceTitle}.png",
+        width: 32,
+        height: 32,
+        fit: BoxFit.cover,
+      );
+    } catch (e) {
+      return Text(sourceTitle[0].toUpperCase(),
+          style: TextStyle(color: Colors.white));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-      decoration: BoxDecoration(
-          color: getColor(), borderRadius: BorderRadius.circular(8.0)),
-      child: Text(sourceTitle[0].toUpperCase(),
-          style: TextStyle(color: Colors.white)),
-    );
+        clipBehavior: Clip.hardEdge,
+        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(16.0)),
+        child: getSourceImage());
   }
 }
