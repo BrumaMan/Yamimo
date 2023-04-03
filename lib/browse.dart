@@ -82,7 +82,7 @@ class _BrowseState extends State<Browse> {
                         search = !search;
                       });
                     },
-                    icon: Icon(Icons.search))
+                    icon: Icon(Icons.travel_explore))
                 : SizedBox.shrink(),
           ],
         ),
