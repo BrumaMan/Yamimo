@@ -7,6 +7,7 @@ import 'package:android_intent_plus/flag.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:auto_update/fetch_github.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -183,7 +184,8 @@ class _AboutScreenState extends State<AboutScreen> {
                               children: [
                                 Text(
                                     "New version: ${_updateInfo['tag'].split('v')[1]}"),
-                                Text('Size: ${filesize(_updateInfo['size'])}')
+                                Text('Size: ${filesize(_updateInfo['size'])}'),
+                                MarkdownBody(data: _updateInfo['body'])
                               ],
                             ),
                           );
