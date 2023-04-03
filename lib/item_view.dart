@@ -669,7 +669,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                               .difference(DateTime.parse(
                                                   snapshot
                                                       .data[index].readableAt))
-                                              .inDays <=
+                                              .inDays <
                                           7
                                       ? ' | ${DateTimeFormat.relative(
                                           DateTime.parse(
