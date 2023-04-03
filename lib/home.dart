@@ -120,8 +120,9 @@ class _HomeState extends State<Home> {
                       valueListenable: libraryBox.listenable(),
                       builder: ((context, value, child) {
                         if (libraryBox.isEmpty) {
-                          return SliverToBoxAdapter(
+                          return SliverFillRemaining(
                             child: Center(
+                              // heightFactor: 30,
                               child: Text("No manga in library"),
                             ),
                           );
