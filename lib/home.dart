@@ -52,7 +52,7 @@ class _HomeState extends State<Home> {
     // for (var chapters in chapterBox.values) {
     //   mangaChapters.add(chapters);
     // }
-    libraryItems.sort((a, b) => a['addedAt'].compareTo(b['addedAt']));
+    libraryItems.sort((a, b) => a['title'].compareTo(b['title']));
 
     return libraryItems;
   }
@@ -240,7 +240,8 @@ class _HomeState extends State<Home> {
                                                   ["title"],
                                               cover: libraryItems[index]
                                                   ["cover"],
-                                              url: libraryItems[index]["title"],
+                                              url: libraryItems[index]["url"] ??
+                                                  libraryItems[index]["title"],
                                               synopsis: libraryItems[index]
                                                           ["synopsis"] ==
                                                       null

@@ -23,6 +23,7 @@ class ChapterView extends StatefulWidget {
       {super.key,
       required this.id,
       required this.mangaId,
+      required this.mangaTitle,
       required this.title,
       required this.chapterCount,
       required this.order,
@@ -33,6 +34,7 @@ class ChapterView extends StatefulWidget {
 
   final String id;
   final String mangaId;
+  final String mangaTitle;
   final String title;
   final int chapterCount;
   final int order;
@@ -340,15 +342,15 @@ class _ChapterViewState extends State<ChapterView>
                   IconButton(
                       onPressed: () {
                         Share.share(
-                            'https://mangadex.org/chapter/${widget.chapters[widget.index + chapterOffset].id}/1');
+                            widget.chapters[widget.index + chapterOffset].url);
                       },
                       icon: Icon(Icons.share_outlined)),
                   IconButton(
                       onPressed: () {
                         Navigator.of(context).push(MaterialPageRoute(
                             builder: (context) => WebView(
-                                url:
-                                    'https://mangadex.org/chapter/${widget.chapters[widget.index + chapterOffset].id}/1',
+                                url: widget
+                                    .chapters[widget.index + chapterOffset].url,
                                 title: widget
                                     .chapters[widget.index + chapterOffset]
                                     .title)));

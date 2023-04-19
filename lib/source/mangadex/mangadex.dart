@@ -1,4 +1,5 @@
 import 'package:first_app/source/mangadex/format_chapter_name.dart';
+import 'package:first_app/source/mangadex/status_parser.dart';
 import 'package:flutter/material.dart';
 import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/model/chapter.dart';
@@ -52,7 +53,7 @@ class MangaDex implements MangaSource {
         synopsis: singleComic["attributes"]["description"]["en"],
         type: singleComic["type"],
         year: '${singleComic["attributes"]["year"]}',
-        status: singleComic["attributes"]["status"],
+        status: parseStatus(singleComic["attributes"]["status"]),
         tags: singleComic["attributes"]["tags"],
         author: singleComic["relationships"][singleComic["relationships"]
                 .indexWhere((element) => element["type"] == "author")]
@@ -97,7 +98,7 @@ class MangaDex implements MangaSource {
         synopsis: singleComic["attributes"]["description"]["en"],
         type: singleComic["type"],
         year: '${singleComic["attributes"]["year"]}',
-        status: singleComic["attributes"]["status"],
+        status: parseStatus(singleComic["attributes"]["status"]),
         tags: singleComic["attributes"]["tags"],
         author: singleComic["relationships"][singleComic["relationships"]
                         .indexWhere((element) => element["type"] == "author") ==
@@ -150,7 +151,7 @@ class MangaDex implements MangaSource {
         synopsis: singleComic["attributes"]["description"]["en"],
         type: singleComic["type"],
         year: singleComic["attributes"]["year"].toString(),
-        status: singleComic["attributes"]["status"],
+        status: parseStatus(singleComic["attributes"]["status"]),
         tags: singleComic["attributes"]["tags"],
         author: singleComic["relationships"][singleComic["relationships"]
                 .indexWhere((element) => element["type"] == "author")]
@@ -238,7 +239,7 @@ class MangaDex implements MangaSource {
         volume: singleComic["attributes"]["volume"],
         chapter: singleComic["attributes"]["chapter"],
         pages: singleComic["attributes"]["pages"],
-        url: singleComic["attributes"]["externalUrl"],
+        url: "https://mangadex.org/chapter/${singleComic['id']}/1",
         publishAt: singleComic["attributes"]["publishAt"],
         readableAt: singleComic["attributes"]["readableAt"],
         scanGroup: singleComic["relationships"]?[0]?["attributes"]?["name"],
