@@ -18,6 +18,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 
+import 'package:status_bar_control/status_bar_control.dart';
+
 class ItemView extends StatefulWidget {
   const ItemView(
       {super.key,
@@ -55,6 +57,7 @@ class ItemView extends StatefulWidget {
 class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   late ScrollController scrollViewController;
   late TabController _tabController;
+  Box settingsBox = Hive.box('settings');
   Box libraryBox = Hive.box('library');
   Box chapterBox = Hive.box('chapters');
   Box chaptersReadBox = Hive.box('chaptersRead');
@@ -70,12 +73,16 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   bool fetchingData = true;
   bool started = false;
   late MangaSource source;
+  late List<Color> gradientColors;
 
   double sensitivityFactor = 20.0;
 
   @override
   void initState() {
     super.initState();
+    gradientColors = settingsBox.get('darkMode', defaultValue: false)
+        ? [Colors.black, Colors.black.withOpacity(0.7)]
+        : [Colors.white, Colors.white.withOpacity(0.6)];
     chaptersRead = chaptersReadBox.get(widget.id, defaultValue: {});
     if (chaptersRead['chapter'] != null) {
       chaptersReadBox.delete(widget.id);
@@ -144,6 +151,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       String id,
       String title,
       String cover,
+      String url,
       String synopsis,
       String type,
       String? year,
@@ -161,6 +169,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       'id': id,
       'title': title,
       'cover': cover,
+      'url': url,
       'synopsis': synopsis,
       'type': type,
       'year': year,
@@ -269,6 +278,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
         return ChapterView(
           id: last.id,
           mangaId: widget.id,
+          mangaTitle: widget.title,
           title: last.title,
           chapterCount: chapterCount,
           order: chapterCount - pageIndex,
@@ -284,6 +294,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       // backgroundColor: Colors.transparent,
       // appBar: PreferredSize(
       //   preferredSize: Size.fromHeight(kToolbarHeight),
@@ -292,8 +303,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       //         image: DecorationImage(
       //             fit: BoxFit.cover,
       //             alignment: Alignment.topCenter,
-      //             image: NetworkImage(
-      //                 'https://uploads.mangadex.org/covers/${widget.id}/${widget.cover}'))),
+      //             image: NetworkImage(widget.cover))),
       //     child: AppBar(
       //       backgroundColor: Colors.transparent,
       //     ),
@@ -304,6 +314,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
           if (scrollViewController.position.userScrollDirection ==
               ScrollDirection.reverse) {
             position = scrollInfo.metrics.pixels;
+            debugPrint('$position');
             setState(() {
               isUp = false;
             });
@@ -311,6 +322,8 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
           if (scrollViewController.position.userScrollDirection ==
               ScrollDirection.forward) {
             position = scrollInfo.metrics.pixels;
+            debugPrint('$position');
+
             setState(() {
               isUp = true;
             });
@@ -323,81 +336,54 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
             controller: scrollViewController,
             slivers: [
               SliverAppBar(
-                // title: Text(widget.title),
+                title: AnimatedOpacity(
+                    opacity: position >= 200.0 ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Text(widget.title)),
                 pinned: true,
+                // backgroundColor: Colors.transparent,
+                expandedHeight: 250,
                 // surfaceTintColor: Color(999),
                 // iconTheme: IconThemeData(color: Colors.white),
-                bottom: PreferredSize(
-                    preferredSize: Size.fromHeight(4.0),
-                    child: Visibility(
-                        visible: fetchingData,
-                        child: LinearProgressIndicator(
-                          minHeight: 4.0,
-                        ))),
-                actions: [
-                  // IconButton(
-                  //     onPressed: () {
-                  //       showModalBottomSheet(
-                  //           context: context,
-                  //           builder: ((context) {
-                  //             return Center(
-                  //                 child: ElevatedButton(
-                  //                     child: Text('Close'),
-                  //                     onPressed: () {
-                  //                       Navigator.pop(context);
-                  //                     }));
-                  //           }));
-                  //     },
-                  //     icon: const Icon(Icons.filter_list_outlined))
-                  ValueListenableBuilder(
-                    valueListenable: libraryBox.listenable(),
-                    builder: (context, value, child) => IconButton(
-                      onPressed: () {
-                        onLibraryPress(
-                            widget.id,
-                            widget.title,
-                            widget.cover,
-                            widget.synopsis,
-                            widget.type,
-                            widget.year,
-                            widget.status,
-                            widget.tags,
-                            widget.author,
-                            DateTime.now(),
-                            widget.source);
-                        updateChapterNumber(widget.id);
-                      },
-                      icon: getIcons(widget.id),
+                // bottom: PreferredSize(
+                //     preferredSize: Size.fromHeight(4.0),
+                //     child: Visibility(
+                //         visible: fetchingData,
+                //         child: LinearProgressIndicator(
+                //           minHeight: 4.0,
+                //         ))),
+
+                flexibleSpace: FlexibleSpaceBar(
+                  collapseMode: CollapseMode.pin,
+                  background: Stack(children: [
+                    Container(
+                      foregroundDecoration: BoxDecoration(
+                          gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: gradientColors)),
+                      width: MediaQuery.of(context).size.width,
+                      child: CachedNetworkImage(
+                        imageUrl: widget.cover,
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                  ),
-                  IconButton(
-                      onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) {
-                            return WebView(
-                              url: widget.url,
-                              title: widget.title,
-                            );
-                          },
-                        ));
-                      },
-                      icon: Icon(Icons.public_outlined)),
-                  IconButton(
-                      onPressed: () {
-                        Share.share(widget.url);
-                      },
-                      icon: Icon(Icons.share_outlined)),
-                ],
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                      top: 8.0, left: 8.0, bottom: 0.0, right: 8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
+                    Positioned(
+                        width: MediaQuery.of(context).size.width,
+                        top: MediaQuery.of(context).systemGestureInsets.top +
+                            kToolbarHeight,
+                        child: Visibility(
+                            visible: fetchingData,
+                            child: LinearProgressIndicator(
+                              minHeight: 4.0,
+                            ))),
+                    Positioned(
+                      top: MediaQuery.of(context).systemGestureInsets.top +
+                          kToolbarHeight +
+                          8.0,
+                      left: 8.0,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           Card(
@@ -410,12 +396,13 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                 width: 100,
                                 fit: BoxFit.cover),
                           ),
-                          Expanded(
+                          Flexible(
                             child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.only(left: 8.0),
+                                    padding: const EdgeInsets.only(
+                                        left: 8.0, right: 8.0),
                                     width: MediaQuery.of(context).size.width /
                                             1.3 -
                                         16,
@@ -459,15 +446,131 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                           ),
                         ],
                       ),
+                    ),
+                  ]),
+                ),
+                actions: [
+                  ValueListenableBuilder(
+                    valueListenable: libraryBox.listenable(),
+                    builder: (context, value, child) => IconButton(
+                      onPressed: () {
+                        onLibraryPress(
+                            widget.id,
+                            widget.title,
+                            widget.cover,
+                            widget.url,
+                            widget.synopsis,
+                            widget.type,
+                            widget.year,
+                            widget.status,
+                            widget.tags,
+                            widget.author,
+                            DateTime.now(),
+                            widget.source);
+                        updateChapterNumber(widget.id);
+                      },
+                      icon: getIcons(widget.id),
+                    ),
+                  ),
+                  IconButton(
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) {
+                            return WebView(
+                              url: widget.url,
+                              title: widget.title,
+                            );
+                          },
+                        ));
+                      },
+                      icon: Icon(Icons.public_outlined)),
+                  IconButton(
+                      onPressed: () {
+                        Share.share(widget.url);
+                      },
+                      icon: Icon(Icons.share_outlined)),
+                ],
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                      top: 8.0, left: 8.0, bottom: 0.0, right: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Row(
+                      //   // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      //   children: [
+                      //     Card(
+                      //       shape: RoundedRectangleBorder(
+                      //           borderRadius: BorderRadius.circular(4.0)),
+                      //       clipBehavior: Clip.hardEdge,
+                      //       child: CachedNetworkImage(
+                      //           imageUrl: widget.cover,
+                      //           height: 150,
+                      //           width: 100,
+                      //           fit: BoxFit.cover),
+                      //     ),
+                      //     Expanded(
+                      //       child: Column(
+                      //           crossAxisAlignment: CrossAxisAlignment.start,
+                      //           children: [
+                      //             Container(
+                      //               padding: const EdgeInsets.only(left: 8.0),
+                      //               width: MediaQuery.of(context).size.width /
+                      //                       1.3 -
+                      //                   16,
+                      //               child: Text(
+                      //                 widget.title,
+                      //                 softWrap: true,
+                      //                 overflow: TextOverflow.ellipsis,
+                      //                 maxLines: 5,
+                      //                 style: const TextStyle(fontSize: 22.0),
+                      //               ),
+                      //             ),
+                      //             Padding(
+                      //               padding: const EdgeInsets.only(
+                      //                   left: 8.0, right: 8.0, top: 8.0),
+                      //               child: Text(
+                      //                 '${widget.author}',
+                      //                 style: TextStyle(
+                      //                     fontWeight: FontWeight.bold),
+                      //               ),
+                      //             ),
+                      //             Padding(
+                      //               padding: const EdgeInsets.only(
+                      //                 left: 8.0,
+                      //                 right: 8.0,
+                      //               ),
+                      //               child: Visibility(
+                      //                 visible: missingChapters != 0,
+                      //                 child: Row(
+                      //                   children: [
+                      //                     Icon(
+                      //                       Icons.warning,
+                      //                       size: 16,
+                      //                     ),
+                      //                     Text(
+                      //                         ' Missing ~ $missingChapters chapter(s)'),
+                      //                   ],
+                      //                 ),
+                      //               ),
+                      //             )
+                      //           ]),
+                      //     ),
+                      //   ],
+                      // ),
                       Padding(
-                        padding: EdgeInsets.only(top: 8.0),
+                        padding: EdgeInsets.only(top: 0),
                         child: IntrinsicHeight(
                           child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
                                 Column(
                                   children: [
-                                    Icon(widget.status == 'completed'
+                                    Icon(widget.status?.toLowerCase() ==
+                                            'completed'
                                         ? Icons.done_all
                                         : Icons.schedule_outlined),
                                     Text('${widget.status}')
@@ -705,6 +808,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                   return ChapterView(
                                     id: snapshot.data[index].id,
                                     mangaId: widget.id,
+                                    mangaTitle: widget.title,
                                     title: snapshot.data[index].title,
                                     chapterCount: chapterCount,
                                     order: chapterCount - index,
