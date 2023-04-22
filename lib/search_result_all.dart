@@ -161,7 +161,7 @@ class _SearchResultState extends State<SearchResultAll>
                                 padding: EdgeInsets.all(5.0),
                                 height: 80,
                                 width:
-                                    MediaQuery.of(context).size.width / 3 - 14,
+                                    MediaQuery.of(context).size.width / 3 - 9,
                                 child: Text(
                                   snapshot.data[index].title ?? 'Unknown title',
                                   softWrap: true,
