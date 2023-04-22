@@ -125,14 +125,6 @@ class _AboutScreenState extends State<AboutScreen> {
               subtitle: Text('Check for updates'),
               onTap: () {
                 debugPrint("$_updateInfo");
-                Fluttertoast.showToast(
-                    msg: 'Checking',
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.BOTTOM,
-                    timeInSecForIosWeb: 1,
-                    backgroundColor: Colors.grey.withOpacity(0.4),
-                    textColor: Colors.black,
-                    fontSize: 16.0);
                 if (_updateInfo != null) {
                   if (_updateInfo['tag'] == "v$version") {
                     /* aplication is up-to-date */
