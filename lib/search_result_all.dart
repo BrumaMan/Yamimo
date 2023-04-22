@@ -120,7 +120,7 @@ class _SearchResultState extends State<SearchResultAll>
           future: comics,
           builder: (BuildContext ctx, AsyncSnapshot snapshot) {
             if (snapshot.data == null) {
-              return SliverToBoxAdapter(
+              return SliverFillRemaining(
                 child: const Center(
                   child: CircularProgressIndicator(),
                 ),
