@@ -174,6 +174,9 @@ class _ChapterViewState extends State<ChapterView>
       pageCount = pages.length;
       pageViews = pages;
     });
+
+    updateChapter();
+
     return pages;
   }
 
@@ -277,7 +280,7 @@ class _ChapterViewState extends State<ChapterView>
   }
 
   void updateChapter() {
-    if (chapterInitialPage + 1 > 1 &&
+    if (chapterInitialPage + 1 >= 1 &&
         chapterInitialPage + 1 <= pageCount &&
         !chaptersRead[widget.chapters[widget.index + chapterOffset].id]
             ['read']) {
@@ -290,16 +293,21 @@ class _ChapterViewState extends State<ChapterView>
                     : 0
               });
       chaptersReadBox.put(widget.mangaId, chaptersRead);
+      // debugPrint('$visible');
     }
 
     if (chapterInitialPage + 1 == pageCount) {
       setState(() {
-        visible = !visible;
+        bool tempVisible = visible;
+        visible = true;
         visible ? showStatusBar() : hideStatusBar();
-        if (_controller.isCompleted) {
-          _controller.reverse();
-        } else {
-          _controller.forward();
+
+        if (tempVisible == false) {
+          if (_controller.isCompleted) {
+            _controller.reverse();
+          } else {
+            _controller.forward();
+          }
         }
       });
     }
@@ -669,7 +677,9 @@ class _ChapterViewState extends State<ChapterView>
                         label: '${chapterInitialPage + 1}',
                         divisions: pageViews.isEmpty
                             ? pageViews.length + 1
-                            : pageViews.length - 1,
+                            : pageViews.length - 1 == 0
+                                ? 1
+                                : pageViews.length - 1,
                         min: 0.0,
                         max: pageViews.isEmpty
                             ? chapterInitialPage.toDouble()
