@@ -14,6 +14,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
   late bool showReaderMode;
   late String? readerBgColor;
   late bool keepScreenOn;
+  late bool showPageNumber;
 
   @override
   void initState() {
@@ -22,6 +23,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
     showReaderMode = settingsBox.get('showReaderMode', defaultValue: true);
     readerBgColor = settingsBox.get('readerBgColor', defaultValue: 'Black');
     keepScreenOn = settingsBox.get('keepScreenOn', defaultValue: true);
+    showPageNumber = settingsBox.get('showPageNumber', defaultValue: true);
   }
 
   @override
@@ -103,6 +105,15 @@ class _ReaderSettingsState extends State<ReaderSettings> {
                   keepScreenOn = value;
                 });
                 settingsBox.put('keepScreenOn', value);
+              }),
+          SwitchListTile(
+              title: Text('Show page number'),
+              value: showPageNumber,
+              onChanged: (value) {
+                setState(() {
+                  showPageNumber = value;
+                });
+                settingsBox.put('showPageNumber', value);
               }),
         ],
       ),

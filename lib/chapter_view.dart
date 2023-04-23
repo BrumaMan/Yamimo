@@ -535,38 +535,42 @@ class _ChapterViewState extends State<ChapterView>
                                   : Center(
                                       child: CircularProgressIndicator(),
                                     ),
-                              Positioned(
-                                bottom: 20.0,
-                                width: MediaQuery.of(context).size.width,
-                                child: Stack(
-                                    alignment:
-                                        AlignmentDirectional.bottomCenter,
-                                    children: [
-                                      Text(
-                                        '${chapterInitialPage + 1}/${pageViews.length}',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            foreground: Paint()
-                                              ..style = PaintingStyle.stroke
-                                              ..strokeWidth = 2
-                                              ..color = Colors.black),
-                                      ),
-                                      Text(
+                              Visibility(
+                                visible: settingsBox.get('showPageNumber',
+                                    defaultValue: true),
+                                child: Positioned(
+                                  bottom: 20.0,
+                                  width: MediaQuery.of(context).size.width,
+                                  child: Stack(
+                                      alignment:
+                                          AlignmentDirectional.bottomCenter,
+                                      children: [
+                                        Text(
                                           '${chapterInitialPage + 1}/${pageViews.length}',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: settingsBox.get(
-                                                              'readerBgColor',
-                                                              defaultValue:
-                                                                  'Black') ==
-                                                          'Black' ||
-                                                      settingsBox.get(
-                                                              'readerBgColor') ==
-                                                          'Gray'
-                                                  ? Colors.white
-                                                  : Colors.black)),
-                                    ]),
+                                              foreground: Paint()
+                                                ..style = PaintingStyle.stroke
+                                                ..strokeWidth = 2
+                                                ..color = Colors.black),
+                                        ),
+                                        Text(
+                                            '${chapterInitialPage + 1}/${pageViews.length}',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: settingsBox.get(
+                                                                'readerBgColor',
+                                                                defaultValue:
+                                                                    'Black') ==
+                                                            'Black' ||
+                                                        settingsBox.get(
+                                                                'readerBgColor') ==
+                                                            'Gray'
+                                                    ? Colors.white
+                                                    : Colors.black)),
+                                      ]),
+                                ),
                               )
                             ],
                           ),
