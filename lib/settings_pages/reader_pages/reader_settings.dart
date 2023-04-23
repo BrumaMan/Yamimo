@@ -13,6 +13,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
   Box settingsBox = Hive.box('settings');
   late bool showReaderMode;
   late String? readerBgColor;
+  late bool keepScreenOn;
 
   @override
   void initState() {
@@ -20,6 +21,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
     super.initState();
     showReaderMode = settingsBox.get('showReaderMode', defaultValue: true);
     readerBgColor = settingsBox.get('readerBgColor', defaultValue: 'Black');
+    keepScreenOn = settingsBox.get('keepScreenOn', defaultValue: true);
   }
 
   @override
@@ -92,7 +94,16 @@ class _ReaderSettingsState extends State<ReaderSettings> {
                     );
                   });
             },
-          )
+          ),
+          SwitchListTile(
+              title: Text('Keep screen on'),
+              value: keepScreenOn,
+              onChanged: (value) {
+                setState(() {
+                  keepScreenOn = value;
+                });
+                settingsBox.put('keepScreenOn', value);
+              }),
         ],
       ),
     );

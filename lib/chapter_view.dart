@@ -13,6 +13,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:status_bar_control/status_bar_control.dart';
 import 'package:preload_page_view/preload_page_view.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:keep_screen_on/keep_screen_on.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 
@@ -81,6 +82,9 @@ class _ChapterViewState extends State<ChapterView>
     // TODO: implement initState
     super.initState();
     getReaderMode();
+    settingsBox.get('keepScreenOn', defaultValue: true)
+        ? KeepScreenOn.turnOn()
+        : null;
     // chapterNumber = widget.chapterCount;
     !Platform.isWindows ? StatusBarControl.setTranslucent(true) : null;
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -122,6 +126,9 @@ class _ChapterViewState extends State<ChapterView>
     showStatusBar();
     // SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
     //     overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom]);
+    settingsBox.get('keepScreenOn', defaultValue: true)
+        ? KeepScreenOn.turnOff()
+        : null;
     super.dispose();
   }
 
