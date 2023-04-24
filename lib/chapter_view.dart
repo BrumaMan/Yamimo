@@ -573,7 +573,7 @@ class _ChapterViewState extends State<ChapterView>
                                   onTap: () {
                                     if (selectedMenu == MenuItems.Default) {
                                       pageController.nextPage(
-                                          duration: Duration(milliseconds: 150),
+                                          duration: Duration(milliseconds: 100),
                                           curve: Curves.linear);
                                       if (chapterInitialPage != pageCount - 1) {
                                         setState(() {
@@ -583,7 +583,7 @@ class _ChapterViewState extends State<ChapterView>
                                       }
                                     } else {
                                       pageController.previousPage(
-                                          duration: Duration(milliseconds: 150),
+                                          duration: Duration(milliseconds: 100),
                                           curve: Curves.linear);
                                       if (chapterInitialPage != 0) {
                                         setState(() {
@@ -621,7 +621,7 @@ class _ChapterViewState extends State<ChapterView>
                                   onTap: () {
                                     if (selectedMenu == MenuItems.Default) {
                                       pageController.previousPage(
-                                          duration: Duration(milliseconds: 150),
+                                          duration: Duration(milliseconds: 100),
                                           curve: Curves.linear);
                                       if (chapterInitialPage != 0) {
                                         setState(() {
@@ -631,7 +631,7 @@ class _ChapterViewState extends State<ChapterView>
                                       }
                                     } else {
                                       pageController.nextPage(
-                                          duration: Duration(milliseconds: 150),
+                                          duration: Duration(milliseconds: 100),
                                           curve: Curves.linear);
                                       if (chapterInitialPage != pageCount - 1) {
                                         setState(() {
