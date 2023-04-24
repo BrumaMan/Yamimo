@@ -60,17 +60,19 @@ dependencies:
   bottom_bar_page_transition: ^2.0.0
   hidable: ^1.0.3
   flutter_markdown: ^0.6.14
+  keep_screen_on: ^2.1.0
+  
 
 
 
 icons_launcher:
-  image_path: "assets/Yamimo_ic_96.png"
+  image_path: "assets/Yamimo_ic_512.png"
   platforms:
     android:
       enable: true
-      adaptive_background_color: "#eeeeee"
-      adaptive_foreground_image: "assets/Yamimo_ic_96.png"
-      adaptive_monochrome_image: "assets/Yamimo_ic_96.png"
+      adaptive_background_color: "#147efb"
+      adaptive_foreground_image: "assets/Yamimo_ic_512.png"
+      adaptive_monochrome_image: "assets/Yamimo_ic_512.png"
     ios:
       enable: true
 
