@@ -253,6 +253,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
         chaptersReadBox.get(widget.id, defaultValue: {});
     int index = 0;
     int pageIndex = chapterCount - 1;
+    // debugPrint('$tempChapters');
 
     // tempChapters.removeWhere((element) => chaptersRead.containsKey(element.id));
 
@@ -314,7 +315,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
           if (scrollViewController.position.userScrollDirection ==
               ScrollDirection.reverse) {
             position = scrollInfo.metrics.pixels;
-            debugPrint('$position');
+            // debugPrint('$position');
             setState(() {
               isUp = false;
             });
@@ -322,7 +323,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
           if (scrollViewController.position.userScrollDirection ==
               ScrollDirection.forward) {
             position = scrollInfo.metrics.pixels;
-            debugPrint('$position');
+            // debugPrint('$position');
 
             setState(() {
               isUp = true;
@@ -653,24 +654,24 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                               Text('$chapterCount Chapters',
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold)),
-                              FilledButton(
-                                  onPressed: chapterCount == 0
-                                      ? null
-                                      : () {
-                                          continueReading(context);
-                                        },
-                                  child: Row(
-                                    children: [
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 8.0),
-                                        child: Icon(Icons.play_arrow),
-                                      ),
-                                      started
-                                          ? Text('Continue')
-                                          : Text('Start'),
-                                    ],
-                                  ))
+                              // FilledButton(
+                              //     onPressed: chapterCount == 0
+                              //         ? null
+                              //         : () {
+                              //             continueReading(context);
+                              //           },
+                              //     child: Row(
+                              //       children: [
+                              //         Padding(
+                              //           padding:
+                              //               const EdgeInsets.only(right: 8.0),
+                              //           child: Icon(Icons.play_arrow),
+                              //         ),
+                              //         started
+                              //             ? Text('Continue')
+                              //             : Text('Start'),
+                              //       ],
+                              //     ))
                             ],
                           ),
                         ),
@@ -827,27 +828,49 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                       );
                     }
                   }),
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 100.0,
+                ),
+              )
             ],
           ),
         ),
       ),
-      // floatingActionButton:
-      //     // ? FloatingActionButton(
-      //     //     onPressed: () {},
-      //     //     child: Icon(Icons.play_arrow),
-      //     //   )
-      //     AnimatedSize(
-      //   alignment: Alignment.center,
-      //   clipBehavior: Clip.none,
-      //   duration: Duration(milliseconds: 300),
-      //   curve: Curves.fastLinearToSlowEaseIn,
-      //   child: FloatingActionButton.extended(
-      //     isExtended: isUp,
-      //     onPressed: (() {}),
-      //     label: const Text('Start'),
-      //     icon: Icon(Icons.play_arrow),
-      //   ),
-      // ),
+      floatingActionButton:
+          // ? FloatingActionButton(
+          //     onPressed: () {},
+          //     child: Icon(Icons.play_arrow),
+          //   )
+          FloatingActionButton.extended(
+        // isExtended: isUp,
+        onPressed: () {
+          continueReading(context);
+        },
+        // icon: Icon(Icons.play_arrow),
+        label: AnimatedSwitcher(
+          duration: Duration(milliseconds: 150),
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SizeTransition(
+              sizeFactor: animation,
+              axis: Axis.horizontal,
+              child: child,
+            ),
+          ),
+          child: !isUp
+              ? Icon(Icons.play_arrow)
+              : Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(right: 4.0),
+                      child: Icon(Icons.play_arrow),
+                    ),
+                    started ? Text('Continue') : Text('Start'),
+                  ],
+                ),
+        ),
+      ),
     );
   }
 }
