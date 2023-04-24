@@ -4,6 +4,7 @@ import 'package:first_app/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:list_tile_switch/list_tile_switch.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class More extends StatefulWidget {
   const More({super.key});
@@ -14,6 +15,7 @@ class More extends StatefulWidget {
 
 class _MoreState extends State<More> {
   bool swichValue = false;
+  Box settingsBox = Hive.box('settings');
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,10 +24,17 @@ class _MoreState extends State<More> {
       ),
       body: Column(
         children: [
-          Align(
-            child: Padding(
-                padding: EdgeInsets.only(top: 20.0, bottom: 20.0),
-                child: Image.asset("assets/Yamimo_ic_96.png")),
+          ValueListenableBuilder(
+            valueListenable: settingsBox.listenable(),
+            builder: (context, value, child) => Align(
+              child: Padding(
+                  padding: EdgeInsets.only(top: 20.0, bottom: 20.0),
+                  child: settingsBox.get('darkMode', defaultValue: false)
+                      ? Image.asset("assets/Yamimo_ic_256_dark.png",
+                          width: 96.0, height: 96.0)
+                      : Image.asset("assets/Yamimo_ic_256_light.png",
+                          width: 96.0, height: 96.0)),
+            ),
           ),
           Divider(
             color: Colors.grey,

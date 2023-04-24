@@ -8,6 +8,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:auto_update/fetch_github.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -27,6 +29,7 @@ class _AboutScreenState extends State<AboutScreen> {
 
   Map<dynamic, dynamic> _updateInfo = {};
   var version;
+  Box settingsBox = Hive.box('settings');
   @override
   void initState() {
     // TODO: implement initState
@@ -113,9 +116,17 @@ class _AboutScreenState extends State<AboutScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Align(child: Image.asset("assets/Yamimo_ic_96.png")),
+            ValueListenableBuilder(
+              valueListenable: settingsBox.listenable(),
+              builder: (context, value, child) => Align(
+                child: Padding(
+                    padding: EdgeInsets.only(top: 20.0, bottom: 20.0),
+                    child: settingsBox.get('darkMode', defaultValue: false)
+                        ? Image.asset("assets/Yamimo_ic_256_dark.png",
+                            width: 96.0, height: 96.0)
+                        : Image.asset("assets/Yamimo_ic_256_light.png",
+                            width: 96.0, height: 96.0)),
+              ),
             ),
             Divider(
               color: Colors.grey[200],
