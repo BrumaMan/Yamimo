@@ -5,6 +5,7 @@ import 'package:first_app/source/model/manga.dart';
 import 'package:first_app/source/source_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:optimized_cached_image/optimized_cached_image.dart';
 
 class SearchSourceResults extends StatefulWidget {
   const SearchSourceResults(
@@ -71,7 +72,7 @@ class _SearchSourceResultsState extends State<SearchSourceResults> {
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          CachedNetworkImage(
+                          OptimizedCacheImage(
                             imageUrl: snapshot.data[index].cover,
                             fit: BoxFit.cover,
                             errorWidget: (context, error, stackTrace) => Center(

@@ -7,6 +7,7 @@ import 'package:page_animation_transition/animations/fade_animation_transition.d
 import 'package:page_animation_transition/page_animation_transition.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:optimized_cached_image/optimized_cached_image.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -150,7 +151,7 @@ class _HomeState extends State<Home> {
                                       children: [
                                         Hero(
                                           tag: libraryItems[index]["cover"],
-                                          child: CachedNetworkImage(
+                                          child: OptimizedCacheImage(
                                             placeholder: (context, url) =>
                                                 Container(),
                                             imageUrl: libraryItems[index]
