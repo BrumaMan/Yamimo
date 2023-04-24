@@ -441,150 +441,208 @@ class _ChapterViewState extends State<ChapterView>
                                     : Colors.black),
                           ),
                         )
-                      : GestureDetector(
-                          child: Stack(
-                            children: [
-                              pageViews.isNotEmpty
-                                  ? InteractiveViewer(
-                                      child: PreloadPageView.builder(
-                                        preloadPagesCount: 5,
-                                        itemCount: pageViews.length,
-                                        controller: pageController,
-                                        pageSnapping: selectedMenu ==
+                      : Stack(
+                          children: [
+                            pageViews.isNotEmpty
+                                ? PreloadPageView.builder(
+                                    preloadPagesCount: 5,
+                                    itemCount: pageViews.length,
+                                    controller: pageController,
+                                    pageSnapping:
+                                        selectedMenu == MenuItems.webtoon ||
+                                                selectedMenu ==
+                                                    MenuItems.continuousVertical
+                                            ? false
+                                            : true,
+                                    reverse: selectedMenu ==
+                                            MenuItems.leftToRight
+                                        ? false
+                                        : selectedMenu == MenuItems.vertical ||
+                                                selectedMenu ==
                                                     MenuItems.webtoon ||
                                                 selectedMenu ==
                                                     MenuItems.continuousVertical
                                             ? false
                                             : true,
-                                        reverse: selectedMenu ==
-                                                MenuItems.leftToRight
-                                            ? false
-                                            : selectedMenu ==
-                                                        MenuItems.vertical ||
-                                                    selectedMenu ==
-                                                        MenuItems.webtoon ||
-                                                    selectedMenu ==
-                                                        MenuItems
-                                                            .continuousVertical
-                                                ? false
-                                                : true,
-                                        scrollDirection: selectedMenu ==
-                                                    MenuItems.vertical ||
-                                                selectedMenu ==
-                                                    MenuItems.webtoon ||
-                                                selectedMenu ==
-                                                    MenuItems.continuousVertical
-                                            ? Axis.vertical
-                                            : Axis.horizontal,
-                                        onPageChanged: (value) => setState(() {
-                                          chapterInitialPage = value;
-                                          updateChapter();
-                                        }),
-                                        itemBuilder: (context, index) {
-                                          try {
-                                            return Column(
-                                              children: [
-                                                Expanded(
-                                                  child: Image.network(
-                                                    snapshot.data![index],
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                            .size
-                                                            .width,
-                                                    fit: selectedMenu ==
-                                                                MenuItems
-                                                                    .webtoon ||
-                                                            selectedMenu ==
-                                                                MenuItems
-                                                                    .continuousVertical
-                                                        ? BoxFit.fill
-                                                        : BoxFit.contain,
-                                                    errorBuilder: (context,
-                                                        error, stackTrace) {
-                                                      return const Center(
-                                                        child: Text(
-                                                            "Can't load page"),
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-                                                Visibility(
-                                                  visible: selectedMenu ==
-                                                          MenuItems.webtoon ||
-                                                      selectedMenu ==
-                                                          MenuItems
-                                                              .continuousVertical,
-                                                  child: Padding(
-                                                      padding: EdgeInsets.all(
+                                    scrollDirection: selectedMenu ==
+                                                MenuItems.vertical ||
+                                            selectedMenu == MenuItems.webtoon ||
+                                            selectedMenu ==
+                                                MenuItems.continuousVertical
+                                        ? Axis.vertical
+                                        : Axis.horizontal,
+                                    onPageChanged: (value) => setState(() {
+                                      chapterInitialPage = value;
+                                      updateChapter();
+                                    }),
+                                    itemBuilder: (context, index) {
+                                      try {
+                                        return Column(
+                                          children: [
+                                            Expanded(
+                                              child: InteractiveViewer(
+                                                child: Image.network(
+                                                  snapshot.data![index],
+                                                  width: MediaQuery.of(context)
+                                                      .size
+                                                      .width,
+                                                  fit: selectedMenu ==
+                                                              MenuItems
+                                                                  .webtoon ||
                                                           selectedMenu ==
-                                                                  MenuItems
-                                                                      .webtoon
-                                                              ? 0.0
-                                                              : 12.0)),
-                                                )
-                                              ],
-                                            );
-                                          } catch (e) {
-                                            return Center(
-                                              child: Text("Can't load page"),
-                                            );
-                                          }
-                                        },
+                                                              MenuItems
+                                                                  .continuousVertical
+                                                      ? BoxFit.fill
+                                                      : BoxFit.contain,
+                                                  errorBuilder: (context, error,
+                                                      stackTrace) {
+                                                    return const Center(
+                                                      child: Text(
+                                                          "Can't load page"),
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+                                            Visibility(
+                                              visible: selectedMenu ==
+                                                      MenuItems.webtoon ||
+                                                  selectedMenu ==
+                                                      MenuItems
+                                                          .continuousVertical,
+                                              child: Padding(
+                                                  padding: EdgeInsets.all(
+                                                      selectedMenu ==
+                                                              MenuItems.webtoon
+                                                          ? 0.0
+                                                          : 12.0)),
+                                            )
+                                          ],
+                                        );
+                                      } catch (e) {
+                                        return Center(
+                                          child: Text("Can't load page"),
+                                        );
+                                      }
+                                    },
+                                  )
+                                : Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                            Visibility(
+                              visible: settingsBox.get('showPageNumber',
+                                  defaultValue: true),
+                              child: Positioned(
+                                bottom: 20.0,
+                                width: MediaQuery.of(context).size.width,
+                                child: Stack(
+                                    alignment:
+                                        AlignmentDirectional.bottomCenter,
+                                    children: [
+                                      Text(
+                                        '${chapterInitialPage + 1}/${pageViews.length}',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            foreground: Paint()
+                                              ..style = PaintingStyle.stroke
+                                              ..strokeWidth = 2
+                                              ..color = Colors.black),
                                       ),
-                                    )
-                                  : Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                              Visibility(
-                                visible: settingsBox.get('showPageNumber',
-                                    defaultValue: true),
-                                child: Positioned(
-                                  bottom: 20.0,
-                                  width: MediaQuery.of(context).size.width,
-                                  child: Stack(
-                                      alignment:
-                                          AlignmentDirectional.bottomCenter,
-                                      children: [
-                                        Text(
+                                      Text(
                                           '${chapterInitialPage + 1}/${pageViews.length}',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                              foreground: Paint()
-                                                ..style = PaintingStyle.stroke
-                                                ..strokeWidth = 2
-                                                ..color = Colors.black),
-                                        ),
-                                        Text(
-                                            '${chapterInitialPage + 1}/${pageViews.length}',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: settingsBox.get(
-                                                                'readerBgColor',
-                                                                defaultValue:
-                                                                    'Black') ==
-                                                            'Black' ||
-                                                        settingsBox.get(
-                                                                'readerBgColor') ==
-                                                            'Gray'
-                                                    ? Colors.white
-                                                    : Colors.black)),
-                                      ]),
-                                ),
-                              )
-                            ],
-                          ),
-                          onTap: () {
-                            setState(() {
-                              visible = !visible;
-                              visible ? showStatusBar() : hideStatusBar();
-                              if (_controller.isCompleted) {
-                                _controller.reverse();
-                              } else {
-                                _controller.forward();
-                              }
-                            });
-                          },
+                                              fontWeight: FontWeight.bold,
+                                              color: settingsBox.get(
+                                                              'readerBgColor',
+                                                              defaultValue:
+                                                                  'Black') ==
+                                                          'Black' ||
+                                                      settingsBox.get(
+                                                              'readerBgColor') ==
+                                                          'Gray'
+                                                  ? Colors.white
+                                                  : Colors.black)),
+                                    ]),
+                              ),
+                            ),
+                            Positioned(
+                                height: MediaQuery.of(context).size.height,
+                                width: MediaQuery.of(context).size.width / 3,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    if (selectedMenu == MenuItems.Default) {
+                                      pageController.nextPage(
+                                          duration: Duration(milliseconds: 150),
+                                          curve: Curves.linear);
+                                      if (chapterInitialPage != pageCount - 1) {
+                                        setState(() {
+                                          chapterInitialPage =
+                                              chapterInitialPage + 1;
+                                        });
+                                      }
+                                    } else {
+                                      pageController.previousPage(
+                                          duration: Duration(milliseconds: 150),
+                                          curve: Curves.linear);
+                                      if (chapterInitialPage != 0) {
+                                        setState(() {
+                                          chapterInitialPage =
+                                              chapterInitialPage - 1;
+                                        });
+                                      }
+                                    }
+                                  },
+                                )),
+                            Positioned(
+                                left: MediaQuery.of(context).size.width / 3,
+                                height: MediaQuery.of(context).size.height,
+                                width: MediaQuery.of(context).size.width / 3,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      visible = !visible;
+                                      visible
+                                          ? showStatusBar()
+                                          : hideStatusBar();
+                                      if (_controller.isCompleted) {
+                                        _controller.reverse();
+                                      } else {
+                                        _controller.forward();
+                                      }
+                                    });
+                                  },
+                                )),
+                            Positioned(
+                                right: 0.0,
+                                height: MediaQuery.of(context).size.height,
+                                width: MediaQuery.of(context).size.width / 3,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    if (selectedMenu == MenuItems.Default) {
+                                      pageController.previousPage(
+                                          duration: Duration(milliseconds: 150),
+                                          curve: Curves.linear);
+                                      if (chapterInitialPage != 0) {
+                                        setState(() {
+                                          chapterInitialPage =
+                                              chapterInitialPage - 1;
+                                        });
+                                      }
+                                    } else {
+                                      pageController.nextPage(
+                                          duration: Duration(milliseconds: 150),
+                                          curve: Curves.linear);
+                                      if (chapterInitialPage != pageCount - 1) {
+                                        setState(() {
+                                          chapterInitialPage =
+                                              chapterInitialPage + 1;
+                                        });
+                                      }
+                                    }
+                                  },
+                                )),
+                          ],
                         );
                 }
               }))),
