@@ -274,7 +274,7 @@ class _HomeState extends State<Home> {
                 }),
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 40.0,
+                height: 30.0,
               ),
             )
           ],
