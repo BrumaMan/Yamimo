@@ -44,7 +44,7 @@ class MangaDex implements MangaSource {
             singleComic["attributes"]["title"]["ja-ro"],
         altTitles: singleComic["attributes"]["altTitles"],
         cover:
-            'https://uploads.mangadex.org/covers/${singleComic['id']}/${singleComic["relationships"][singleComic["relationships"].indexWhere((element) => element["type"] == "cover_art")]["attributes"]["fileName"]}',
+            'https://uploads.mangadex.org/covers/${singleComic['id']}/${singleComic["relationships"][singleComic["relationships"].indexWhere((element) => element["type"] == "cover_art")]["attributes"]["fileName"]}.256.jpg',
         url: singleComic['attributes']['title']['en'] != null
             ? '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['en'].toLowerCase()}'
             : '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['ja-ro'].toLowerCase()}',
@@ -91,7 +91,7 @@ class MangaDex implements MangaSource {
             singleComic["attributes"]["title"]["ja-ro"],
         altTitles: singleComic["attributes"]["altTitles"],
         cover:
-            'https://uploads.mangadex.org/covers/${singleComic['id']}/${singleComic["relationships"][singleComic["relationships"].indexWhere((element) => element["type"] == "cover_art")]["attributes"]["fileName"]}',
+            'https://uploads.mangadex.org/covers/${singleComic['id']}/${singleComic["relationships"][singleComic["relationships"].indexWhere((element) => element["type"] == "cover_art")]["attributes"]["fileName"]}.256.jpg',
         url: singleComic['attributes']['title']['en'] != null
             ? '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['en'].toLowerCase()}'
             : '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['ja-ro']}',
@@ -144,7 +144,7 @@ class MangaDex implements MangaSource {
             singleComic["attributes"]["title"]["ja-ro"],
         altTitles: singleComic["attributes"]["altTitles"],
         cover:
-            'https://uploads.mangadex.org/covers/${singleComic['id']}/${singleComic["relationships"][singleComic["relationships"].indexWhere((element) => element["type"] == "cover_art")]["attributes"]["fileName"]}',
+            'https://uploads.mangadex.org/covers/${singleComic['id']}/${singleComic["relationships"][singleComic["relationships"].indexWhere((element) => element["type"] == "cover_art")]["attributes"]["fileName"]}.256.jpg',
         url: singleComic['attributes']['title']['en'] != null
             ? '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['en'].toLowerCase()}'
             : '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['ja-ro']}',
