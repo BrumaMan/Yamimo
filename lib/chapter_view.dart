@@ -25,6 +25,7 @@ class ChapterView extends StatefulWidget {
       required this.id,
       required this.mangaId,
       required this.mangaTitle,
+      required this.isWebtoon,
       required this.title,
       required this.chapterCount,
       required this.order,
@@ -36,6 +37,7 @@ class ChapterView extends StatefulWidget {
   final String id;
   final String mangaId;
   final String mangaTitle;
+  final int isWebtoon;
   final String title;
   final int chapterCount;
   final int order;
@@ -96,7 +98,14 @@ class _ChapterViewState extends State<ChapterView>
     // );
     chaptersRead = chaptersReadBox.get(widget.mangaId);
     addChapterToRead(widget.id);
-    pageController = PreloadPageController(initialPage: chapterInitialPage);
+    pageController = PreloadPageController(
+        initialPage: chapterInitialPage,
+        viewportFraction: selectedMenu == MenuItems.webtoon ||
+                selectedMenu == MenuItems.continuousVertical
+            ? widget.isWebtoon >= 0
+                ? 4.0
+                : 0.7
+            : 1.0);
     _controller = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 300),
@@ -682,8 +691,8 @@ class _ChapterViewState extends State<ChapterView>
                           onSelected: (MenuItems item) {
                             if (item == MenuItems.Default) {}
                             setState(() {
-                              debugPrint(
-                                  Theme.of(context).useMaterial3.toString());
+                              // debugPrint(
+                              //     Theme.of(context).useMaterial3.toString());
                               selectedMenu = item;
                               settingsBox.put('readerMode', '$selectedMenu');
                             });
