@@ -6,6 +6,8 @@ import 'package:first_app/more.dart';
 import 'package:first_app/responsive/desktop_layout.dart';
 import 'package:first_app/responsive/responsive_layout.dart';
 import 'package:first_app/search_result.dart';
+import 'package:first_app/source/model/chapter.dart';
+import 'package:first_app/source/model/manga_details.dart';
 import 'package:first_app/util/globals.dart';
 import 'package:first_app/util/theme.dart';
 import 'package:status_bar_control/status_bar_control.dart';
@@ -18,10 +20,15 @@ import 'package:hidable/hidable.dart';
 void main() async {
   await Hive.initFlutter();
 
+  Hive.registerAdapter(MangaDetailsAdapter());
+  Hive.registerAdapter(ChapterAdapter());
+
   var settings_Box = await Hive.openBox('settings');
   var library_Box = await Hive.openBox('library');
   var chapters_Box = await Hive.openBox('chapters');
   var chaptersRead_Box = await Hive.openBox('chaptersRead');
+  var mangaDetails_Box = await Hive.openBox<MangaDetails>('mangaDetails');
+  var mangaChapters_Box = await Hive.openBox<List<dynamic>>('mangaChapters');
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(systemNavigationBarColor: Colors.transparent));
