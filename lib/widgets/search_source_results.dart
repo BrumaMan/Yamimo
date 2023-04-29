@@ -115,16 +115,6 @@ class _SearchSourceResultsState extends State<SearchSourceResults> {
                           title: snapshot.data[index].title,
                           cover: snapshot.data[index].cover,
                           url: snapshot.data[index].url,
-                          synopsis: snapshot.data[index].synopsis == null
-                              ? "No description"
-                              : snapshot.data[index].synopsis,
-                          type: snapshot.data[index].type,
-                          year: snapshot.data[index].year == 'null'
-                              ? 'Year unknown'
-                              : snapshot.data[index].year,
-                          status: snapshot.data[index].status,
-                          tags: snapshot.data[index].tags,
-                          author: snapshot.data[index].author,
                           source: widget.name,
                           // scrapeDate: snapshot.data[index].scrapeDate,
                         );
