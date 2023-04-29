@@ -1,4 +1,5 @@
 import 'package:first_app/source/comickfun/format_chapter_name.dart';
+import 'package:first_app/source/model/manga_details.dart';
 import 'package:flutter/material.dart';
 import 'package:first_app/source/comickfun/status_parser.dart';
 import 'package:first_app/source/manga_source.dart';
@@ -19,6 +20,27 @@ class ComickFun implements MangaSource {
 
   @override
   String sourceURL = 'https://comick.app';
+
+  @override
+  Future<http.Response> updateLibraryRequest(String id) async {
+    Uri url = Uri.https(baseURL, "/comic/$id");
+    final response = await http.get(url);
+    return response;
+  }
+
+  @override
+  updateLibraryParse(http.Response response) {
+    var responseData = convert.jsonDecode(response.body)["comic"];
+
+    return {
+      'id': responseData["hid"],
+      'title': responseData["title"],
+      'cover':
+          "https://meo.comick.pictures/${responseData['md_covers'][0]['b2key']}",
+      'url': "$sourceURL/comic/${responseData["hid"]}",
+      'source': 'Comick',
+    };
+  }
 
   @override
   popularMangaRequest(int offset) async {
@@ -43,8 +65,14 @@ class ComickFun implements MangaSource {
       if (singleComic['hid'] == null) {
         continue;
       }
-      detailsResponse = await mangaDetailsRequest(singleComic['hid']);
-      Manga comic = mangaDetailsParse(detailsResponse);
+      Manga comic = Manga(
+        id: singleComic['hid'],
+        title: singleComic["title"] ?? singleComic["title"],
+        altTitles: singleComic["genres"],
+        cover:
+            "https://meo.comick.pictures/${singleComic['md_covers'][0]['b2key']}",
+        url: "$sourceURL/comic/${singleComic["hid"]}",
+      );
       // debugPrint('${comic.author}');
       //Adding user to the list.
       comics.add(comic);
@@ -76,8 +104,14 @@ class ComickFun implements MangaSource {
       if (singleComic['hid'] == null) {
         continue;
       }
-      detailsResponse = await mangaDetailsRequest(singleComic['hid']);
-      Manga comic = mangaDetailsParse(detailsResponse);
+      Manga comic = Manga(
+        id: singleComic['hid'],
+        title: singleComic["title"] ?? singleComic["title"],
+        altTitles: singleComic["genres"],
+        cover:
+            "https://meo.comick.pictures/${singleComic['md_covers'][0]['b2key']}",
+        url: "$sourceURL/comic/${singleComic["hid"]}",
+      );
       // debugPrint('${comic.author}');
       //Adding user to the list.
       comics.add(comic);
@@ -109,9 +143,14 @@ class ComickFun implements MangaSource {
       if (singleComic['hid'] == null) {
         continue;
       }
-      detailsResponse = await mangaDetailsRequest(singleComic['hid']);
-
-      Manga comic = mangaDetailsParse(detailsResponse);
+      Manga comic = Manga(
+        id: singleComic['hid'],
+        title: singleComic["title"] ?? singleComic["title"],
+        altTitles: singleComic["genres"],
+        cover:
+            "https://meo.comick.pictures/${singleComic['md_covers'][0]['b2key']}",
+        url: "$sourceURL/comic/${singleComic["hid"]}",
+      );
       // debugPrint('${comic.author}');
       //Adding user to the list.
       manga.add(comic);
@@ -128,18 +167,16 @@ class ComickFun implements MangaSource {
   }
 
   @override
-  mangaDetailsParse(http.Response response) {
+  MangaDetails mangaDetailsParse(http.Response response) {
     var responseData = convert.jsonDecode(response.body);
-    Manga comic = Manga(
-      id: responseData["comic"]['hid'],
-      title: responseData["comic"]["title"] ?? responseData["comic"]["title"],
-      altTitles: responseData["comic"]["md_titles"],
-      cover:
-          "https://meo.comick.pictures/${responseData["comic"]['md_covers'][0]['b2key']}",
-      url: "$sourceURL/comic/${responseData["comic"]["hid"]}",
-      synopsis: responseData["comic"]["desc"],
+    MangaDetails comic = MangaDetails(
+      synopsis: responseData["comic"]["desc"] == null
+          ? 'No description'
+          : responseData["comic"]["desc"],
       type: responseData["comic"]['hid'],
-      year: '${responseData["comic"]["year"]}',
+      year: responseData["comic"]["year"] == null
+          ? 'Year unknown'
+          : '${responseData["comic"]["year"]}',
       status: parseStatus(responseData["comic"]["status"]),
       tags: responseData["genres"],
       author: responseData['authors'].isNotEmpty
@@ -206,6 +243,7 @@ class ComickFun implements MangaSource {
             ? 'Unknown'
             : singleComic['md_groups'][0]['title'] ?? 'Unknown',
         officialScan: false,
+        downloaded: false,
       );
 
       //Adding user to the list.

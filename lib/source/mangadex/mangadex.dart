@@ -1,5 +1,6 @@
 import 'package:first_app/source/mangadex/format_chapter_name.dart';
 import 'package:first_app/source/mangadex/status_parser.dart';
+import 'package:first_app/source/model/manga_details.dart';
 import 'package:flutter/material.dart';
 import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/model/chapter.dart';
@@ -19,6 +20,33 @@ class MangaDex implements MangaSource {
 
   @override
   String sourceURL = 'https://mangadex.org';
+
+  @override
+  Future<http.Response> updateLibraryRequest(String id) async {
+    Uri url = Uri.https("api.mangadex.org", "/manga/$id", {
+      'includes[]': ['cover_art', 'author'],
+      // 'includes[]': 'author',
+    });
+    final response = await http.get(url);
+    return response;
+  }
+
+  @override
+  updateLibraryParse(http.Response response) {
+    var responseData = convert.jsonDecode(response.body)["data"];
+
+    return {
+      'id': responseData["id"],
+      'title': responseData["attributes"]["title"]["en"] ??
+          responseData["attributes"]["title"]["ja-ro"],
+      'cover':
+          'https://uploads.mangadex.org/covers/${responseData['id']}/${responseData["relationships"][responseData["relationships"].indexWhere((element) => element["type"] == "cover_art")]["attributes"]["fileName"]}.256.jpg',
+      'url': responseData['attributes']['title']['en'] != null
+          ? '$sourceURL/title/${responseData['id']}/${responseData['attributes']['title']['en'].toLowerCase()}'
+          : '$sourceURL/title/${responseData['id']}/${responseData['attributes']['title']['ja-ro']}',
+      'source': 'MangaDex',
+    };
+  }
 
   @override
   popularMangaRequest(int offset) async {
@@ -50,14 +78,6 @@ class MangaDex implements MangaSource {
             : '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['ja-ro'].toLowerCase()}',
         // ??
         //     '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['ja-ro'].toLowerCase()}',
-        synopsis: singleComic["attributes"]["description"]["en"],
-        type: singleComic["type"],
-        year: '${singleComic["attributes"]["year"]}',
-        status: parseStatus(singleComic["attributes"]["status"]),
-        tags: singleComic["attributes"]["tags"],
-        author: singleComic["relationships"][singleComic["relationships"]
-                .indexWhere((element) => element["type"] == "author")]
-            ["attributes"]["name"],
       );
       // debugPrint('${comic.author}');
       //Adding user to the list.
@@ -95,18 +115,6 @@ class MangaDex implements MangaSource {
         url: singleComic['attributes']['title']['en'] != null
             ? '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['en'].toLowerCase()}'
             : '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['ja-ro']}',
-        synopsis: singleComic["attributes"]["description"]["en"],
-        type: singleComic["type"],
-        year: '${singleComic["attributes"]["year"]}',
-        status: parseStatus(singleComic["attributes"]["status"]),
-        tags: singleComic["attributes"]["tags"],
-        author: singleComic["relationships"][singleComic["relationships"]
-                        .indexWhere((element) => element["type"] == "author") ==
-                    -1
-                ? 0
-                : singleComic["relationships"].indexWhere((element) =>
-                    element["type"] == "author")]["attributes"]["name"] ??
-            'Unknown author',
       );
       // debugPrint('${comic.author}');
       //Adding user to the list.
@@ -148,14 +156,6 @@ class MangaDex implements MangaSource {
         url: singleComic['attributes']['title']['en'] != null
             ? '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['en'].toLowerCase()}'
             : '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['ja-ro']}',
-        synopsis: singleComic["attributes"]["description"]["en"],
-        type: singleComic["type"],
-        year: singleComic["attributes"]["year"].toString(),
-        status: parseStatus(singleComic["attributes"]["status"]),
-        tags: singleComic["attributes"]["tags"],
-        author: singleComic["relationships"][singleComic["relationships"]
-                .indexWhere((element) => element["type"] == "author")]
-            ["attributes"]["name"],
       );
       // debugPrint('${comic.id}');
       //Adding comic to the list.
@@ -166,15 +166,39 @@ class MangaDex implements MangaSource {
   }
 
   @override
-  mangaDetailsRequest(String id) {
-    // TODO: implement mangaDetailsRequest
-    throw UnimplementedError();
+  Future<http.Response> mangaDetailsRequest(String id) async {
+    Uri url = Uri.https("api.mangadex.org", "/manga/$id", {
+      'includes[]': ['cover_art', 'author'],
+      // 'includes[]': 'author',
+    });
+    final response = await http.get(url);
+    return response;
   }
 
   @override
-  mangaDetailsParse(http.Response response) {
-    // TODO: implement mangaDetailsParse
-    throw UnimplementedError();
+  MangaDetails mangaDetailsParse(http.Response response) {
+    var responseData = convert.jsonDecode(response.body)["data"];
+
+    MangaDetails manga = MangaDetails(
+      synopsis: responseData["attributes"]["description"]["en"] == null
+          ? 'No description'
+          : responseData["attributes"]["description"]["en"],
+      type: responseData["type"],
+      year: responseData["attributes"]["year"] == null
+          ? 'Year unknown'
+          : '${responseData["attributes"]["year"]}',
+      status: parseStatus(responseData["attributes"]["status"]),
+      tags: responseData["attributes"]["tags"],
+      author: responseData["relationships"][responseData["relationships"]
+                      .indexWhere((element) => element["type"] == "author") ==
+                  -1
+              ? 0
+              : responseData["relationships"].indexWhere((element) =>
+                  element["type"] == "author")]["attributes"]["name"] ??
+          'Unknown author',
+    );
+
+    return manga;
   }
 
   @override
@@ -245,6 +269,7 @@ class MangaDex implements MangaSource {
         scanGroup: singleComic["relationships"]?[0]?["attributes"]?["name"],
         officialScan: singleComic["relationships"]?[0]?["attributes"]
             ?["official"],
+        downloaded: false,
       );
 
       //Adding user to the list.
