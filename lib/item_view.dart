@@ -4,6 +4,7 @@ import 'package:first_app/chapter_view.dart';
 import 'package:first_app/search_result.dart';
 import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/model/chapter.dart';
+import 'package:first_app/source/model/manga_details.dart';
 import 'package:first_app/source/source_helper.dart';
 import 'package:first_app/util/globals.dart';
 import 'package:first_app/util/theme.dart';
@@ -27,12 +28,6 @@ class ItemView extends StatefulWidget {
       required this.title,
       required this.cover,
       required this.url,
-      required this.synopsis,
-      required this.type,
-      required this.year,
-      required this.status,
-      required this.tags,
-      required this.author,
       required this.source
       // required this.scrapeDate,
       });
@@ -41,12 +36,6 @@ class ItemView extends StatefulWidget {
   final String title;
   final String cover;
   final String url;
-  final String synopsis;
-  final String type;
-  final String? year;
-  final String? status;
-  final List<dynamic>? tags;
-  final String author;
   final String source;
   // final String scrapeDate;
 
@@ -61,11 +50,15 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   Box libraryBox = Hive.box('library');
   Box chapterBox = Hive.box('chapters');
   Box chaptersReadBox = Hive.box('chaptersRead');
-  List<Widget> tags = [];
+  Box mangaDetailsBox = Hive.box<MangaDetails>('mangaDetails');
+  Box mangaChaptersBox = Hive.box<List<dynamic>>('mangaChapters');
+  List<Widget> tagsWidget = [];
+  List<dynamic> tags = [];
   var chaptersRead;
   var chapters;
   var nextChapters;
   var chaptersPassed;
+  var mangaDetails;
   int missingChapters = 0;
   int chapterCount = 0;
   double position = 0.0;
@@ -92,7 +85,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
     _tabController = TabController(length: 3, vsync: this);
     // textController = TextEditingController(text: widget.searchTerm);
     source = SourceHelper().getSource(widget.source);
-    tags = getTags();
+    mangaDetails = getMangaDetails();
     chapters = getRequest();
     // nextChapters = chapters as List<Chapter>;
     // debugPrint('${scrollViewController.positions}');
@@ -106,20 +99,44 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  List<Widget> getTags() {
+  List<Widget> getTags(List<dynamic> mangaTags) {
     // widget.tags!
     //     .removeWhere((element) => element["attributes"]["group"] != 'genre');
-    List<Widget> tags = [];
-    tags = source.getGenres(widget.tags!);
-    return tags;
+    List<Widget> tagsWidgets = [];
+    tagsWidgets = source.getGenres(mangaTags);
+    setState(() {
+      tags = mangaTags;
+    });
+    return tagsWidgets;
   }
 
-  Future<List<Chapter>> getRequest() async {
-    //replace your restFull API here.
-    final response = await source.chapterListRequest(widget.id);
+  Future<MangaDetails> getMangaDetails() async {
+    late MangaDetails mangaDetails;
+    if (mangaDetailsBox.containsKey(widget.id)) {
+      mangaDetails = mangaDetailsBox.get(widget.id);
+    } else {
+      final mangaDetailsResponse = await source.mangaDetailsRequest(widget.id);
+      mangaDetails = source.mangaDetailsParse(mangaDetailsResponse);
+      mangaDetailsBox.put(widget.id, mangaDetails);
+    }
+    tagsWidget = getTags(mangaDetails.tags!);
+    // debugPrint(mangaDetails.synopsis);
+    return mangaDetails;
+  }
 
-    List<Chapter> chapters = [];
-    chapters = await source.chapterListParse(response);
+  Future<List<Chapter>> getRequest({refresh = false}) async {
+    late List<Chapter> chapters;
+    if (mangaChaptersBox.containsKey(widget.id) && refresh == false) {
+      List<Chapter> tempChapters =
+          List<Chapter>.from(mangaChaptersBox.get(widget.id));
+      chapters = tempChapters;
+    } else {
+      //replace your restFull API here.
+      final chapterResponse = await source.chapterListRequest(widget.id);
+
+      chapters = await source.chapterListParse(chapterResponse);
+      mangaChaptersBox.put(widget.id, List<Chapter>.from(chapters));
+    }
 
     // chapters.reversed;
     setState(() {
@@ -128,6 +145,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       started = getChaptersRead(
           '${chapterCount == 0 ? '' : chapters[chapterCount - 1].id}');
       missingChapters = getMissingChaptersCount(chapters);
+      // mangaDetails = mangaDetails;
       fetchingData = false;
     });
     updateChapterNumber(widget.id);
@@ -147,19 +165,8 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
     return Icon(Icons.favorite_outline_outlined);
   }
 
-  void onLibraryPress(
-      String id,
-      String title,
-      String cover,
-      String url,
-      String synopsis,
-      String type,
-      String? year,
-      String? status,
-      List<dynamic>? tags,
-      String author,
-      DateTime addedAt,
-      String source) {
+  void onLibraryPress(String id, String title, String cover, String url,
+      DateTime addedAt, String source) {
     if (libraryBox.containsKey(id)) {
       chapterBox.delete(id);
       libraryBox.delete(id);
@@ -170,12 +177,6 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       'title': title,
       'cover': cover,
       'url': url,
-      'synopsis': synopsis,
-      'type': type,
-      'year': year,
-      'status': status,
-      'tags': tags,
-      'author': author,
       'addedAt': addedAt,
       'source': source
     });
@@ -280,6 +281,8 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
           id: last.id,
           mangaId: widget.id,
           mangaTitle: widget.title,
+          isWebtoon: tags.indexWhere(
+              (element) => element["attributes"]["name"]["en"] == 'Long Strip'),
           title: last.title,
           chapterCount: chapterCount,
           order: chapterCount - pageIndex,
@@ -333,507 +336,530 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
         },
         child: Scrollbar(
           radius: Radius.circular(8.0),
-          child: CustomScrollView(
-            controller: scrollViewController,
-            slivers: [
-              SliverAppBar(
-                title: AnimatedOpacity(
-                    opacity: position >= 200.0 ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Text(widget.title)),
-                pinned: true,
-                // backgroundColor: Colors.transparent,
-                expandedHeight: 250,
-                // surfaceTintColor: Color(999),
-                // iconTheme: IconThemeData(color: Colors.white),
-                // bottom: PreferredSize(
-                //     preferredSize: Size.fromHeight(4.0),
-                //     child: Visibility(
-                //         visible: fetchingData,
-                //         child: LinearProgressIndicator(
-                //           minHeight: 4.0,
-                //         ))),
+          child: RefreshIndicator(
+            onRefresh: () {
+              return Future.delayed(Duration(seconds: 1), () {
+                chapters = getRequest(refresh: true);
+              });
+            },
+            child: CustomScrollView(
+              controller: scrollViewController,
+              slivers: [
+                SliverAppBar(
+                  title: AnimatedOpacity(
+                      opacity: position >= 200.0 ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Text(widget.title)),
+                  pinned: true,
+                  // backgroundColor: Colors.transparent,
+                  expandedHeight: 250,
+                  // surfaceTintColor: Color(999),
+                  // iconTheme: IconThemeData(color: Colors.white),
+                  // bottom: PreferredSize(
+                  //     preferredSize: Size.fromHeight(4.0),
+                  //     child: Visibility(
+                  //         visible: fetchingData,
+                  //         child: LinearProgressIndicator(
+                  //           minHeight: 4.0,
+                  //         ))),
 
-                flexibleSpace: FlexibleSpaceBar(
-                  collapseMode: CollapseMode.pin,
-                  background: Stack(children: [
-                    Container(
-                      foregroundDecoration: BoxDecoration(
-                          gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                              colors: gradientColors)),
-                      width: MediaQuery.of(context).size.width,
-                      child: CachedNetworkImage(
-                        imageUrl: widget.cover,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    Positioned(
+                  flexibleSpace: FlexibleSpaceBar(
+                    collapseMode: CollapseMode.pin,
+                    background: Stack(children: [
+                      Container(
+                        foregroundDecoration: BoxDecoration(
+                            gradient: LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: gradientColors)),
                         width: MediaQuery.of(context).size.width,
-                        top: MediaQuery.of(context).systemGestureInsets.top +
-                            kToolbarHeight,
-                        child: Visibility(
-                            visible: fetchingData,
-                            child: LinearProgressIndicator(
-                              minHeight: 4.0,
-                            ))),
-                    Positioned(
-                      top: MediaQuery.of(context).systemGestureInsets.top +
-                          kToolbarHeight +
-                          8.0,
-                      left: 8.0,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Card(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4.0)),
-                            clipBehavior: Clip.hardEdge,
-                            child: CachedNetworkImage(
-                                imageUrl: widget.cover,
-                                height: 150,
-                                width: 100,
-                                fit: BoxFit.cover),
-                          ),
-                          Flexible(
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.only(
-                                        left: 8.0, right: 8.0),
-                                    width: MediaQuery.of(context).size.width /
-                                            1.3 -
-                                        16,
-                                    child: Text(
-                                      widget.title,
-                                      softWrap: true,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 5,
-                                      style: const TextStyle(fontSize: 22.0),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 8.0, right: 8.0, top: 8.0),
-                                    child: Text(
-                                      '${widget.author}',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                      left: 8.0,
-                                      right: 8.0,
-                                    ),
-                                    child: Visibility(
-                                      visible: missingChapters != 0,
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.warning,
-                                            size: 16,
-                                          ),
-                                          Text(
-                                              ' Missing ~ $missingChapters chapter(s)'),
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                ]),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ]),
-                ),
-                actions: [
-                  ValueListenableBuilder(
-                    valueListenable: libraryBox.listenable(),
-                    builder: (context, value, child) => IconButton(
-                      onPressed: () {
-                        onLibraryPress(
-                            widget.id,
-                            widget.title,
-                            widget.cover,
-                            widget.url,
-                            widget.synopsis,
-                            widget.type,
-                            widget.year,
-                            widget.status,
-                            widget.tags,
-                            widget.author,
-                            DateTime.now(),
-                            widget.source);
-                        updateChapterNumber(widget.id);
-                      },
-                      icon: getIcons(widget.id),
-                    ),
-                  ),
-                  IconButton(
-                      onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) {
-                            return WebView(
-                              url: widget.url,
-                              title: widget.title,
-                            );
-                          },
-                        ));
-                      },
-                      icon: Icon(Icons.public_outlined)),
-                  IconButton(
-                      onPressed: () {
-                        Share.share(widget.url);
-                      },
-                      icon: Icon(Icons.share_outlined)),
-                ],
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                      top: 8.0, left: 8.0, bottom: 0.0, right: 8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Row(
-                      //   // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      //   children: [
-                      //     Card(
-                      //       shape: RoundedRectangleBorder(
-                      //           borderRadius: BorderRadius.circular(4.0)),
-                      //       clipBehavior: Clip.hardEdge,
-                      //       child: CachedNetworkImage(
-                      //           imageUrl: widget.cover,
-                      //           height: 150,
-                      //           width: 100,
-                      //           fit: BoxFit.cover),
-                      //     ),
-                      //     Expanded(
-                      //       child: Column(
-                      //           crossAxisAlignment: CrossAxisAlignment.start,
-                      //           children: [
-                      //             Container(
-                      //               padding: const EdgeInsets.only(left: 8.0),
-                      //               width: MediaQuery.of(context).size.width /
-                      //                       1.3 -
-                      //                   16,
-                      //               child: Text(
-                      //                 widget.title,
-                      //                 softWrap: true,
-                      //                 overflow: TextOverflow.ellipsis,
-                      //                 maxLines: 5,
-                      //                 style: const TextStyle(fontSize: 22.0),
-                      //               ),
-                      //             ),
-                      //             Padding(
-                      //               padding: const EdgeInsets.only(
-                      //                   left: 8.0, right: 8.0, top: 8.0),
-                      //               child: Text(
-                      //                 '${widget.author}',
-                      //                 style: TextStyle(
-                      //                     fontWeight: FontWeight.bold),
-                      //               ),
-                      //             ),
-                      //             Padding(
-                      //               padding: const EdgeInsets.only(
-                      //                 left: 8.0,
-                      //                 right: 8.0,
-                      //               ),
-                      //               child: Visibility(
-                      //                 visible: missingChapters != 0,
-                      //                 child: Row(
-                      //                   children: [
-                      //                     Icon(
-                      //                       Icons.warning,
-                      //                       size: 16,
-                      //                     ),
-                      //                     Text(
-                      //                         ' Missing ~ $missingChapters chapter(s)'),
-                      //                   ],
-                      //                 ),
-                      //               ),
-                      //             )
-                      //           ]),
-                      //     ),
-                      //   ],
-                      // ),
-                      Padding(
-                        padding: EdgeInsets.only(top: 0),
-                        child: IntrinsicHeight(
-                          child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Column(
-                                  children: [
-                                    Icon(widget.status?.toLowerCase() ==
-                                            'completed'
-                                        ? Icons.done_all
-                                        : Icons.schedule_outlined),
-                                    Text('${widget.status}')
-                                  ],
-                                ),
-                                VerticalDivider(
-                                  // width: 20,
-                                  thickness: 1,
-                                  color: Colors.grey,
-                                ),
-                                Column(
-                                  children: [
-                                    const Icon(Icons.language),
-                                    Text(widget.source)
-                                  ],
-                                ),
-                                VerticalDivider(
-                                  // width: 20,
-                                  thickness: 1,
-                                  color: Colors.grey,
-                                ),
-                                Column(
-                                  children: [
-                                    const Icon(Icons.new_releases_outlined),
-                                    Text('${widget.year}')
-                                  ],
-                                ),
-                              ]),
+                        child: CachedNetworkImage(
+                          imageUrl: widget.cover,
+                          fit: BoxFit.cover,
                         ),
                       ),
-                      Container(
-                        width: MediaQuery.of(context).size.width,
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      Positioned(
+                          width: MediaQuery.of(context).size.width,
+                          top: MediaQuery.of(context).systemGestureInsets.top +
+                              kToolbarHeight,
+                          child: Visibility(
+                              visible: fetchingData,
+                              child: LinearProgressIndicator(
+                                minHeight: 4.0,
+                              ))),
+                      Positioned(
+                        top: MediaQuery.of(context).systemGestureInsets.top +
+                            kToolbarHeight +
+                            8.0,
+                        left: 8.0,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            GestureDetector(
-                              child: Text(
-                                widget.synopsis,
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              onTap: () {
-                                showModalBottomSheet(
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(0.0)),
-                                    backgroundColor:
-                                        Colors.black.withOpacity(0.8),
-                                    context: context,
-                                    builder: (context) {
-                                      return Container(
-                                        margin: EdgeInsets.only(bottom: 16.0),
-                                        padding: EdgeInsets.all(12.0),
-                                        child: Text(
-                                          widget.synopsis,
-                                          softWrap: true,
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                      );
-                                    });
-                              },
+                            Card(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4.0)),
+                              clipBehavior: Clip.hardEdge,
+                              child: CachedNetworkImage(
+                                  imageUrl: widget.cover,
+                                  height: 150,
+                                  width: 100,
+                                  fit: BoxFit.cover),
                             ),
-                            // Text('More'),
+                            Flexible(
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.only(
+                                          left: 8.0, right: 8.0),
+                                      width: MediaQuery.of(context).size.width /
+                                              1.3 -
+                                          16,
+                                      child: Text(
+                                        widget.title,
+                                        softWrap: true,
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 5,
+                                        style: const TextStyle(fontSize: 22.0),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 8.0, right: 8.0, top: 8.0),
+                                      child: FutureBuilder(
+                                        future: mangaDetails,
+                                        builder:
+                                            (context, AsyncSnapshot snapshot) {
+                                          if (!snapshot.hasData) {
+                                            return Text('');
+                                          } else {
+                                            return Text(
+                                              '${snapshot.data.author}',
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold),
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        left: 8.0,
+                                        right: 8.0,
+                                      ),
+                                      child: Visibility(
+                                        visible: missingChapters != 0,
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.warning,
+                                              size: 16,
+                                            ),
+                                            Text(
+                                                ' Missing ~ $missingChapters chapter(s)'),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  ]),
+                            ),
                           ],
                         ),
                       ),
-                      Wrap(
-                        spacing: 5.0,
-                        runSpacing: 0.0,
-                        children: tags,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Visibility(
-                          visible: !fetchingData,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('$chapterCount Chapters',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold)),
-                              // FilledButton(
-                              //     onPressed: chapterCount == 0
-                              //         ? null
-                              //         : () {
-                              //             continueReading(context);
-                              //           },
-                              //     child: Row(
-                              //       children: [
-                              //         Padding(
-                              //           padding:
-                              //               const EdgeInsets.only(right: 8.0),
-                              //           child: Icon(Icons.play_arrow),
-                              //         ),
-                              //         started
-                              //             ? Text('Continue')
-                              //             : Text('Start'),
-                              //       ],
-                              //     ))
-                            ],
-                          ),
-                        ),
-                      )
-                    ],
+                    ]),
                   ),
+                  actions: [
+                    ValueListenableBuilder(
+                      valueListenable: libraryBox.listenable(),
+                      builder: (context, value, child) => IconButton(
+                        onPressed: () {
+                          onLibraryPress(widget.id, widget.title, widget.cover,
+                              widget.url, DateTime.now(), widget.source);
+                          updateChapterNumber(widget.id);
+                        },
+                        icon: getIcons(widget.id),
+                      ),
+                    ),
+                    IconButton(
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) {
+                              return WebView(
+                                url: widget.url,
+                                title: widget.title,
+                              );
+                            },
+                          ));
+                        },
+                        icon: Icon(Icons.public_outlined)),
+                    IconButton(
+                        onPressed: () {
+                          Share.share(widget.url);
+                        },
+                        icon: Icon(Icons.share_outlined)),
+                  ],
                 ),
-              ),
-              FutureBuilder(
-                  future: chapters,
-                  builder: (BuildContext ctx, AsyncSnapshot snapshot) {
+                FutureBuilder(
+                  future: mangaDetails,
+                  builder: (context, AsyncSnapshot snapshot) {
                     if (!snapshot.hasData) {
                       return SliverToBoxAdapter();
                     } else {
-                      return SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                            addAutomaticKeepAlives: false,
-                            addRepaintBoundaries: false,
-                            childCount: chapterCount, (context, index) {
-                          return ListTile(
-                            // tileColor: Colors.black,
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 8.0),
-                            // leading: Card(
-                            //   clipBehavior: Clip.hardEdge,
-                            //   child: Image.network(
-                            //     snapshot.data[index].content[0],
-                            //     fit: BoxFit.cover,
-                            //     width: 50.0,
-                            //   ),
-                            // ),
-                            title: Row(
-                              children: [
-                                Expanded(
-                                  child: ValueListenableBuilder(
-                                    valueListenable:
-                                        chaptersReadBox.listenable(),
-                                    builder: (context, value, child) => Text(
-                                      snapshot.data[index].title,
-                                      overflow: TextOverflow.ellipsis,
-                                      softWrap: true,
-                                      style: TextStyle(
+                      return SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                              top: 8.0, left: 8.0, bottom: 0.0, right: 8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Row(
+                              //   // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              //   children: [
+                              //     Card(
+                              //       shape: RoundedRectangleBorder(
+                              //           borderRadius: BorderRadius.circular(4.0)),
+                              //       clipBehavior: Clip.hardEdge,
+                              //       child: CachedNetworkImage(
+                              //           imageUrl: widget.cover,
+                              //           height: 150,
+                              //           width: 100,
+                              //           fit: BoxFit.cover),
+                              //     ),
+                              //     Expanded(
+                              //       child: Column(
+                              //           crossAxisAlignment: CrossAxisAlignment.start,
+                              //           children: [
+                              //             Container(
+                              //               padding: const EdgeInsets.only(left: 8.0),
+                              //               width: MediaQuery.of(context).size.width /
+                              //                       1.3 -
+                              //                   16,
+                              //               child: Text(
+                              //                 widget.title,
+                              //                 softWrap: true,
+                              //                 overflow: TextOverflow.ellipsis,
+                              //                 maxLines: 5,
+                              //                 style: const TextStyle(fontSize: 22.0),
+                              //               ),
+                              //             ),
+                              //             Padding(
+                              //               padding: const EdgeInsets.only(
+                              //                   left: 8.0, right: 8.0, top: 8.0),
+                              //               child: Text(
+                              //                 '${widget.author}',
+                              //                 style: TextStyle(
+                              //                     fontWeight: FontWeight.bold),
+                              //               ),
+                              //             ),
+                              //             Padding(
+                              //               padding: const EdgeInsets.only(
+                              //                 left: 8.0,
+                              //                 right: 8.0,
+                              //               ),
+                              //               child: Visibility(
+                              //                 visible: missingChapters != 0,
+                              //                 child: Row(
+                              //                   children: [
+                              //                     Icon(
+                              //                       Icons.warning,
+                              //                       size: 16,
+                              //                     ),
+                              //                     Text(
+                              //                         ' Missing ~ $missingChapters chapter(s)'),
+                              //                   ],
+                              //                 ),
+                              //               ),
+                              //             )
+                              //           ]),
+                              //     ),
+                              //   ],
+                              // ),
+                              Padding(
+                                padding: EdgeInsets.only(top: 0),
+                                child: IntrinsicHeight(
+                                  child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Column(
+                                          children: [
+                                            Icon(snapshot.data.status ==
+                                                    'Completed'
+                                                ? Icons.done_all
+                                                : Icons.schedule_outlined),
+                                            Text('${snapshot.data.status}')
+                                          ],
+                                        ),
+                                        VerticalDivider(
+                                          // width: 20,
+                                          thickness: 1,
+                                          color: Colors.grey,
+                                        ),
+                                        Column(
+                                          children: [
+                                            const Icon(Icons.language),
+                                            Text(widget.source)
+                                          ],
+                                        ),
+                                        VerticalDivider(
+                                          // width: 20,
+                                          thickness: 1,
+                                          color: Colors.grey,
+                                        ),
+                                        Column(
+                                          children: [
+                                            const Icon(
+                                                Icons.new_releases_outlined),
+                                            Text('${snapshot.data.year}')
+                                          ],
+                                        ),
+                                      ]),
+                                ),
+                              ),
+                              Container(
+                                width: MediaQuery.of(context).size.width,
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    GestureDetector(
+                                      child: Text(
+                                        snapshot.data.synopsis,
+                                        maxLines: 3,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      onTap: () {
+                                        showModalBottomSheet(
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(0.0)),
+                                            backgroundColor:
+                                                Colors.black.withOpacity(0.8),
+                                            context: context,
+                                            builder: (context) {
+                                              return Container(
+                                                margin: EdgeInsets.only(
+                                                    bottom: 16.0),
+                                                padding: EdgeInsets.all(12.0),
+                                                child: Text(
+                                                  snapshot.data.synopsis,
+                                                  softWrap: true,
+                                                  style: TextStyle(
+                                                      color: Colors.white),
+                                                ),
+                                              );
+                                            });
+                                      },
+                                    ),
+                                    // Text('More'),
+                                  ],
+                                ),
+                              ),
+                              Wrap(
+                                spacing: 5.0,
+                                runSpacing: 0.0,
+                                children: tagsWidget,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Visibility(
+                                  visible: !fetchingData,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text('$chapterCount Chapters',
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                      // FilledButton(
+                                      //     onPressed: chapterCount == 0
+                                      //         ? null
+                                      //         : () {
+                                      //             continueReading(context);
+                                      //           },
+                                      //     child: Row(
+                                      //       children: [
+                                      //         Padding(
+                                      //           padding:
+                                      //               const EdgeInsets.only(right: 8.0),
+                                      //           child: Icon(Icons.play_arrow),
+                                      //         ),
+                                      //         started
+                                      //             ? Text('Continue')
+                                      //             : Text('Start'),
+                                      //       ],
+                                      //     ))
+                                    ],
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                FutureBuilder(
+                    future: chapters,
+                    builder: (BuildContext ctx, AsyncSnapshot snapshot) {
+                      if (!snapshot.hasData) {
+                        return SliverToBoxAdapter();
+                      } else {
+                        return SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                              addAutomaticKeepAlives: false,
+                              addRepaintBoundaries: false,
+                              childCount: chapterCount, (context, index) {
+                            return ListTile(
+                              // tileColor: Colors.black,
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 8.0),
+                              // leading: Card(
+                              //   clipBehavior: Clip.hardEdge,
+                              //   child: Image.network(
+                              //     snapshot.data[index].content[0],
+                              //     fit: BoxFit.cover,
+                              //     width: 50.0,
+                              //   ),
+                              // ),
+                              title: Row(
+                                children: [
+                                  Expanded(
+                                    child: ValueListenableBuilder(
+                                      valueListenable:
+                                          chaptersReadBox.listenable(),
+                                      builder: (context, value, child) => Text(
+                                        snapshot.data[index].title,
+                                        overflow: TextOverflow.ellipsis,
+                                        softWrap: true,
+                                        style: TextStyle(
+                                            color: getChaptersRead(
+                                                    snapshot.data[index].id)
+                                                ? settingsBox.get('darkMode',
+                                                        defaultValue: false)
+                                                    ? Colors.grey[700]
+                                                    : Colors.grey[400]
+                                                : null),
+                                      ),
+                                    ),
+                                  ),
+                                  // Text(
+                                  //   '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago',
+                                  //   style: TextStyle(
+                                  //       color: chaptersRead["chapter"] >=
+                                  //               chapterCount - index
+                                  //           ? Colors.grey[700]
+                                  //           : null),
+                                  // ),
+                                ],
+                              ),
+                              subtitle: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Text(
+                                  //     '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago '),
+                                  snapshot.data[index].officialScan == true
+                                      ? Icon(
+                                          Icons.done_all,
                                           color: getChaptersRead(
                                                   snapshot.data[index].id)
                                               ? settingsBox.get('darkMode',
                                                       defaultValue: false)
                                                   ? Colors.grey[700]
                                                   : Colors.grey[400]
-                                              : null),
-                                    ),
-                                  ),
-                                ),
-                                // Text(
-                                //   '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago',
-                                //   style: TextStyle(
-                                //       color: chaptersRead["chapter"] >=
-                                //               chapterCount - index
-                                //           ? Colors.grey[700]
-                                //           : null),
-                                // ),
-                              ],
-                            ),
-                            subtitle: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // Text(
-                                //     '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago '),
-                                snapshot.data[index].officialScan == true
-                                    ? Icon(
-                                        Icons.done_all,
+                                              : null,
+                                        )
+                                      : Text(''),
+                                  Text(
+                                    ' ${snapshot.data[index].scanGroup == null ? "Unknown group" : snapshot.data[index].scanGroup}',
+                                    softWrap: true,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,
+                                    style: TextStyle(
                                         color: getChaptersRead(
                                                 snapshot.data[index].id)
                                             ? settingsBox.get('darkMode',
                                                     defaultValue: false)
                                                 ? Colors.grey[700]
                                                 : Colors.grey[400]
-                                            : null,
-                                      )
-                                    : Text(''),
-                                Text(
-                                  ' ${snapshot.data[index].scanGroup == null ? "Unknown group" : snapshot.data[index].scanGroup}',
-                                  softWrap: true,
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 2,
-                                  style: TextStyle(
-                                      color: getChaptersRead(
-                                              snapshot.data[index].id)
-                                          ? settingsBox.get('darkMode',
-                                                  defaultValue: false)
-                                              ? Colors.grey[700]
-                                              : Colors.grey[400]
-                                          : null),
-                                ),
-                                Text(getChapterPagesRead(
-                                    snapshot.data[index].id,
-                                    snapshot.data[index].pages)),
-                                Text(
-                                  DateTime.now()
-                                              .difference(DateTime.parse(
-                                                  snapshot
-                                                      .data[index].readableAt))
-                                              .inDays <
-                                          7
-                                      ? ' | ${DateTimeFormat.relative(
-                                          DateTime.parse(
-                                              snapshot.data[index].readableAt),
-                                        )}'
-                                      : getChapterDate(
-                                          snapshot.data[index].readableAt),
-                                  style: TextStyle(
-                                      color: getChaptersRead(
-                                              snapshot.data[index].id)
-                                          ? settingsBox.get('darkMode',
-                                                  defaultValue: false)
-                                              ? Colors.grey[700]
-                                              : Colors.grey[400]
-                                          : null),
-                                ),
-                              ],
-                            ),
-                            onTap: () {
-                              if (!chaptersRead
-                                  .containsKey('${snapshot.data[index].id}')) {
-                                chaptersRead.addAll({
-                                  snapshot.data[index].id: {
-                                    'read': false,
-                                    'page': 0
-                                  }
-                                });
-                                chaptersReadBox.put(widget.id, chaptersRead);
-                                chaptersRead = chaptersReadBox.get(widget.id);
-                              }
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (context) {
-                                  return ChapterView(
-                                    id: snapshot.data[index].id,
-                                    mangaId: widget.id,
-                                    mangaTitle: widget.title,
-                                    title: snapshot.data[index].title,
-                                    chapterCount: chapterCount,
-                                    order: chapterCount - index,
-                                    chapters: chaptersPassed,
-                                    index: index,
-                                    url: snapshot.data[index].url == null
-                                        ? ""
-                                        : snapshot.data[index].url,
-                                    source: widget.source,
-                                  );
-                                }),
-                              );
-                            },
-                          );
-                        }),
-                      );
-                    }
-                  }),
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 100.0,
-                ),
-              )
-            ],
+                                            : null),
+                                  ),
+                                  Text(getChapterPagesRead(
+                                      snapshot.data[index].id,
+                                      snapshot.data[index].pages)),
+                                  Text(
+                                    DateTime.now()
+                                                .difference(DateTime.parse(
+                                                    snapshot.data[index]
+                                                        .readableAt))
+                                                .inDays <
+                                            7
+                                        ? ' | ${DateTimeFormat.relative(
+                                            DateTime.parse(snapshot
+                                                .data[index].readableAt),
+                                          )}'
+                                        : getChapterDate(
+                                            snapshot.data[index].readableAt),
+                                    style: TextStyle(
+                                        color: getChaptersRead(
+                                                snapshot.data[index].id)
+                                            ? settingsBox.get('darkMode',
+                                                    defaultValue: false)
+                                                ? Colors.grey[700]
+                                                : Colors.grey[400]
+                                            : null),
+                                  ),
+                                ],
+                              ),
+                              onTap: () {
+                                if (!chaptersRead.containsKey(
+                                    '${snapshot.data[index].id}')) {
+                                  chaptersRead.addAll({
+                                    snapshot.data[index].id: {
+                                      'read': false,
+                                      'page': 0
+                                    }
+                                  });
+                                  chaptersReadBox.put(widget.id, chaptersRead);
+                                  chaptersRead = chaptersReadBox.get(widget.id);
+                                }
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) {
+                                    return ChapterView(
+                                      id: snapshot.data[index].id,
+                                      mangaId: widget.id,
+                                      mangaTitle: widget.title,
+                                      isWebtoon: tags.indexWhere((element) =>
+                                          element["attributes"]["name"]["en"] ==
+                                          'Long Strip'),
+                                      title: snapshot.data[index].title,
+                                      chapterCount: chapterCount,
+                                      order: chapterCount - index,
+                                      chapters: chaptersPassed,
+                                      index: index,
+                                      url: snapshot.data[index].url == null
+                                          ? ""
+                                          : snapshot.data[index].url,
+                                      source: widget.source,
+                                    );
+                                  }),
+                                );
+                              },
+                            );
+                          }),
+                        );
+                      }
+                    }),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 100.0,
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       ),
