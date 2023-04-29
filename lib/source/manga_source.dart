@@ -9,6 +9,10 @@ abstract class MangaSource {
 
   final String sourceURL = '';
 
+  Future<Response> updateLibraryRequest(String id);
+
+  updateLibraryParse(Response response);
+
   Future<Response> popularMangaRequest(int offset);
 
   popularMangaParse(Response response);
