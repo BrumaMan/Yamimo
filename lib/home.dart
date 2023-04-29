@@ -1,8 +1,12 @@
 import 'package:first_app/item_view.dart';
+import 'package:first_app/source/manga_source.dart';
+import 'package:first_app/source/source_helper.dart';
 import 'package:first_app/util/globals.dart';
+import 'package:first_app/widgets/library_filter_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:http/http.dart';
 import 'package:page_animation_transition/animations/fade_animation_transition.dart';
 import 'package:page_animation_transition/page_animation_transition.dart';
 import 'package:transparent_image/transparent_image.dart';
@@ -33,6 +37,7 @@ class _HomeState extends State<Home> {
   List<dynamic> mangaChapters = [];
   late int itemsPerRow;
   LibraryDeleteNotifier libraryDeleteNotifier = LibraryDeleteNotifier();
+  int updateCount = 0;
   @override
   void initState() {
     // TODO: implement initState
@@ -99,6 +104,38 @@ class _HomeState extends State<Home> {
     // }
   }
 
+  void updateLibraryItems() async {
+    var libraryItems = libraryBox.values;
+    snackbarKey.currentState?.showSnackBar(SnackBar(
+      content: Text('Updating'),
+      behavior: SnackBarBehavior.floating,
+    ));
+    for (var item in libraryItems) {
+      MangaSource source = SourceHelper().getSource(item['source']);
+      String id = item['id'];
+      DateTime addedAt = item['addedAt'];
+      Response updateResponse = await source.updateLibraryRequest(id);
+      var newDetails = source.updateLibraryParse(updateResponse);
+
+      libraryBox.put(id, {
+        'id': id,
+        'title': newDetails["title"],
+        'cover': newDetails["cover"],
+        'url': newDetails["url"],
+        'addedAt': addedAt,
+        'source': newDetails["source"],
+      });
+
+      setState(() {
+        updateCount++;
+      });
+    }
+
+    setState(() {
+      updateCount = 0;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -111,8 +148,23 @@ class _HomeState extends State<Home> {
           controller: homeScrollController,
           slivers: [
             SliverAppBar(
-              title: Text('Library'),
+              title: Text(updateCount == 0
+                  ? 'Library'
+                  : 'Library($updateCount of ${libraryBox.length})'),
               floating: true,
+              actions: [
+                IconButton(
+                    onPressed: () => updateLibraryItems(),
+                    icon: Icon(Icons.refresh))
+                // IconButton(
+                //     onPressed: () {
+                //       showBottomSheet(
+                //         context: context,
+                //         builder: (context) => LibraryFilter(),
+                //       );
+                //     },
+                //     icon: Icon(Icons.filter_list))
+              ],
             ),
             ValueListenableBuilder(
                 valueListenable: chaptersReadBox.listenable(),
@@ -243,19 +295,6 @@ class _HomeState extends State<Home> {
                                                   ["cover"],
                                               url: libraryItems[index]["url"] ??
                                                   libraryItems[index]["title"],
-                                              synopsis: libraryItems[index]
-                                                          ["synopsis"] ==
-                                                      null
-                                                  ? "No description"
-                                                  : libraryItems[index]
-                                                      ["synopsis"],
-                                              type: libraryItems[index]["type"],
-                                              year: libraryItems[index]["year"],
-                                              status: libraryItems[index]
-                                                  ["status"],
-                                              tags: libraryItems[index]["tags"],
-                                              author: libraryItems[index]
-                                                  ["author"],
                                               source: libraryItems[index]
                                                   ["source"],
                                               // scrapeDate: snapshot.data[index].scrapeDate,
