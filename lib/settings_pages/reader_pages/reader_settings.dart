@@ -36,6 +36,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
         children: [
           SwitchListTile(
               title: Text('Show reading mode'),
+              subtitle: Text('Briefly show current mode when reader is opened'),
               value: showReaderMode,
               onChanged: (value) {
                 setState(() {
@@ -99,6 +100,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
           ),
           SwitchListTile(
               title: Text('Keep screen on'),
+              subtitle: Text('Keep screen awake when in reader'),
               value: keepScreenOn,
               onChanged: (value) {
                 setState(() {
@@ -108,6 +110,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
               }),
           SwitchListTile(
               title: Text('Show page number'),
+              subtitle: Text('Show current page number on the bottom'),
               value: showPageNumber,
               onChanged: (value) {
                 setState(() {

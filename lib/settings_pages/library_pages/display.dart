@@ -38,6 +38,8 @@ class _DisplayState extends State<Display> {
             Text('Display', style: TextStyle(color: Colors.blue)),
             ListTile(
               title: Text('Items per row'),
+              subtitle: Text(
+                  checkValue == 2 ? 'Items: Default' : 'Items: $checkValue'),
               contentPadding: EdgeInsets.symmetric(horizontal: 0.0),
               onTap: () {
                 showDialog(
