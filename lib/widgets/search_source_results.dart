@@ -56,6 +56,7 @@ class _SearchSourceResultsState extends State<SearchSourceResults> {
             );
           } else {
             return GridView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
                   childAspectRatio: 0.7,

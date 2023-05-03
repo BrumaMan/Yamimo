@@ -60,7 +60,7 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
             title: 'Flutter Demo',
             scaffoldMessengerKey: snackbarKey,
-            scrollBehavior: MyCustomScrollBehavior(),
+            // scrollBehavior: MyCustomScrollBehavior(),
             theme: lightTheme,
             darkTheme: darkTheme,
             themeMode: settingsBox.get("darkMode", defaultValue: false)

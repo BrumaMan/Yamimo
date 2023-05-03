@@ -344,6 +344,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
             },
             child: CustomScrollView(
               controller: scrollViewController,
+              physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverAppBar(
                   title: AnimatedOpacity(
@@ -717,14 +718,10 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                               // tileColor: Colors.black,
                               contentPadding:
                                   EdgeInsets.symmetric(horizontal: 8.0),
-                              // leading: Card(
-                              //   clipBehavior: Clip.hardEdge,
-                              //   child: Image.network(
-                              //     snapshot.data[index].content[0],
-                              //     fit: BoxFit.cover,
-                              //     width: 50.0,
-                              //   ),
-                              // ),
+                              // trailing: IconButton(
+                              //     onPressed: () {},
+                              //     icon: Icon(
+                              //         Icons.download_for_offline_outlined)),
                               title: Row(
                                 children: [
                                   Expanded(

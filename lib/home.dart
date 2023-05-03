@@ -146,6 +146,7 @@ class _HomeState extends State<Home> {
         padding: const EdgeInsets.symmetric(horizontal: 5.0),
         child: CustomScrollView(
           controller: homeScrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverAppBar(
               title: Text(updateCount == 0
@@ -187,7 +188,7 @@ class _HomeState extends State<Home> {
                                   SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: itemsPerRow,
                                 childAspectRatio: 0.67,
-                                mainAxisSpacing: 5.0,
+                                mainAxisSpacing: 2.5,
                                 crossAxisSpacing: 2.5,
                               ),
                               itemCount: libraryItems.length,
