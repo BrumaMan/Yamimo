@@ -6,6 +6,7 @@ import 'package:first_app/source/source_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:optimized_cached_image/optimized_cached_image.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class SearchSourceResults extends StatefulWidget {
   const SearchSourceResults(
@@ -19,14 +20,19 @@ class SearchSourceResults extends StatefulWidget {
 }
 
 class _SearchSourceResultsState extends State<SearchSourceResults> {
+  Box settingsBox = Hive.box('settings');
+
   var mangas;
   int mangaCount = 0;
   late MangaSource source;
+  late int itemsPerRow;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    itemsPerRow = settingsBox.get('rowItems', defaultValue: 2);
+
     source = SourceHelper().getSource(widget.name);
     mangas = getRequest();
   }
@@ -58,9 +64,9 @@ class _SearchSourceResultsState extends State<SearchSourceResults> {
             return GridView.builder(
                 physics: const AlwaysScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
+                  crossAxisCount: itemsPerRow,
                   childAspectRatio: 0.7,
-                  mainAxisSpacing: 5.0,
+                  mainAxisSpacing: 2.5,
                   crossAxisSpacing: 2.5,
                 ),
                 itemCount: mangaCount,
@@ -94,7 +100,9 @@ class _SearchSourceResultsState extends State<SearchSourceResults> {
                                   ])),
                               padding: EdgeInsets.all(5.0),
                               height: 80,
-                              width: MediaQuery.of(context).size.width / 3 - 10,
+                              width: MediaQuery.of(context).size.width /
+                                      itemsPerRow -
+                                  10,
                               child: Text(
                                 snapshot.data[index].title ?? 'Unknown title',
                                 softWrap: true,
