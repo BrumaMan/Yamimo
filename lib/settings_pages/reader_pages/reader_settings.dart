@@ -110,7 +110,7 @@ class _ReaderSettingsState extends State<ReaderSettings> {
               }),
           SwitchListTile(
               title: Text('Show page number'),
-              subtitle: Text('Show current page number on the bottom'),
+              subtitle: Text('Show current page number in the reader'),
               value: showPageNumber,
               onChanged: (value) {
                 setState(() {
