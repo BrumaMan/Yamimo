@@ -28,7 +28,7 @@ class LibraryDeleteNotifier {
   }
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin {
   Box libraryBox = Hive.box('library');
   Box settingsBox = Hive.box('settings');
   Box chapterBox = Hive.box('chapters');
@@ -38,6 +38,10 @@ class _HomeState extends State<Home> {
   late int itemsPerRow;
   LibraryDeleteNotifier libraryDeleteNotifier = LibraryDeleteNotifier();
   int updateCount = 0;
+
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   void initState() {
     // TODO: implement initState
