@@ -53,6 +53,7 @@ class MangaDex implements MangaSource {
     Uri url = Uri.https("api.mangadex.org", "/manga", {
       'includes[]': ['cover_art', 'author'],
       'order[followedCount]': 'desc',
+      'offset': offset == 0 ? '$offset' : '${offset * 100}',
       'limit': '100'
     });
     final response = await http.get(url);
@@ -75,7 +76,7 @@ class MangaDex implements MangaSource {
             'https://uploads.mangadex.org/covers/${singleComic['id']}/${singleComic["relationships"][singleComic["relationships"].indexWhere((element) => element["type"] == "cover_art")]["attributes"]["fileName"]}.256.jpg',
         url: singleComic['attributes']['title']['en'] != null
             ? '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['en'].toLowerCase()}'
-            : '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['ja-ro'].toLowerCase()}',
+            : '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['ja-ro']}',
         // ??
         //     '$sourceURL/title/${singleComic['id']}/${singleComic['attributes']['title']['ja-ro'].toLowerCase()}',
       );
@@ -92,6 +93,7 @@ class MangaDex implements MangaSource {
     Uri url = Uri.https("api.mangadex.org", "/manga", {
       'includes[]': ['cover_art', 'author'],
       // 'order': { 'followedCount': 'desc'},
+      'offset': offset == 0 ? '$offset' : '${offset * 100}',
       'limit': '100'
     });
     final response = await http.get(url);

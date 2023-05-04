@@ -48,6 +48,7 @@ class ComickFun implements MangaSource {
       // 'includes[]': ['cover_art', 'author'],
       'sort': 'follow',
       // 'tachiyomi': 'true'
+      'page': '${offset + 1}',
       'limit': '100'
     });
     final response = await http.get(url);
@@ -55,7 +56,7 @@ class ComickFun implements MangaSource {
   }
 
   @override
-  Future<List<Manga>> popularMangaParse(http.Response response) async {
+  popularMangaParse(http.Response response) {
     var responseData = convert.jsonDecode(response.body);
     late http.Response detailsResponse;
 
@@ -87,6 +88,7 @@ class ComickFun implements MangaSource {
       // 'includes[]': ['cover_art', 'author'],
       'sort': 'uploaded',
       'tachiyomi': 'true',
+      'page': '${offset + 1}',
       'limit': '100'
     });
     final response = await http.get(url);
@@ -94,7 +96,7 @@ class ComickFun implements MangaSource {
   }
 
   @override
-  Future<List<Manga>> latestMangaParse(http.Response response) async {
+  latestMangaParse(http.Response response) {
     var responseData = convert.jsonDecode(response.body);
     late http.Response detailsResponse;
 
