@@ -58,7 +58,7 @@ class MyApp extends StatelessWidget {
       valueListenable: settingsBox.listenable(),
       builder: (context, value, child) {
         return MaterialApp(
-            title: 'Flutter Demo',
+            title: 'Yamimo',
             scaffoldMessengerKey: snackbarKey,
             // scrollBehavior: MyCustomScrollBehavior(),
             theme: lightTheme,
