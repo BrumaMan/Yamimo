@@ -865,33 +865,36 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
           //     onPressed: () {},
           //     child: Icon(Icons.play_arrow),
           //   )
-          FloatingActionButton.extended(
-        // isExtended: isUp,
-        onPressed: () {
-          continueReading(context);
-        },
-        // icon: Icon(Icons.play_arrow),
-        label: AnimatedSwitcher(
-          duration: Duration(milliseconds: 150),
-          transitionBuilder: (child, animation) => FadeTransition(
-            opacity: animation,
-            child: SizeTransition(
-              sizeFactor: animation,
-              axis: Axis.horizontal,
-              child: child,
+          Visibility(
+        visible: chapterCount != 0,
+        child: FloatingActionButton.extended(
+          // isExtended: isUp,
+          onPressed: () {
+            continueReading(context);
+          },
+          // icon: Icon(Icons.play_arrow),
+          label: AnimatedSwitcher(
+            duration: Duration(milliseconds: 150),
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SizeTransition(
+                sizeFactor: animation,
+                axis: Axis.horizontal,
+                child: child,
+              ),
             ),
+            child: !isUp
+                ? Icon(Icons.play_arrow)
+                : Row(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(right: 4.0),
+                        child: Icon(Icons.play_arrow),
+                      ),
+                      started ? Text('Continue') : Text('Start'),
+                    ],
+                  ),
           ),
-          child: !isUp
-              ? Icon(Icons.play_arrow)
-              : Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(right: 4.0),
-                      child: Icon(Icons.play_arrow),
-                    ),
-                    started ? Text('Continue') : Text('Start'),
-                  ],
-                ),
         ),
       ),
     );
