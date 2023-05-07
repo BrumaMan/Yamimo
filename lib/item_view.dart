@@ -281,8 +281,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
           id: last.id,
           mangaId: widget.id,
           mangaTitle: widget.title,
-          isWebtoon: tags.indexWhere(
-              (element) => element["attributes"]["name"]["en"] == 'Long Strip'),
+          isWebtoon: source.isWebtoon(tags),
           title: last.title,
           chapterCount: chapterCount,
           order: chapterCount - pageIndex,
@@ -829,9 +828,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                       id: snapshot.data[index].id,
                                       mangaId: widget.id,
                                       mangaTitle: widget.title,
-                                      isWebtoon: tags.indexWhere((element) =>
-                                          element["attributes"]["name"]["en"] ==
-                                          'Long Strip'),
+                                      isWebtoon: source.isWebtoon(tags),
                                       title: snapshot.data[index].title,
                                       chapterCount: chapterCount,
                                       order: chapterCount - index,

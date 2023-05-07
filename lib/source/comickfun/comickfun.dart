@@ -319,4 +319,9 @@ class ComickFun implements MangaSource {
     }
     return tags;
   }
+
+  @override
+  isWebtoon(List tags) {
+    return tags.indexWhere((element) => element["name"] == 'Long Strip');
+  }
 }

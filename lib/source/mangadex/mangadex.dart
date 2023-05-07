@@ -351,4 +351,10 @@ class MangaDex implements MangaSource {
     }
     return tags;
   }
+
+  @override
+  isWebtoon(List tags) {
+    return tags.indexWhere(
+        (element) => element["attributes"]["name"]["en"] == 'Long Strip');
+  }
 }

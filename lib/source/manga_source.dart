@@ -40,4 +40,6 @@ abstract class MangaSource {
   imageParse(Response response);
 
   getGenres(List<dynamic> genres);
+
+  isWebtoon(List<dynamic> tags);
 }
