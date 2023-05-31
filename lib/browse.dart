@@ -21,6 +21,7 @@ class _BrowseState extends State<Browse> {
   late TextEditingController textController;
   Box settingsBox = Hive.box('settings');
   bool search = false;
+  List<String> mangaSources = sources;
 
   List<String> backImages = [
     'assets/c5a3090c-4ca0-40a2-9102-e0ee0c6dac15.jpg',
@@ -32,6 +33,7 @@ class _BrowseState extends State<Browse> {
   void initState() {
     super.initState();
     textController = TextEditingController();
+    mangaSources.sort((a, b) => a.compareTo(b));
   }
 
   @override
