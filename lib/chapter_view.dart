@@ -14,6 +14,7 @@ import 'package:status_bar_control/status_bar_control.dart';
 import 'package:preload_page_view/preload_page_view.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:keep_screen_on/keep_screen_on.dart';
+import 'package:mno_zoom_widget/zoom_widget.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 
@@ -103,7 +104,7 @@ class _ChapterViewState extends State<ChapterView>
         viewportFraction: selectedMenu == MenuItems.webtoon ||
                 selectedMenu == MenuItems.continuousVertical
             ? widget.isWebtoon >= 0
-                ? 4.0
+                ? 3.0
                 : 0.7
             : 1.0);
     _controller = AnimationController(
@@ -489,7 +490,22 @@ class _ChapterViewState extends State<ChapterView>
                                         return Column(
                                           children: [
                                             Expanded(
-                                              child: InteractiveViewer(
+                                              child: Zoom(
+                                                maxZoomHeight: selectedMenu ==
+                                                            MenuItems.webtoon ||
+                                                        selectedMenu ==
+                                                            MenuItems
+                                                                .continuousVertical
+                                                    ? widget.isWebtoon >= 0
+                                                        ? 8000
+                                                        : 1850
+                                                    : 1800,
+                                                maxZoomWidth: 1200,
+                                                initZoom: 0.0,
+                                                canvasColor: Colors.transparent,
+                                                backgroundColor:
+                                                    Colors.transparent,
+                                                opacityScrollBars: 0.0,
                                                 child: Image.network(
                                                   snapshot.data![index],
                                                   width: MediaQuery.of(context)
@@ -695,6 +711,16 @@ class _ChapterViewState extends State<ChapterView>
                               //     Theme.of(context).useMaterial3.toString());
                               selectedMenu = item;
                               settingsBox.put('readerMode', '$selectedMenu');
+                              pageController = PreloadPageController(
+                                  initialPage: chapterInitialPage,
+                                  viewportFraction:
+                                      selectedMenu == MenuItems.webtoon ||
+                                              selectedMenu ==
+                                                  MenuItems.continuousVertical
+                                          ? widget.isWebtoon >= 0
+                                              ? 4.0
+                                              : 0.7
+                                          : 1.0);
                             });
                           },
                           itemBuilder: (context) => <PopupMenuEntry<MenuItems>>[
