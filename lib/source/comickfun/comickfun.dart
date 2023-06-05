@@ -44,7 +44,7 @@ class ComickFun implements MangaSource {
 
   @override
   popularMangaRequest(int offset) async {
-    Uri url = Uri.https(baseURL, "/search", {
+    Uri url = Uri.https(baseURL, "/v1.0/search", {
       // 'includes[]': ['cover_art', 'author'],
       'sort': 'follow',
       // 'tachiyomi': 'true'
@@ -61,6 +61,9 @@ class ComickFun implements MangaSource {
     late http.Response detailsResponse;
 
     List<Manga> comics = [];
+    if (response.statusCode != 200) {
+      return comics;
+    }
     int index = 0;
     for (var singleComic in responseData) {
       if (singleComic['hid'] == null) {
@@ -84,7 +87,7 @@ class ComickFun implements MangaSource {
 
   @override
   Future<http.Response> latestMangaRequest(int offset) async {
-    Uri url = Uri.https(baseURL, "/search", {
+    Uri url = Uri.https(baseURL, "/v1.0/search", {
       // 'includes[]': ['cover_art', 'author'],
       'sort': 'uploaded',
       'tachiyomi': 'true',
@@ -101,6 +104,9 @@ class ComickFun implements MangaSource {
     late http.Response detailsResponse;
 
     List<Manga> comics = [];
+    if (response.statusCode != 200) {
+      return comics;
+    }
     int index = 0;
     for (var singleComic in responseData) {
       if (singleComic['hid'] == null) {
@@ -125,7 +131,7 @@ class ComickFun implements MangaSource {
   @override
   Future<http.Response> searchMangaRequest(
       int offset, String query, String filter) async {
-    Uri url = Uri.https(baseURL, "/search", {
+    Uri url = Uri.https(baseURL, "/v1.0/search", {
       'q': query,
       // 'sort': 'follow',
       // 'limit': '100'
@@ -140,6 +146,9 @@ class ComickFun implements MangaSource {
     late http.Response detailsResponse;
 
     List<Manga> manga = [];
+    if (response.statusCode != 200) {
+      return manga;
+    }
     int index = 0;
     for (var singleComic in responseData) {
       if (singleComic['hid'] == null) {
@@ -310,7 +319,7 @@ class ComickFun implements MangaSource {
             border: Border.all(color: Colors.grey.withOpacity(0.8)),
             borderRadius: BorderRadius.all(Radius.circular(8.0))),
         padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
-        margin: EdgeInsets.symmetric(vertical: 4.0),
+        margin: EdgeInsets.only(right: 4.0),
         child: Text(tag["name"],
             style: TextStyle(
               fontSize: 12,
