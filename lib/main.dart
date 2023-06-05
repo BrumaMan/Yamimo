@@ -169,51 +169,47 @@ class _MyHomePageState extends State<MyHomePage> {
           child: ValueListenableBuilder(
             valueListenable: settingsBox.listenable(),
             builder: (context, value, child) {
-              return Hidable(
-                preferredWidgetSize: Size.fromHeight(100),
-                controller: homeScrollController,
-                child: NavigationBar(
-                  destinations: [
-                    NavigationDestination(
-                        icon: Icon(Icons.collections_bookmark_outlined,
-                            color:
-                                settingsBox.get("darkMode", defaultValue: false)
-                                    ? white
-                                    : black),
-                        selectedIcon: Icon(Icons.collections_bookmark,
-                            color:
-                                settingsBox.get("darkMode", defaultValue: false)
-                                    ? white
-                                    : black),
-                        label: 'Library'),
-                    NavigationDestination(
-                        icon: Icon(Icons.explore_outlined,
-                            color:
-                                settingsBox.get("darkMode", defaultValue: false)
-                                    ? white
-                                    : black),
-                        selectedIcon: Icon(Icons.explore,
-                            color:
-                                settingsBox.get("darkMode", defaultValue: false)
-                                    ? white
-                                    : black),
-                        label: 'Explore'),
-                    NavigationDestination(
-                        icon: Icon(Icons.more_horiz,
-                            color:
-                                settingsBox.get("darkMode", defaultValue: false)
-                                    ? white
-                                    : black),
-                        label: 'More'),
-                  ],
-                  onDestinationSelected: (int index) {
-                    setState(() {
-                      currentIndex = index;
-                    });
-                  },
-                  selectedIndex: currentIndex,
-                  // labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-                ),
+              return NavigationBar(
+                destinations: [
+                  NavigationDestination(
+                      icon: Icon(Icons.collections_bookmark_outlined,
+                          color:
+                              settingsBox.get("darkMode", defaultValue: false)
+                                  ? white
+                                  : black),
+                      selectedIcon: Icon(Icons.collections_bookmark,
+                          color:
+                              settingsBox.get("darkMode", defaultValue: false)
+                                  ? white
+                                  : black),
+                      label: 'Library'),
+                  NavigationDestination(
+                      icon: Icon(Icons.explore_outlined,
+                          color:
+                              settingsBox.get("darkMode", defaultValue: false)
+                                  ? white
+                                  : black),
+                      selectedIcon: Icon(Icons.explore,
+                          color:
+                              settingsBox.get("darkMode", defaultValue: false)
+                                  ? white
+                                  : black),
+                      label: 'Explore'),
+                  NavigationDestination(
+                      icon: Icon(Icons.more_horiz,
+                          color:
+                              settingsBox.get("darkMode", defaultValue: false)
+                                  ? white
+                                  : black),
+                      label: 'More'),
+                ],
+                onDestinationSelected: (int index) {
+                  setState(() {
+                    currentIndex = index;
+                  });
+                },
+                selectedIndex: currentIndex,
+                // labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
               );
             },
           ),
