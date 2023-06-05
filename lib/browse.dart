@@ -9,6 +9,8 @@ import 'package:first_app/widgets/source_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:page_animation_transition/animations/fade_animation_transition.dart';
+import 'package:page_animation_transition/page_animation_transition.dart';
 
 class Browse extends StatefulWidget {
   const Browse({super.key});
@@ -148,19 +150,21 @@ class _BrowseState extends State<Browse> {
               title: Text(sources[index]),
               trailing: TextButton(
                   onPressed: () {
-                    Navigator.of(context).push(CupertinoPageRoute(
-                        builder: ((context) => SearchResultAll(
-                              name: sources[index],
-                              sort: 'Latest',
-                            ))));
+                    Navigator.of(context).push(PageAnimationTransition(
+                        page: SearchResultAll(
+                          name: sources[index],
+                          sort: 'Latest',
+                        ),
+                        pageAnimationType: FadeAnimationTransition()));
                   },
                   child: Text('Latest')),
               onTap: () {
-                Navigator.of(context).push(CupertinoPageRoute(
-                    builder: ((context) => SearchResultAll(
-                          name: sources[index],
-                          sort: 'Popular',
-                        ))));
+                Navigator.of(context).push(PageAnimationTransition(
+                    page: SearchResultAll(
+                      name: sources[index],
+                      sort: 'Popular',
+                    ),
+                    pageAnimationType: FadeAnimationTransition()));
               },
             );
           },

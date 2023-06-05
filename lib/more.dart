@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:list_tile_switch/list_tile_switch.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:page_animation_transition/animations/fade_animation_transition.dart';
+import 'package:page_animation_transition/page_animation_transition.dart';
 
 class More extends StatefulWidget {
   const More({super.key});
@@ -72,30 +74,27 @@ class _MoreState extends State<More> {
             title: Text('Overview'),
             leading: Icon(Icons.bar_chart, color: Colors.blue[400]),
             onTap: () {
-              Navigator.of(context).push(CupertinoPageRoute(
-                builder: (context) {
-                  return Overview();
-                },
-              ));
+              Navigator.of(context).push(PageAnimationTransition(
+                  page: Overview(),
+                  pageAnimationType: FadeAnimationTransition()));
             },
           ),
           ListTile(
             title: Text('Settings'),
             leading: Icon(Icons.settings_outlined, color: Colors.blue[400]),
             onTap: () {
-              Navigator.of(context).push(CupertinoPageRoute(
-                builder: (context) {
-                  return const Settings();
-                },
-              ));
+              Navigator.of(context).push(PageAnimationTransition(
+                  page: const Settings(),
+                  pageAnimationType: FadeAnimationTransition()));
             },
           ),
           ListTile(
             title: Text('About'),
             leading: Icon(Icons.info_outline, color: Colors.blue[400]),
             onTap: () {
-              Navigator.of(context).push(
-                  MaterialPageRoute(builder: ((context) => AboutScreen())));
+              Navigator.of(context).push(PageAnimationTransition(
+                  page: const AboutScreen(),
+                  pageAnimationType: FadeAnimationTransition()));
             },
           )
         ],

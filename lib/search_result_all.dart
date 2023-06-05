@@ -12,7 +12,10 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+import 'package:page_animation_transition/animations/fade_animation_transition.dart';
 import 'dart:convert' as convert;
+
+import 'package:page_animation_transition/page_animation_transition.dart';
 
 class SearchResultAll extends StatefulWidget {
   const SearchResultAll({super.key, required this.name, required this.sort});
@@ -214,18 +217,19 @@ class _SearchResultState extends State<SearchResultAll>
                               ),
                             ),
                             onTap: () {
-                              Navigator.of(context)
-                                  .push(CupertinoPageRoute(builder: (context) {
-                                return ItemView(
-                                  id: snapshot.data[index].id,
-                                  title: snapshot.data[index].title ??
-                                      'Unknown title',
-                                  cover: snapshot.data[index].cover,
-                                  url: snapshot.data[index].url,
-                                  source: widget.name,
-                                  // scrapeDate: snapshot.data[index].scrapeDate,
-                                );
-                              }));
+                              Navigator.of(context).push(
+                                  PageAnimationTransition(
+                                      page: ItemView(
+                                        id: snapshot.data[index].id,
+                                        title: snapshot.data[index].title ??
+                                            'Unknown title',
+                                        cover: snapshot.data[index].cover,
+                                        url: snapshot.data[index].url,
+                                        source: widget.name,
+                                        // scrapeDate: snapshot.data[index].scrapeDate,
+                                      ),
+                                      pageAnimationType:
+                                          FadeAnimationTransition()));
                             },
                           );
                         },
@@ -235,10 +239,15 @@ class _SearchResultState extends State<SearchResultAll>
                   }
                 },
               ),
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 20.0,
+                ),
+              )
             ]),
       ),
-      floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.filter_list), onPressed: () {}),
+      // floatingActionButton: FloatingActionButton(
+      //     child: Icon(Icons.filter_list), onPressed: () {}),
     );
   }
 }

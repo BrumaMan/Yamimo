@@ -5,6 +5,8 @@ import 'package:first_app/settings_pages/library_pages/library_settings.dart';
 import 'package:first_app/settings_pages/reader_pages/reader_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:page_animation_transition/animations/fade_animation_transition.dart';
+import 'package:page_animation_transition/page_animation_transition.dart';
 
 class Settings extends StatelessWidget {
   const Settings({super.key});
@@ -21,38 +23,43 @@ class Settings extends StatelessWidget {
             title: Text("General"),
             leading: Icon(Icons.tune, color: Colors.blue),
             onTap: () {
-              Navigator.of(context).push(CupertinoPageRoute(
-                  builder: ((context) => GeneralSettings())));
+              Navigator.of(context).push(PageAnimationTransition(
+                  page: GeneralSettings(),
+                  pageAnimationType: FadeAnimationTransition()));
             },
           ),
           ListTile(
             title: Text("Appearance"),
             leading: Icon(Icons.palette_outlined, color: Colors.blue),
-            onTap: () => Navigator.of(context).push(CupertinoPageRoute(
-                builder: ((context) => AppearanceSettings()))),
+            onTap: () => Navigator.of(context).push(PageAnimationTransition(
+                page: AppearanceSettings(),
+                pageAnimationType: FadeAnimationTransition())),
           ),
           ListTile(
             title: Text("Library"),
             leading:
                 Icon(Icons.collections_bookmark_outlined, color: Colors.blue),
-            onTap: () => Navigator.of(context).push(
-                CupertinoPageRoute(builder: ((context) => LibrarySettings()))),
+            onTap: () => Navigator.of(context).push(PageAnimationTransition(
+                page: LibrarySettings(),
+                pageAnimationType: FadeAnimationTransition())),
           ),
           ListTile(
             title: Text("Reader"),
             leading:
                 Icon(Icons.chrome_reader_mode_outlined, color: Colors.blue),
             onTap: () {
-              Navigator.of(context).push(
-                  CupertinoPageRoute(builder: ((context) => ReaderSettings())));
+              Navigator.of(context).push(PageAnimationTransition(
+                  page: ReaderSettings(),
+                  pageAnimationType: FadeAnimationTransition()));
             },
           ),
           ListTile(
             title: Text("Advanced"),
             leading: Icon(Icons.data_object, color: Colors.blue),
             onTap: () {
-              Navigator.of(context).push(CupertinoPageRoute(
-                  builder: ((context) => AdvancedSettings())));
+              Navigator.of(context).push(PageAnimationTransition(
+                  page: AdvancedSettings(),
+                  pageAnimationType: FadeAnimationTransition()));
             },
           ),
           // ListTile(
