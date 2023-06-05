@@ -46,6 +46,7 @@ class ItemView extends StatefulWidget {
 class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   late ScrollController scrollViewController;
   late TabController _tabController;
+  late AnimationController _controller;
   Box settingsBox = Hive.box('settings');
   Box libraryBox = Hive.box('library');
   Box chapterBox = Hive.box('chapters');
@@ -67,6 +68,8 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   bool started = false;
   late MangaSource source;
   late List<Color> gradientColors;
+  late Color appBarColor;
+  late Animation<Color?> _animation;
 
   double sensitivityFactor = 20.0;
 
@@ -76,6 +79,9 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
     gradientColors = settingsBox.get('darkMode', defaultValue: false)
         ? [Colors.black, Colors.black.withOpacity(0.7)]
         : [Colors.white, Colors.white.withOpacity(0.6)];
+    appBarColor = settingsBox.get('darkMode', defaultValue: false)
+        ? Colors.black
+        : Colors.white;
     chaptersRead = chaptersReadBox.get(widget.id, defaultValue: {});
     if (chaptersRead['chapter'] != null) {
       chaptersReadBox.delete(widget.id);
@@ -83,7 +89,15 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
     }
     scrollViewController = ScrollController();
     _tabController = TabController(length: 3, vsync: this);
+    _controller =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 200));
     // textController = TextEditingController(text: widget.searchTerm);
+    _animation =
+        ColorTween(begin: appBarColor.withOpacity(0.02), end: appBarColor)
+            .animate(_controller)
+          ..addListener(() {
+            setState(() {});
+          });
     source = SourceHelper().getSource(widget.source);
     mangaDetails = getMangaDetails();
     chapters = getRequest();
@@ -95,6 +109,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   void dispose() {
     // textController.dispose();
     scrollViewController.dispose();
+    _controller.dispose();
     snackbarKey.currentState?.clearSnackBars();
     super.dispose();
   }
@@ -312,12 +327,60 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       //     ),
       //   ),
       // ),
+      appBar: AppBar(
+        title: AnimatedOpacity(
+            opacity: position >= 200.0 ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 200),
+            child: Text(widget.title)),
+        backgroundColor: _animation.value,
+        // expandedHeight: 250,
+        // surfaceTintColor: Color(999),
+        // iconTheme: IconThemeData(color: Colors.white),
+        bottom: PreferredSize(
+            preferredSize: Size.fromHeight(4.0),
+            child: Visibility(
+                visible: fetchingData,
+                child: LinearProgressIndicator(
+                  minHeight: 4.0,
+                ))),
+        actions: [
+          ValueListenableBuilder(
+            valueListenable: libraryBox.listenable(),
+            builder: (context, value, child) => IconButton(
+              onPressed: () {
+                onLibraryPress(widget.id, widget.title, widget.cover,
+                    widget.url, DateTime.now(), widget.source);
+                updateChapterNumber(widget.id);
+              },
+              icon: getIcons(widget.id),
+            ),
+          ),
+          IconButton(
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) {
+                    return WebView(
+                      url: widget.url,
+                      title: widget.title,
+                    );
+                  },
+                ));
+              },
+              icon: Icon(Icons.public_outlined)),
+          IconButton(
+              onPressed: () {
+                Share.share(widget.url);
+              },
+              icon: Icon(Icons.share_outlined)),
+        ],
+      ),
       body: NotificationListener<ScrollNotification>(
         onNotification: (ScrollNotification scrollInfo) {
           if (scrollViewController.position.userScrollDirection ==
               ScrollDirection.reverse) {
             position = scrollInfo.metrics.pixels;
             // debugPrint('$position');
+            position > 0.0 && position <= 10.0 ? _controller.forward() : null;
             setState(() {
               isUp = false;
             });
@@ -326,7 +389,9 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
               ScrollDirection.forward) {
             position = scrollInfo.metrics.pixels;
             // debugPrint('$position');
-
+            if (position <= 5.0) {
+              _controller.reverse();
+            }
             setState(() {
               isUp = true;
             });
@@ -345,161 +410,6 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
               controller: scrollViewController,
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-                SliverAppBar(
-                  title: AnimatedOpacity(
-                      opacity: position >= 200.0 ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Text(widget.title)),
-                  pinned: true,
-                  // backgroundColor: Colors.transparent,
-                  expandedHeight: 250,
-                  // surfaceTintColor: Color(999),
-                  // iconTheme: IconThemeData(color: Colors.white),
-                  // bottom: PreferredSize(
-                  //     preferredSize: Size.fromHeight(4.0),
-                  //     child: Visibility(
-                  //         visible: fetchingData,
-                  //         child: LinearProgressIndicator(
-                  //           minHeight: 4.0,
-                  //         ))),
-
-                  flexibleSpace: FlexibleSpaceBar(
-                    collapseMode: CollapseMode.pin,
-                    background: Stack(children: [
-                      Container(
-                        foregroundDecoration: BoxDecoration(
-                            gradient: LinearGradient(
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
-                                colors: gradientColors)),
-                        width: MediaQuery.of(context).size.width,
-                        child: CachedNetworkImage(
-                          imageUrl: widget.cover,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Positioned(
-                          width: MediaQuery.of(context).size.width,
-                          top: MediaQuery.of(context).systemGestureInsets.top +
-                              kToolbarHeight,
-                          child: Visibility(
-                              visible: fetchingData,
-                              child: LinearProgressIndicator(
-                                minHeight: 4.0,
-                              ))),
-                      Positioned(
-                        top: MediaQuery.of(context).systemGestureInsets.top +
-                            kToolbarHeight +
-                            8.0,
-                        left: 8.0,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Card(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4.0)),
-                              clipBehavior: Clip.hardEdge,
-                              child: CachedNetworkImage(
-                                  imageUrl: widget.cover,
-                                  height: 150,
-                                  width: 100,
-                                  fit: BoxFit.cover),
-                            ),
-                            Flexible(
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.only(
-                                          left: 8.0, right: 8.0),
-                                      width: MediaQuery.of(context).size.width /
-                                              1.3 -
-                                          16,
-                                      child: Text(
-                                        widget.title,
-                                        softWrap: true,
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 5,
-                                        style: const TextStyle(fontSize: 22.0),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 8.0, right: 8.0, top: 8.0),
-                                      child: FutureBuilder(
-                                        future: mangaDetails,
-                                        builder:
-                                            (context, AsyncSnapshot snapshot) {
-                                          if (!snapshot.hasData) {
-                                            return Text('');
-                                          } else {
-                                            return Text(
-                                              '${snapshot.data.author}',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
-                                            );
-                                          }
-                                        },
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        left: 8.0,
-                                        right: 8.0,
-                                      ),
-                                      child: Visibility(
-                                        visible: missingChapters != 0,
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.warning,
-                                              size: 16,
-                                            ),
-                                            Text(
-                                                ' Missing ~ $missingChapters chapter(s)'),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                  ]),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ]),
-                  ),
-                  actions: [
-                    ValueListenableBuilder(
-                      valueListenable: libraryBox.listenable(),
-                      builder: (context, value, child) => IconButton(
-                        onPressed: () {
-                          onLibraryPress(widget.id, widget.title, widget.cover,
-                              widget.url, DateTime.now(), widget.source);
-                          updateChapterNumber(widget.id);
-                        },
-                        icon: getIcons(widget.id),
-                      ),
-                    ),
-                    IconButton(
-                        onPressed: () {
-                          Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) {
-                              return WebView(
-                                url: widget.url,
-                                title: widget.title,
-                              );
-                            },
-                          ));
-                        },
-                        icon: Icon(Icons.public_outlined)),
-                    IconButton(
-                        onPressed: () {
-                          Share.share(widget.url);
-                        },
-                        icon: Icon(Icons.share_outlined)),
-                  ],
-                ),
                 FutureBuilder(
                   future: mangaDetails,
                   builder: (context, AsyncSnapshot snapshot) {
@@ -509,75 +419,120 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                       return SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.only(
-                              top: 8.0, left: 8.0, bottom: 0.0, right: 8.0),
+                              top: 0.0, left: 0.0, bottom: 0.0, right: 0.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Row(
-                              //   // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              //   children: [
-                              //     Card(
-                              //       shape: RoundedRectangleBorder(
-                              //           borderRadius: BorderRadius.circular(4.0)),
-                              //       clipBehavior: Clip.hardEdge,
-                              //       child: CachedNetworkImage(
-                              //           imageUrl: widget.cover,
-                              //           height: 150,
-                              //           width: 100,
-                              //           fit: BoxFit.cover),
-                              //     ),
-                              //     Expanded(
-                              //       child: Column(
-                              //           crossAxisAlignment: CrossAxisAlignment.start,
-                              //           children: [
-                              //             Container(
-                              //               padding: const EdgeInsets.only(left: 8.0),
-                              //               width: MediaQuery.of(context).size.width /
-                              //                       1.3 -
-                              //                   16,
-                              //               child: Text(
-                              //                 widget.title,
-                              //                 softWrap: true,
-                              //                 overflow: TextOverflow.ellipsis,
-                              //                 maxLines: 5,
-                              //                 style: const TextStyle(fontSize: 22.0),
-                              //               ),
-                              //             ),
-                              //             Padding(
-                              //               padding: const EdgeInsets.only(
-                              //                   left: 8.0, right: 8.0, top: 8.0),
-                              //               child: Text(
-                              //                 '${widget.author}',
-                              //                 style: TextStyle(
-                              //                     fontWeight: FontWeight.bold),
-                              //               ),
-                              //             ),
-                              //             Padding(
-                              //               padding: const EdgeInsets.only(
-                              //                 left: 8.0,
-                              //                 right: 8.0,
-                              //               ),
-                              //               child: Visibility(
-                              //                 visible: missingChapters != 0,
-                              //                 child: Row(
-                              //                   children: [
-                              //                     Icon(
-                              //                       Icons.warning,
-                              //                       size: 16,
-                              //                     ),
-                              //                     Text(
-                              //                         ' Missing ~ $missingChapters chapter(s)'),
-                              //                   ],
-                              //                 ),
-                              //               ),
-                              //             )
-                              //           ]),
-                              //     ),
-                              //   ],
-                              // ),
+                              Stack(children: [
+                                Container(
+                                  foregroundDecoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                          begin: Alignment.bottomCenter,
+                                          end: Alignment.topCenter,
+                                          colors: gradientColors)),
+                                  width: MediaQuery.of(context).size.width,
+                                  child: CachedNetworkImage(
+                                    imageUrl: widget.cover,
+                                    fit: BoxFit.cover,
+                                    height: 320,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: MediaQuery.of(context)
+                                          .systemGestureInsets
+                                          .top +
+                                      kToolbarHeight +
+                                      8.0,
+                                  left: 8.0,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Card(
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(4.0)),
+                                        clipBehavior: Clip.hardEdge,
+                                        child: CachedNetworkImage(
+                                            imageUrl: widget.cover,
+                                            height: 150,
+                                            width: 100,
+                                            fit: BoxFit.cover),
+                                      ),
+                                      Flexible(
+                                        child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.only(
+                                                    left: 8.0, right: 8.0),
+                                                width: MediaQuery.of(context)
+                                                            .size
+                                                            .width /
+                                                        1.3 -
+                                                    16,
+                                                child: Text(
+                                                  widget.title,
+                                                  softWrap: true,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  maxLines: 5,
+                                                  style: const TextStyle(
+                                                      fontSize: 22.0),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    left: 8.0,
+                                                    right: 8.0,
+                                                    top: 8.0),
+                                                child: FutureBuilder(
+                                                  future: mangaDetails,
+                                                  builder: (context,
+                                                      AsyncSnapshot snapshot) {
+                                                    if (!snapshot.hasData) {
+                                                      return Text('');
+                                                    } else {
+                                                      return Text(
+                                                        '${snapshot.data.author}',
+                                                        style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      );
+                                                    }
+                                                  },
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                  left: 8.0,
+                                                  right: 8.0,
+                                                ),
+                                                child: Visibility(
+                                                  visible: missingChapters != 0,
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.warning,
+                                                        size: 16,
+                                                      ),
+                                                      Text(
+                                                          ' Missing ~ $missingChapters chapter(s)'),
+                                                    ],
+                                                  ),
+                                                ),
+                                              )
+                                            ]),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ]),
                               Padding(
-                                padding: EdgeInsets.only(top: 0),
+                                padding: EdgeInsets.only(left: 8.0, right: 8.0),
                                 child: IntrinsicHeight(
                                   child: Row(
                                       mainAxisAlignment:
@@ -620,7 +575,8 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                               ),
                               Container(
                                 width: MediaQuery.of(context).size.width,
-                                padding: const EdgeInsets.all(8.0),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0, vertical: 8.0),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -657,13 +613,19 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                   ],
                                 ),
                               ),
-                              Wrap(
-                                spacing: 5.0,
-                                runSpacing: 0.0,
-                                children: tagsWidget,
+                              SizedBox(
+                                height: 30,
+                                child: ListView(
+                                  padding:
+                                      EdgeInsets.only(left: 8.0, right: 6.0),
+                                  scrollDirection: Axis.horizontal,
+                                  // shrinkWrap: true,
+                                  children: tagsWidget,
+                                ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
+                                padding: const EdgeInsets.only(
+                                    top: 8.0, left: 8.0, right: 8.0),
                                 child: Visibility(
                                   visible: !fetchingData,
                                   child: Row(
