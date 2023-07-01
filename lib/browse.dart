@@ -1,7 +1,3 @@
-import 'dart:ui';
-
-import 'package:first_app/authors.dart';
-import 'package:first_app/genres.dart';
 import 'package:first_app/search_result.dart';
 import 'package:first_app/search_result_all.dart';
 import 'package:first_app/util/globals.dart';

@@ -4,9 +4,9 @@ import 'package:hive_flutter/hive_flutter.dart';
 class Overview extends StatelessWidget {
   Overview({super.key});
 
-  Box libraryBox = Hive.box('library');
-  Box chapterBox = Hive.box('chapters');
-  Box chaptersReadBox = Hive.box('chaptersRead');
+  final Box libraryBox = Hive.box('library');
+  final Box chapterBox = Hive.box('chapters');
+  final Box chaptersReadBox = Hive.box('chaptersRead');
 
   int getCompletedCount({bool started = false}) {
     int completed = 0;

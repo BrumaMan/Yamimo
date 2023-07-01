@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:first_app/item_view.dart';
 import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/model/manga.dart';

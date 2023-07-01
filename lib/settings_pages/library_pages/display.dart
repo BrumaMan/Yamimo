@@ -1,9 +1,5 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_switch/flutter_switch.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:list_tile_switch/list_tile_switch.dart';
 
 class Display extends StatefulWidget {
   const Display({super.key, required this.context});

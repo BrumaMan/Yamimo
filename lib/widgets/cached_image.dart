@@ -1,4 +1,5 @@
-import 'package:cached_network_image/cached_network_image.dart';
+// ignore_for_file: must_call_super
+
 import 'package:flutter/material.dart';
 import 'package:optimized_cached_image/optimized_cached_image.dart';
 

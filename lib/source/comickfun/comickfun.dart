@@ -58,7 +58,6 @@ class ComickFun implements MangaSource {
   @override
   popularMangaParse(http.Response response) {
     var responseData = convert.jsonDecode(response.body);
-    late http.Response detailsResponse;
 
     List<Manga> comics = [];
     if (response.statusCode != 200) {
@@ -101,7 +100,6 @@ class ComickFun implements MangaSource {
   @override
   latestMangaParse(http.Response response) {
     var responseData = convert.jsonDecode(response.body);
-    late http.Response detailsResponse;
 
     List<Manga> comics = [];
     if (response.statusCode != 200) {
@@ -143,7 +141,6 @@ class ComickFun implements MangaSource {
   @override
   searchMangaParse(http.Response response) async {
     var responseData = convert.jsonDecode(response.body);
-    late http.Response detailsResponse;
 
     List<Manga> manga = [];
     if (response.statusCode != 200) {
@@ -274,15 +271,12 @@ class ComickFun implements MangaSource {
   @override
   pageListParse(http.Response response) {
     var responseData = convert.jsonDecode(response.body)['chapter'];
-    String? baseUrl = responseData["server"];
-    String? hash = responseData["hash"];
 
     // print(responseData);
 
     //Creating a list to store input data;
     List<String> pages = [];
     List<Widget> tempPageViews = [];
-    int index = 0;
     try {
       for (var page in responseData['md_images']) {
         //Adding user to the list.

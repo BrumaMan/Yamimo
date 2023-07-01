@@ -3,7 +3,6 @@ import 'package:first_app/overview.dart';
 import 'package:first_app/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:list_tile_switch/list_tile_switch.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:page_animation_transition/animations/fade_animation_transition.dart';
 import 'package:page_animation_transition/page_animation_transition.dart';

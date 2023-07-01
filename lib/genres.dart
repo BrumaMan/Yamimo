@@ -1,6 +1,3 @@
-import 'dart:ui';
-
-import 'package:first_app/search_result_all.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -48,7 +45,6 @@ class _GenresScreenState extends State<GenresScreen> {
     responseData
         .removeWhere((element) => element["attributes"]["group"] != 'genre');
     List<Tag> tags = [];
-    int index = 0;
     for (var singleTag in responseData) {
       Tag tag = Tag(
         id: singleTag["id"],

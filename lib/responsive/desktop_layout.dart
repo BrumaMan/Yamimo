@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:first_app/browse.dart';
 import 'package:first_app/home.dart';
 import 'package:first_app/more.dart';
-import 'package:first_app/search_result.dart';
-import 'package:status_bar_control/status_bar_control.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -16,7 +14,6 @@ class DesktopLayout extends StatefulWidget {
 
 class _DesktopLayoutState extends State<DesktopLayout> {
   Box settingsBox = Hive.box('settings');
-  int _counter = 0;
   int currentIndex = 0;
   final List<String> _screenNames = ['Library', 'Explore', 'More'];
   final List<Widget> _screens = const [

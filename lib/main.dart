@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable
+
 import 'dart:ui';
 
 import 'package:first_app/browse.dart';
@@ -5,17 +7,14 @@ import 'package:first_app/home.dart';
 import 'package:first_app/more.dart';
 import 'package:first_app/responsive/desktop_layout.dart';
 import 'package:first_app/responsive/responsive_layout.dart';
-import 'package:first_app/search_result.dart';
 import 'package:first_app/source/model/chapter.dart';
 import 'package:first_app/source/model/manga_details.dart';
 import 'package:first_app/util/globals.dart';
 import 'package:first_app/util/theme.dart';
-import 'package:status_bar_control/status_bar_control.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:bottom_bar_page_transition/bottom_bar_page_transition.dart';
-import 'package:hidable/hidable.dart';
 
 void main() async {
   await Hive.initFlutter();
@@ -94,7 +93,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Box settingsBox = Hive.box('settings');
-  int _counter = 0;
   int currentIndex = 0;
   final List<String> _screenNames = ['Library', 'Explore', 'More'];
   final List<Widget> _screens = const [
@@ -151,21 +149,18 @@ class _MyHomePageState extends State<MyHomePage> {
         transitionDuration: Duration(milliseconds: 100),
       ),
       bottomNavigationBar: Theme(
-        data: ThemeData(splashColor: Colors.transparent),
+        data: ThemeData(
+            splashColor: Colors.transparent,
+            brightness: settingsBox.get("darkMode", defaultValue: false)
+                ? Brightness.dark
+                : Brightness.light),
         child: NavigationBarTheme(
-          data: settingsBox.get("darkMode", defaultValue: false)
-              ? NavigationBarThemeData(
-                  surfaceTintColor: Colors.black,
-                  backgroundColor: Colors.white.withOpacity(0.08),
-                  indicatorColor: Colors.blue[400],
-                  labelTextStyle: MaterialStateProperty.resolveWith(
-                      (states) => getColor(states)))
-              : NavigationBarThemeData(
-                  // surfaceTintColor: Colors.black,
-                  backgroundColor: Colors.blue.withOpacity(0.08),
-                  indicatorColor: Colors.blue[400],
-                  labelTextStyle: MaterialStateProperty.resolveWith(
-                      (states) => getColor(states))),
+          data: NavigationBarThemeData(
+              // surfaceTintColor: Colors.black,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              indicatorColor: Theme.of(context).colorScheme.inversePrimary,
+              labelTextStyle: MaterialStateProperty.resolveWith(
+                  (states) => getColor(states))),
           child: ValueListenableBuilder(
             valueListenable: settingsBox.listenable(),
             builder: (context, value, child) {

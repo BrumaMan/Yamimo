@@ -1,6 +1,3 @@
-import 'dart:ui';
-
-import 'package:first_app/search_result_all.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -48,7 +45,6 @@ class _AuthorsScreenState extends State<AuthorsScreen> {
 
     //Creating a list to store input data;
     List<Author> authors = [];
-    int index = 0;
     for (var singleAuthor in responseData) {
       Author tag = Author(
         id: singleAuthor["id"],

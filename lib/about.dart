@@ -3,9 +3,7 @@ import 'package:filesize/filesize.dart';
 import 'package:flutter/material.dart';
 import 'package:line_icons/line_icon.dart';
 import 'package:android_intent_plus/android_intent.dart';
-import 'package:android_intent_plus/flag.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:auto_update/fetch_github.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -136,6 +134,7 @@ class _AboutScreenState extends State<AboutScreen> {
               subtitle: Text('Check for updates'),
               onTap: () {
                 debugPrint("$_updateInfo");
+                // ignore: unnecessary_null_comparison
                 if (_updateInfo != null) {
                   if (_updateInfo['tag'] == "v$version") {
                     /* aplication is up-to-date */

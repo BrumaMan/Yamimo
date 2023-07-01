@@ -1,13 +1,11 @@
 import 'dart:ui';
 
 import 'package:first_app/chapter_view.dart';
-import 'package:first_app/search_result.dart';
 import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/model/chapter.dart';
 import 'package:first_app/source/model/manga_details.dart';
 import 'package:first_app/source/source_helper.dart';
 import 'package:first_app/util/globals.dart';
-import 'package:first_app/util/theme.dart';
 import 'package:first_app/webview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -16,10 +14,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:date_time_format/date_time_format.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert' as convert;
-
-import 'package:status_bar_control/status_bar_control.dart';
 
 class ItemView extends StatefulWidget {
   const ItemView(
@@ -45,7 +39,6 @@ class ItemView extends StatefulWidget {
 
 class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   late ScrollController scrollViewController;
-  late TabController _tabController;
   late AnimationController _controller;
   Box settingsBox = Hive.box('settings');
   Box libraryBox = Hive.box('library');
@@ -88,7 +81,6 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       chaptersRead = chaptersReadBox.get(widget.id, defaultValue: {});
     }
     scrollViewController = ScrollController();
-    _tabController = TabController(length: 3, vsync: this);
     _controller =
         AnimationController(vsync: this, duration: Duration(milliseconds: 200));
     // textController = TextEditingController(text: widget.searchTerm);
@@ -199,8 +191,6 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
 
   void updateChapterNumber(String id) {
     if (libraryBox.containsKey(id)) {
-      int chapterNumber = chapterBox.get(id, defaultValue: chapterCount);
-      int newChaptersNum = chapterNumber - chapterCount;
       chapterBox.put(id, chapterCount);
       return;
     }

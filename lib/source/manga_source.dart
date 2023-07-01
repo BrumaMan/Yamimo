@@ -1,5 +1,4 @@
 import 'package:first_app/source/model/chapter.dart';
-import 'package:first_app/source/model/manga.dart';
 import 'package:http/http.dart';
 
 abstract class MangaSource {

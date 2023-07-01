@@ -1,3 +1,5 @@
+// ignore_for_file: must_call_super
+
 import 'package:first_app/item_view.dart';
 import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/source_helper.dart';
@@ -9,8 +11,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart';
 import 'package:page_animation_transition/animations/fade_animation_transition.dart';
 import 'package:page_animation_transition/page_animation_transition.dart';
-import 'package:transparent_image/transparent_image.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:optimized_cached_image/optimized_cached_image.dart';
 
 class Home extends StatefulWidget {
@@ -91,7 +91,6 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin {
     // libraryDeleteNotifier.increment();
     // libraryItems.removeAt(index);
     // mangaChapters.removeAt(index);
-    int count = 0;
 
     libraryBox.delete(id);
     chapterBox.delete(id);
@@ -253,7 +252,9 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin {
                                                   top: 0.0,
                                                   child: Container(
                                                     decoration: BoxDecoration(
-                                                        color: Colors.blue[400],
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .primary,
                                                         borderRadius:
                                                             BorderRadius.all(
                                                                 Radius.circular(
@@ -266,7 +267,12 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin {
                                                     child: Text(
                                                       "${chapterBox.get(libraryItems[index]['id']) - chaptersRead(libraryItems[index]["id"])}",
                                                       style: TextStyle(
-                                                          color: Colors.black),
+                                                          color: settingsBox.get(
+                                                                  "darkMode",
+                                                                  defaultValue:
+                                                                      false)
+                                                              ? Colors.black
+                                                              : Colors.white),
                                                     ),
                                                   )),
                                             ),

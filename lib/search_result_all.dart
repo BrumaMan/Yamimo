@@ -1,10 +1,6 @@
-import 'dart:io';
-import 'dart:ui';
+// ignore_for_file: must_call_super
 
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:first_app/authors.dart';
 import 'package:first_app/item_view.dart';
-import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/model/manga.dart';
 import 'package:first_app/source/source_helper.dart';
 import 'package:first_app/widgets/cached_image.dart';
@@ -13,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:page_animation_transition/animations/fade_animation_transition.dart';
-import 'dart:convert' as convert;
 
 import 'package:page_animation_transition/page_animation_transition.dart';
 

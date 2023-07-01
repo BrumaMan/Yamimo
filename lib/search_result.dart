@@ -1,7 +1,3 @@
-import 'dart:io';
-import 'dart:ui';
-
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:first_app/util/globals.dart';
 import 'package:first_app/widgets/search_source_results.dart';
 import 'package:flutter/material.dart';

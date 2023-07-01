@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:first_app/item_view.dart';
 import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/model/chapter.dart';
 import 'package:first_app/source/source_helper.dart';
@@ -15,8 +14,6 @@ import 'package:preload_page_view/preload_page_view.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:keep_screen_on/keep_screen_on.dart';
 import 'package:mno_zoom_widget/zoom_widget.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert' as convert;
 
 enum MenuItems { Default, leftToRight, vertical, webtoon, continuousVertical }
 
@@ -184,7 +181,6 @@ class _ChapterViewState extends State<ChapterView>
     final response = await source.pageListRequest(chapter);
 
     List<String> pages = [];
-    List<Widget> tempPageViews = [];
     pages = source.pageListParse(response);
     // chapters.reversed;
     setState(() {

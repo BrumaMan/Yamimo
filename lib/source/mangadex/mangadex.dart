@@ -306,7 +306,6 @@ class MangaDex implements MangaSource {
     //Creating a list to store input data;
     List<String> pages = [];
     List<Widget> tempPageViews = [];
-    int index = 0;
     try {
       for (var page in responseData["chapter"]["data"]) {
         //Adding user to the list.
