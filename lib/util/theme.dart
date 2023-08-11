@@ -17,6 +17,11 @@ ThemeData lightTheme = ThemeData(
   iconTheme: const IconThemeData(
     color: Colors.white,
   ),
+  chipTheme: ChipThemeData(
+      backgroundColor: Colors.black,
+      labelStyle: TextStyle(color: Colors.white)),
+  colorScheme: ColorScheme.fromSeed(
+      seedColor: Color.fromARGB(255, 65, 22, 184), brightness: Brightness.dark),
   useMaterial3: true,
 );
 ThemeData darkTheme = ThemeData(
@@ -33,6 +38,11 @@ ThemeData darkTheme = ThemeData(
   iconTheme: const IconThemeData(
     color: Colors.black,
   ),
+  chipTheme: ChipThemeData(
+      backgroundColor: Colors.white,
+      labelStyle: TextStyle(color: Colors.black)),
+  colorScheme:
+      ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 65, 22, 184)),
   useMaterial3: true,
 );
 
