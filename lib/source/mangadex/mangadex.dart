@@ -336,16 +336,15 @@ class MangaDex implements MangaSource {
   getGenres(List genres) {
     List<Widget> tags = [];
     for (var tag in genres) {
-      tags.add(Container(
-        decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.withOpacity(0.8)),
-            borderRadius: BorderRadius.all(Radius.circular(8.0))),
-        padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
-        margin: EdgeInsets.only(right: 4.0),
-        child: Text(tag["attributes"]["name"]["en"],
-            style: TextStyle(
-              fontSize: 12,
-            )),
+      tags.add(Padding(
+        padding: const EdgeInsets.only(right: 6.0),
+        child: ActionChip(
+          label: Text(tag["attributes"]["name"]["en"],
+              style: TextStyle(
+                fontSize: 12,
+              )),
+          onPressed: () {},
+        ),
       ));
     }
     return tags;
