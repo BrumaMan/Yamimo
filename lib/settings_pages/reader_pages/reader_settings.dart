@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:list_tile_switch/list_tile_switch.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class ReaderSettings extends StatefulWidget {
