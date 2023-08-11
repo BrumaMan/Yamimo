@@ -148,67 +148,48 @@ class _MyHomePageState extends State<MyHomePage> {
         transitionType: TransitionType.fade,
         transitionDuration: Duration(milliseconds: 100),
       ),
-      bottomNavigationBar: Theme(
-        data: ThemeData(
-            splashColor: Colors.transparent,
-            brightness: settingsBox.get("darkMode", defaultValue: false)
-                ? Brightness.dark
-                : Brightness.light),
-        child: NavigationBarTheme(
-          data: NavigationBarThemeData(
-              // surfaceTintColor: Colors.black,
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              indicatorColor: Theme.of(context).colorScheme.inversePrimary,
-              labelTextStyle: MaterialStateProperty.resolveWith(
-                  (states) => getColor(states))),
-          child: ValueListenableBuilder(
-            valueListenable: settingsBox.listenable(),
-            builder: (context, value, child) {
-              return NavigationBar(
-                destinations: [
-                  NavigationDestination(
-                      icon: Icon(Icons.collections_bookmark_outlined,
-                          color:
-                              settingsBox.get("darkMode", defaultValue: false)
-                                  ? white
-                                  : black),
-                      selectedIcon: Icon(Icons.collections_bookmark,
-                          color:
-                              settingsBox.get("darkMode", defaultValue: false)
-                                  ? white
-                                  : black),
-                      label: 'Library'),
-                  NavigationDestination(
-                      icon: Icon(Icons.explore_outlined,
-                          color:
-                              settingsBox.get("darkMode", defaultValue: false)
-                                  ? white
-                                  : black),
-                      selectedIcon: Icon(Icons.explore,
-                          color:
-                              settingsBox.get("darkMode", defaultValue: false)
-                                  ? white
-                                  : black),
-                      label: 'Explore'),
-                  NavigationDestination(
-                      icon: Icon(Icons.more_horiz,
-                          color:
-                              settingsBox.get("darkMode", defaultValue: false)
-                                  ? white
-                                  : black),
-                      label: 'More'),
-                ],
-                onDestinationSelected: (int index) {
-                  setState(() {
-                    currentIndex = index;
-                  });
-                },
-                selectedIndex: currentIndex,
-                // labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-              );
+      bottomNavigationBar: ValueListenableBuilder(
+        valueListenable: settingsBox.listenable(),
+        builder: (context, value, child) {
+          return NavigationBar(
+            indicatorColor: Theme.of(context).colorScheme.inversePrimary,
+            destinations: [
+              NavigationDestination(
+                  icon: Icon(Icons.collections_bookmark_outlined,
+                      color: settingsBox.get("darkMode", defaultValue: false)
+                          ? white
+                          : black),
+                  selectedIcon: Icon(Icons.collections_bookmark,
+                      color: settingsBox.get("darkMode", defaultValue: false)
+                          ? white
+                          : black),
+                  label: 'Library'),
+              NavigationDestination(
+                  icon: Icon(Icons.explore_outlined,
+                      color: settingsBox.get("darkMode", defaultValue: false)
+                          ? white
+                          : black),
+                  selectedIcon: Icon(Icons.explore,
+                      color: settingsBox.get("darkMode", defaultValue: false)
+                          ? white
+                          : black),
+                  label: 'Explore'),
+              NavigationDestination(
+                  icon: Icon(Icons.more_horiz,
+                      color: settingsBox.get("darkMode", defaultValue: false)
+                          ? white
+                          : black),
+                  label: 'More'),
+            ],
+            onDestinationSelected: (int index) {
+              setState(() {
+                currentIndex = index;
+              });
             },
-          ),
-        ),
+            selectedIndex: currentIndex,
+            // labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+          );
+        },
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
