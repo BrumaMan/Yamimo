@@ -223,10 +223,11 @@ class _AboutScreenState extends State<AboutScreen> {
               children: [
                 Icon(
                   Icons.public_outlined,
-                  color: Colors.blue[400],
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 GestureDetector(
-                  child: LineIcon.twitter(color: Colors.blue[400]),
+                  child: LineIcon.twitter(
+                      color: Theme.of(context).colorScheme.primary),
                   onTap: () async {
                     AndroidIntent intent = AndroidIntent(
                       action: 'action_view',
@@ -237,7 +238,8 @@ class _AboutScreenState extends State<AboutScreen> {
                   },
                 ),
                 GestureDetector(
-                  child: LineIcon.github(color: Colors.blue[400]),
+                  child: LineIcon.github(
+                      color: Theme.of(context).colorScheme.primary),
                   onTap: () async {
                     AndroidIntent intent = AndroidIntent(
                       action: 'action_view',

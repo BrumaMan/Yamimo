@@ -21,7 +21,8 @@ class Settings extends StatelessWidget {
         children: [
           ListTile(
             title: Text("General"),
-            leading: Icon(Icons.tune, color: Colors.blue),
+            leading:
+                Icon(Icons.tune, color: Theme.of(context).colorScheme.primary),
             onTap: () {
               Navigator.of(context).push(PageAnimationTransition(
                   page: GeneralSettings(),
@@ -30,23 +31,24 @@ class Settings extends StatelessWidget {
           ),
           ListTile(
             title: Text("Appearance"),
-            leading: Icon(Icons.palette_outlined, color: Colors.blue),
+            leading: Icon(Icons.palette_outlined,
+                color: Theme.of(context).colorScheme.primary),
             onTap: () => Navigator.of(context).push(PageAnimationTransition(
                 page: AppearanceSettings(),
                 pageAnimationType: FadeAnimationTransition())),
           ),
           ListTile(
             title: Text("Library"),
-            leading:
-                Icon(Icons.collections_bookmark_outlined, color: Colors.blue),
+            leading: Icon(Icons.collections_bookmark_outlined,
+                color: Theme.of(context).colorScheme.primary),
             onTap: () => Navigator.of(context).push(PageAnimationTransition(
                 page: LibrarySettings(),
                 pageAnimationType: FadeAnimationTransition())),
           ),
           ListTile(
             title: Text("Reader"),
-            leading:
-                Icon(Icons.chrome_reader_mode_outlined, color: Colors.blue),
+            leading: Icon(Icons.chrome_reader_mode_outlined,
+                color: Theme.of(context).colorScheme.primary),
             onTap: () {
               Navigator.of(context).push(PageAnimationTransition(
                   page: ReaderSettings(),
@@ -55,7 +57,8 @@ class Settings extends StatelessWidget {
           ),
           ListTile(
             title: Text("Advanced"),
-            leading: Icon(Icons.data_object, color: Colors.blue),
+            leading: Icon(Icons.data_object,
+                color: Theme.of(context).colorScheme.primary),
             onTap: () {
               Navigator.of(context).push(PageAnimationTransition(
                   page: AdvancedSettings(),

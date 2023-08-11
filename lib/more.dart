@@ -71,7 +71,8 @@ class _MoreState extends State<More> {
           // ),
           ListTile(
             title: Text('Overview'),
-            leading: Icon(Icons.bar_chart, color: Colors.blue[400]),
+            leading: Icon(Icons.bar_chart,
+                color: Theme.of(context).colorScheme.primary),
             onTap: () {
               Navigator.of(context).push(PageAnimationTransition(
                   page: Overview(),
@@ -80,7 +81,8 @@ class _MoreState extends State<More> {
           ),
           ListTile(
             title: Text('Settings'),
-            leading: Icon(Icons.settings_outlined, color: Colors.blue[400]),
+            leading: Icon(Icons.settings_outlined,
+                color: Theme.of(context).colorScheme.primary),
             onTap: () {
               Navigator.of(context).push(PageAnimationTransition(
                   page: const Settings(),
@@ -89,7 +91,8 @@ class _MoreState extends State<More> {
           ),
           ListTile(
             title: Text('About'),
-            leading: Icon(Icons.info_outline, color: Colors.blue[400]),
+            leading: Icon(Icons.info_outline,
+                color: Theme.of(context).colorScheme.primary),
             onTap: () {
               Navigator.of(context).push(PageAnimationTransition(
                   page: const AboutScreen(),
