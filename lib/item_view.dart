@@ -167,7 +167,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
 
   Widget getIcons(String id) {
     if (libraryBox.containsKey(id)) {
-      return Icon(Icons.favorite, color: Colors.blue[300]);
+      return Icon(Icons.favorite, color: Theme.of(context).colorScheme.primary);
     }
     return Icon(Icons.favorite_outline_outlined);
   }
@@ -604,7 +604,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                 ),
                               ),
                               SizedBox(
-                                height: 30,
+                                height: 40,
                                 child: ListView(
                                   padding:
                                       EdgeInsets.only(left: 8.0, right: 6.0),
