@@ -257,7 +257,8 @@ class ComickFun implements MangaSource {
             ? false
             : singleComic['group_name'].isEmpty
                 ? false
-                : singleComic['group_name'][0] == "Official"
+                : singleComic['group_name'][0] == "Official" ||
+                        singleComic['group_name'][0] == "Official (low quality)"
                     ? true
                     : false,
         downloaded: false,
