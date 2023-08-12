@@ -705,7 +705,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                 ],
                               ),
                               subtitle: Row(
-                                mainAxisSize: MainAxisSize.min,
+                                // mainAxisSize: MainAxisSize.min,
                                 children: [
                                   // Text(
                                   //     '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago '),
@@ -721,45 +721,54 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                               : null,
                                         )
                                       : Text(''),
-                                  Text(
-                                    ' ${snapshot.data[index].scanGroup == null ? "Unknown group" : snapshot.data[index].scanGroup}',
-                                    softWrap: true,
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 2,
-                                    style: TextStyle(
-                                        color: getChaptersRead(
-                                                snapshot.data[index].id)
-                                            ? settingsBox.get('darkMode',
-                                                    defaultValue: false)
-                                                ? Colors.grey[700]
-                                                : Colors.grey[400]
-                                            : null),
+                                  Expanded(
+                                    child: Text(
+                                      ' ${snapshot.data[index].scanGroup == null ? "Unknown group" : snapshot.data[index].scanGroup}${getChapterPagesRead(snapshot.data[index].id, snapshot.data[index].pages)}${DateTime.now().difference(DateTime.parse(snapshot.data[index].readableAt)).inDays < 7 ? ' | ${DateTimeFormat.relative(
+                                          DateTime.parse(
+                                              snapshot.data[index].readableAt),
+                                        )}' : getChapterDate(snapshot.data[index].readableAt)}',
+                                      softWrap: true,
+                                      overflow: TextOverflow.ellipsis,
+                                      // maxLines: 2,
+                                      style: TextStyle(
+                                          color: getChaptersRead(
+                                                  snapshot.data[index].id)
+                                              ? settingsBox.get('darkMode',
+                                                      defaultValue: false)
+                                                  ? Colors.grey[700]
+                                                  : Colors.grey[400]
+                                              : null),
+                                    ),
                                   ),
-                                  Text(getChapterPagesRead(
-                                      snapshot.data[index].id,
-                                      snapshot.data[index].pages)),
-                                  Text(
-                                    DateTime.now()
-                                                .difference(DateTime.parse(
-                                                    snapshot.data[index]
-                                                        .readableAt))
-                                                .inDays <
-                                            7
-                                        ? ' | ${DateTimeFormat.relative(
-                                            DateTime.parse(snapshot
-                                                .data[index].readableAt),
-                                          )}'
-                                        : getChapterDate(
-                                            snapshot.data[index].readableAt),
-                                    style: TextStyle(
-                                        color: getChaptersRead(
-                                                snapshot.data[index].id)
-                                            ? settingsBox.get('darkMode',
-                                                    defaultValue: false)
-                                                ? Colors.grey[700]
-                                                : Colors.grey[400]
-                                            : null),
-                                  ),
+                                  // Text(
+                                  //   getChapterPagesRead(snapshot.data[index].id,
+                                  //       snapshot.data[index].pages),
+                                  //   maxLines: 1,
+                                  //   overflow: TextOverflow.ellipsis,
+                                  // ),
+                                  // Text(
+                                  //     DateTime.now()
+                                  //                 .difference(DateTime.parse(
+                                  //                     snapshot.data[index]
+                                  //                         .readableAt))
+                                  //                 .inDays <
+                                  //             7
+                                  //         ? ' | ${DateTimeFormat.relative(
+                                  //             DateTime.parse(snapshot
+                                  //                 .data[index].readableAt),
+                                  //           )}'
+                                  //         : getChapterDate(
+                                  //             snapshot.data[index].readableAt),
+                                  //     style: TextStyle(
+                                  //         color: getChaptersRead(
+                                  //                 snapshot.data[index].id)
+                                  //             ? settingsBox.get('darkMode',
+                                  //                     defaultValue: false)
+                                  //                 ? Colors.grey[700]
+                                  //                 : Colors.grey[400]
+                                  //             : null),
+                                  //     maxLines: 1,
+                                  //     overflow: TextOverflow.ellipsis),
                                 ],
                               ),
                               onTap: () {
