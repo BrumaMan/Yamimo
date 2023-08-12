@@ -247,10 +247,19 @@ class ComickFun implements MangaSource {
             "$sourceURL$mangaURL/${singleComic['hid']}-chapter-${singleComic['chap']}-en",
         publishAt: singleComic["created_at"],
         readableAt: singleComic["created_at"],
-        scanGroup: singleComic['md_groups'].isEmpty
+        scanGroup: singleComic['group_name'] == null
+            // singleComic['md_chapters_groups'].isEmpty
             ? 'Unknown'
-            : singleComic['md_groups'][0]['title'] ?? 'Unknown',
-        officialScan: false,
+            : singleComic['group_name'].isEmpty
+                ? 'Unknown'
+                : singleComic['group_name'][0],
+        officialScan: singleComic['group_name'] == null
+            ? false
+            : singleComic['group_name'].isEmpty
+                ? false
+                : singleComic['group_name'][0] == "Official"
+                    ? true
+                    : false,
         downloaded: false,
       );
 
@@ -311,7 +320,7 @@ class ComickFun implements MangaSource {
       tags.add(Padding(
         padding: const EdgeInsets.only(right: 6.0),
         child: ActionChip(
-          label: Text(tag["attributes"]["name"]["en"],
+          label: Text(tag["name"],
               style: TextStyle(
                 fontSize: 12,
               )),
