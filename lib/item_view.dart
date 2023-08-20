@@ -6,6 +6,7 @@ import 'package:first_app/source/model/chapter.dart';
 import 'package:first_app/source/model/manga_details.dart';
 import 'package:first_app/source/source_helper.dart';
 import 'package:first_app/util/globals.dart';
+import 'package:first_app/util/status_icons.dart';
 import 'package:first_app/webview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -388,301 +389,362 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
           }
           return true;
         },
-        child: Scrollbar(
-          radius: Radius.circular(8.0),
-          child: RefreshIndicator(
-            onRefresh: () {
-              return Future.delayed(Duration(seconds: 1), () {
-                chapters = getRequest(refresh: true);
-              });
-            },
-            child: CustomScrollView(
-              controller: scrollViewController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                FutureBuilder(
-                  future: mangaDetails,
-                  builder: (context, AsyncSnapshot snapshot) {
-                    if (!snapshot.hasData) {
-                      return SliverToBoxAdapter();
-                    } else {
-                      return SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                              top: 0.0, left: 0.0, bottom: 0.0, right: 0.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Stack(children: [
-                                Container(
-                                  foregroundDecoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                          begin: Alignment.bottomCenter,
-                                          end: Alignment.topCenter,
-                                          colors: gradientColors)),
-                                  width: MediaQuery.of(context).size.width,
-                                  child: CachedNetworkImage(
-                                    imageUrl: widget.cover,
-                                    fit: BoxFit.cover,
-                                    height: 320,
-                                  ),
-                                ),
-                                Positioned(
-                                  top: MediaQuery.of(context)
-                                          .systemGestureInsets
-                                          .top +
-                                      kToolbarHeight +
-                                      8.0,
-                                  left: 8.0,
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      Card(
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(4.0)),
-                                        clipBehavior: Clip.hardEdge,
-                                        child: CachedNetworkImage(
-                                            imageUrl: widget.cover,
-                                            height: 150,
-                                            width: 100,
-                                            fit: BoxFit.cover),
-                                      ),
-                                      Flexible(
-                                        child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.only(
-                                                    left: 8.0, right: 8.0),
-                                                width: MediaQuery.of(context)
-                                                            .size
-                                                            .width /
-                                                        1.3 -
-                                                    16,
-                                                child: Text(
-                                                  widget.title,
-                                                  softWrap: true,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  maxLines: 5,
-                                                  style: const TextStyle(
-                                                      fontSize: 22.0),
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left: 8.0,
-                                                    right: 8.0,
-                                                    top: 8.0),
-                                                child: FutureBuilder(
-                                                  future: mangaDetails,
-                                                  builder: (context,
-                                                      AsyncSnapshot snapshot) {
-                                                    if (!snapshot.hasData) {
-                                                      return Text('');
-                                                    } else {
-                                                      return Text(
-                                                        '${snapshot.data.author}',
-                                                        style: TextStyle(
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold),
-                                                      );
-                                                    }
-                                                  },
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                  left: 8.0,
-                                                  right: 8.0,
-                                                ),
-                                                child: Visibility(
-                                                  visible: missingChapters != 0,
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons.warning,
-                                                        size: 16,
-                                                      ),
-                                                      Text(
-                                                          ' Missing ~ $missingChapters chapter(s)'),
-                                                    ],
-                                                  ),
-                                                ),
-                                              )
-                                            ]),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ]),
-                              Padding(
-                                padding: EdgeInsets.only(left: 8.0, right: 8.0),
-                                child: IntrinsicHeight(
-                                  child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        Column(
-                                          children: [
-                                            Icon(snapshot.data.status ==
-                                                    'Completed'
-                                                ? Icons.done_all
-                                                : Icons.schedule_outlined),
-                                            Text('${snapshot.data.status}')
-                                          ],
-                                        ),
-                                        VerticalDivider(
-                                          // width: 20,
-                                          thickness: 1,
-                                          color: Colors.grey,
-                                        ),
-                                        Column(
-                                          children: [
-                                            const Icon(Icons.language),
-                                            Text(widget.source)
-                                          ],
-                                        ),
-                                        VerticalDivider(
-                                          // width: 20,
-                                          thickness: 1,
-                                          color: Colors.grey,
-                                        ),
-                                        Column(
-                                          children: [
-                                            const Icon(
-                                                Icons.new_releases_outlined),
-                                            Text('${snapshot.data.year}')
-                                          ],
-                                        ),
-                                      ]),
-                                ),
-                              ),
-                              Container(
-                                width: MediaQuery.of(context).size.width,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0, vertical: 8.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    GestureDetector(
-                                      child: Text(
-                                        snapshot.data.synopsis,
-                                        maxLines: 3,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      onTap: () {
-                                        showModalBottomSheet(
-                                            shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(0.0)),
-                                            backgroundColor:
-                                                Colors.black.withOpacity(0.8),
-                                            context: context,
-                                            builder: (context) {
-                                              return Container(
-                                                margin: EdgeInsets.only(
-                                                    bottom: 16.0),
-                                                padding: EdgeInsets.all(12.0),
-                                                child: Text(
-                                                  snapshot.data.synopsis,
-                                                  softWrap: true,
-                                                  style: TextStyle(
-                                                      color: Colors.white),
-                                                ),
-                                              );
-                                            });
-                                      },
-                                    ),
-                                    // Text('More'),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                height: 40,
-                                child: ListView(
-                                  padding:
-                                      EdgeInsets.only(left: 8.0, right: 6.0),
-                                  scrollDirection: Axis.horizontal,
-                                  // shrinkWrap: true,
-                                  children: tagsWidget,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                    top: 8.0, left: 8.0, right: 8.0),
-                                child: Visibility(
-                                  visible: !fetchingData,
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text('$chapterCount Chapters',
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold)),
-                                      // FilledButton(
-                                      //     onPressed: chapterCount == 0
-                                      //         ? null
-                                      //         : () {
-                                      //             continueReading(context);
-                                      //           },
-                                      //     child: Row(
-                                      //       children: [
-                                      //         Padding(
-                                      //           padding:
-                                      //               const EdgeInsets.only(right: 8.0),
-                                      //           child: Icon(Icons.play_arrow),
-                                      //         ),
-                                      //         started
-                                      //             ? Text('Continue')
-                                      //             : Text('Start'),
-                                      //       ],
-                                      //     ))
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                ),
-                FutureBuilder(
-                    future: chapters,
-                    builder: (BuildContext ctx, AsyncSnapshot snapshot) {
+        child: ScrollbarTheme(
+          data: ScrollbarThemeData(
+              thumbColor: MaterialStatePropertyAll(
+                  Theme.of(context).colorScheme.primary),
+              crossAxisMargin: 6.0),
+          child: Scrollbar(
+            radius: Radius.circular(8.0),
+            thickness: 8.0,
+            child: RefreshIndicator(
+              onRefresh: () {
+                return Future.delayed(Duration(seconds: 1), () {
+                  chapters = getRequest(refresh: true);
+                });
+              },
+              child: CustomScrollView(
+                controller: scrollViewController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  FutureBuilder(
+                    future: mangaDetails,
+                    builder: (context, AsyncSnapshot snapshot) {
                       if (!snapshot.hasData) {
                         return SliverToBoxAdapter();
                       } else {
-                        return SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                              addAutomaticKeepAlives: false,
-                              addRepaintBoundaries: false,
-                              childCount: chapterCount, (context, index) {
-                            return ListTile(
-                              // tileColor: Colors.black,
-                              contentPadding:
-                                  EdgeInsets.symmetric(horizontal: 8.0),
-                              // trailing: IconButton(
-                              //     onPressed: () {},
-                              //     icon: Icon(
-                              //         Icons.download_for_offline_outlined)),
-                              title: Row(
-                                children: [
-                                  Expanded(
-                                    child: ValueListenableBuilder(
-                                      valueListenable:
-                                          chaptersReadBox.listenable(),
-                                      builder: (context, value, child) => Text(
-                                        snapshot.data[index].title,
-                                        overflow: TextOverflow.ellipsis,
+                        return SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                                top: 0.0, left: 0.0, bottom: 0.0, right: 0.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Stack(children: [
+                                  Container(
+                                    foregroundDecoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                            begin: Alignment.bottomCenter,
+                                            end: Alignment.topCenter,
+                                            colors: gradientColors)),
+                                    width: MediaQuery.of(context).size.width,
+                                    child: CachedNetworkImage(
+                                      imageUrl: widget.cover,
+                                      fit: BoxFit.cover,
+                                      height: 320,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: MediaQuery.of(context)
+                                            .systemGestureInsets
+                                            .top +
+                                        kToolbarHeight +
+                                        8.0,
+                                    left: 8.0,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Card(
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(4.0)),
+                                          clipBehavior: Clip.hardEdge,
+                                          child: CachedNetworkImage(
+                                              imageUrl: widget.cover,
+                                              height: 150,
+                                              width: 100,
+                                              fit: BoxFit.cover),
+                                        ),
+                                        Flexible(
+                                          child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          left: 8.0,
+                                                          right: 8.0),
+                                                  width: MediaQuery.of(context)
+                                                              .size
+                                                              .width /
+                                                          1.3 -
+                                                      16,
+                                                  child: Text(
+                                                    widget.title,
+                                                    softWrap: true,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    maxLines: 5,
+                                                    style: const TextStyle(
+                                                        fontSize: 22.0),
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          left: 8.0,
+                                                          right: 8.0,
+                                                          top: 8.0),
+                                                  child: FutureBuilder(
+                                                    future: mangaDetails,
+                                                    builder: (context,
+                                                        AsyncSnapshot
+                                                            snapshot) {
+                                                      if (!snapshot.hasData) {
+                                                        return Text('');
+                                                      } else {
+                                                        return Text(
+                                                          '${snapshot.data.author}',
+                                                          style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        );
+                                                      }
+                                                    },
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                    left: 8.0,
+                                                    right: 8.0,
+                                                  ),
+                                                  child: Visibility(
+                                                    visible:
+                                                        missingChapters != 0,
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.warning,
+                                                          size: 16,
+                                                        ),
+                                                        Text(
+                                                            ' Missing ~ $missingChapters chapter(s)'),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                )
+                                              ]),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ]),
+                                Padding(
+                                  padding:
+                                      EdgeInsets.only(left: 8.0, right: 8.0),
+                                  child: IntrinsicHeight(
+                                    child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          Column(
+                                            children: [
+                                              Icon(parseStatusIcon(
+                                                  snapshot.data.status)),
+                                              Text('${snapshot.data.status}')
+                                            ],
+                                          ),
+                                          VerticalDivider(
+                                            // width: 20,
+                                            thickness: 1,
+                                            color: Colors.grey,
+                                          ),
+                                          Column(
+                                            children: [
+                                              const Icon(Icons.language),
+                                              Text(widget.source)
+                                            ],
+                                          ),
+                                          VerticalDivider(
+                                            // width: 20,
+                                            thickness: 1,
+                                            color: Colors.grey,
+                                          ),
+                                          Column(
+                                            children: [
+                                              const Icon(
+                                                  Icons.new_releases_outlined),
+                                              Text('${snapshot.data.year}')
+                                            ],
+                                          ),
+                                        ]),
+                                  ),
+                                ),
+                                Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0, vertical: 8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      GestureDetector(
+                                        child: Text(
+                                          snapshot.data.synopsis,
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        onTap: () {
+                                          showModalBottomSheet(
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          0.0)),
+                                              backgroundColor:
+                                                  Colors.black.withOpacity(0.8),
+                                              context: context,
+                                              builder: (context) {
+                                                return Container(
+                                                  margin: EdgeInsets.only(
+                                                      bottom: 16.0),
+                                                  padding: EdgeInsets.all(12.0),
+                                                  child: Text(
+                                                    snapshot.data.synopsis,
+                                                    softWrap: true,
+                                                    style: TextStyle(
+                                                        color: Colors.white),
+                                                  ),
+                                                );
+                                              });
+                                        },
+                                      ),
+                                      // Text('More'),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 40,
+                                  child: ListView(
+                                    padding:
+                                        EdgeInsets.only(left: 8.0, right: 6.0),
+                                    scrollDirection: Axis.horizontal,
+                                    // shrinkWrap: true,
+                                    children: tagsWidget,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      top: 8.0, left: 8.0, right: 8.0),
+                                  child: Visibility(
+                                    visible: !fetchingData,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('$chapterCount Chapters',
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold)),
+                                        // FilledButton(
+                                        //     onPressed: chapterCount == 0
+                                        //         ? null
+                                        //         : () {
+                                        //             continueReading(context);
+                                        //           },
+                                        //     child: Row(
+                                        //       children: [
+                                        //         Padding(
+                                        //           padding:
+                                        //               const EdgeInsets.only(right: 8.0),
+                                        //           child: Icon(Icons.play_arrow),
+                                        //         ),
+                                        //         started
+                                        //             ? Text('Continue')
+                                        //             : Text('Start'),
+                                        //       ],
+                                        //     ))
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  FutureBuilder(
+                      future: chapters,
+                      builder: (BuildContext ctx, AsyncSnapshot snapshot) {
+                        if (!snapshot.hasData) {
+                          return SliverToBoxAdapter();
+                        } else {
+                          return SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                                addAutomaticKeepAlives: false,
+                                addRepaintBoundaries: false,
+                                childCount: chapterCount, (context, index) {
+                              return ListTile(
+                                // tileColor: Colors.black,
+                                contentPadding:
+                                    EdgeInsets.symmetric(horizontal: 8.0),
+                                // trailing: IconButton(
+                                //     onPressed: () {},
+                                //     icon: Icon(
+                                //         Icons.download_for_offline_outlined)),
+                                title: Row(
+                                  children: [
+                                    Expanded(
+                                      child: ValueListenableBuilder(
+                                        valueListenable:
+                                            chaptersReadBox.listenable(),
+                                        builder: (context, value, child) =>
+                                            Text(
+                                          snapshot.data[index].title,
+                                          overflow: TextOverflow.ellipsis,
+                                          softWrap: true,
+                                          style: TextStyle(
+                                              color: getChaptersRead(
+                                                      snapshot.data[index].id)
+                                                  ? settingsBox.get('darkMode',
+                                                          defaultValue: false)
+                                                      ? Colors.grey[700]
+                                                      : Colors.grey[400]
+                                                  : null),
+                                        ),
+                                      ),
+                                    ),
+                                    // Text(
+                                    //   '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago',
+                                    //   style: TextStyle(
+                                    //       color: chaptersRead["chapter"] >=
+                                    //               chapterCount - index
+                                    //           ? Colors.grey[700]
+                                    //           : null),
+                                    // ),
+                                  ],
+                                ),
+                                subtitle: Row(
+                                  // mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Text(
+                                    //     '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago '),
+                                    snapshot.data[index].officialScan == true
+                                        ? Icon(
+                                            Icons.done_all,
+                                            color: getChaptersRead(
+                                                    snapshot.data[index].id)
+                                                ? settingsBox.get('darkMode',
+                                                        defaultValue: false)
+                                                    ? Colors.grey[700]
+                                                    : Colors.grey[400]
+                                                : null,
+                                          )
+                                        : Text(''),
+                                    Expanded(
+                                      child: Text(
+                                        ' ${snapshot.data[index].scanGroup == null ? "Unknown group" : snapshot.data[index].scanGroup}${getChapterPagesRead(snapshot.data[index].id, snapshot.data[index].pages)}${DateTime.now().difference(DateTime.parse(snapshot.data[index].readableAt)).inDays < 7 ? ' | ${DateTimeFormat.relative(
+                                            DateTime.parse(snapshot
+                                                .data[index].readableAt),
+                                          )}' : getChapterDate(snapshot.data[index].readableAt)}',
                                         softWrap: true,
+                                        overflow: TextOverflow.ellipsis,
+                                        // maxLines: 2,
                                         style: TextStyle(
                                             color: getChaptersRead(
                                                     snapshot.data[index].id)
@@ -693,127 +755,83 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                                 : null),
                                       ),
                                     ),
-                                  ),
-                                  // Text(
-                                  //   '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago',
-                                  //   style: TextStyle(
-                                  //       color: chaptersRead["chapter"] >=
-                                  //               chapterCount - index
-                                  //           ? Colors.grey[700]
-                                  //           : null),
-                                  // ),
-                                ],
-                              ),
-                              subtitle: Row(
-                                // mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Text(
-                                  //     '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago '),
-                                  snapshot.data[index].officialScan == true
-                                      ? Icon(
-                                          Icons.done_all,
-                                          color: getChaptersRead(
-                                                  snapshot.data[index].id)
-                                              ? settingsBox.get('darkMode',
-                                                      defaultValue: false)
-                                                  ? Colors.grey[700]
-                                                  : Colors.grey[400]
-                                              : null,
-                                        )
-                                      : Text(''),
-                                  Expanded(
-                                    child: Text(
-                                      ' ${snapshot.data[index].scanGroup == null ? "Unknown group" : snapshot.data[index].scanGroup}${getChapterPagesRead(snapshot.data[index].id, snapshot.data[index].pages)}${DateTime.now().difference(DateTime.parse(snapshot.data[index].readableAt)).inDays < 7 ? ' | ${DateTimeFormat.relative(
-                                          DateTime.parse(
-                                              snapshot.data[index].readableAt),
-                                        )}' : getChapterDate(snapshot.data[index].readableAt)}',
-                                      softWrap: true,
-                                      overflow: TextOverflow.ellipsis,
-                                      // maxLines: 2,
-                                      style: TextStyle(
-                                          color: getChaptersRead(
-                                                  snapshot.data[index].id)
-                                              ? settingsBox.get('darkMode',
-                                                      defaultValue: false)
-                                                  ? Colors.grey[700]
-                                                  : Colors.grey[400]
-                                              : null),
-                                    ),
-                                  ),
-                                  // Text(
-                                  //   getChapterPagesRead(snapshot.data[index].id,
-                                  //       snapshot.data[index].pages),
-                                  //   maxLines: 1,
-                                  //   overflow: TextOverflow.ellipsis,
-                                  // ),
-                                  // Text(
-                                  //     DateTime.now()
-                                  //                 .difference(DateTime.parse(
-                                  //                     snapshot.data[index]
-                                  //                         .readableAt))
-                                  //                 .inDays <
-                                  //             7
-                                  //         ? ' | ${DateTimeFormat.relative(
-                                  //             DateTime.parse(snapshot
-                                  //                 .data[index].readableAt),
-                                  //           )}'
-                                  //         : getChapterDate(
-                                  //             snapshot.data[index].readableAt),
-                                  //     style: TextStyle(
-                                  //         color: getChaptersRead(
-                                  //                 snapshot.data[index].id)
-                                  //             ? settingsBox.get('darkMode',
-                                  //                     defaultValue: false)
-                                  //                 ? Colors.grey[700]
-                                  //                 : Colors.grey[400]
-                                  //             : null),
-                                  //     maxLines: 1,
-                                  //     overflow: TextOverflow.ellipsis),
-                                ],
-                              ),
-                              onTap: () {
-                                if (!chaptersRead.containsKey(
-                                    '${snapshot.data[index].id}')) {
-                                  chaptersRead.addAll({
-                                    snapshot.data[index].id: {
-                                      'read': false,
-                                      'page': 0
-                                    }
-                                  });
-                                  chaptersReadBox.put(widget.id, chaptersRead);
-                                  chaptersRead = chaptersReadBox.get(widget.id);
-                                }
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (context) {
-                                    return ChapterView(
-                                      id: snapshot.data[index].id,
-                                      mangaId: widget.id,
-                                      mangaTitle: widget.title,
-                                      isWebtoon: source.isWebtoon(tags),
-                                      title: snapshot.data[index].title,
-                                      chapterCount: chapterCount,
-                                      order: chapterCount - index,
-                                      chapters: chaptersPassed,
-                                      index: index,
-                                      url: snapshot.data[index].url == null
-                                          ? ""
-                                          : snapshot.data[index].url,
-                                      source: widget.source,
-                                    );
-                                  }),
-                                );
-                              },
-                            );
-                          }),
-                        );
-                      }
-                    }),
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 100.0,
-                  ),
-                )
-              ],
+                                    // Text(
+                                    //   getChapterPagesRead(snapshot.data[index].id,
+                                    //       snapshot.data[index].pages),
+                                    //   maxLines: 1,
+                                    //   overflow: TextOverflow.ellipsis,
+                                    // ),
+                                    // Text(
+                                    //     DateTime.now()
+                                    //                 .difference(DateTime.parse(
+                                    //                     snapshot.data[index]
+                                    //                         .readableAt))
+                                    //                 .inDays <
+                                    //             7
+                                    //         ? ' | ${DateTimeFormat.relative(
+                                    //             DateTime.parse(snapshot
+                                    //                 .data[index].readableAt),
+                                    //           )}'
+                                    //         : getChapterDate(
+                                    //             snapshot.data[index].readableAt),
+                                    //     style: TextStyle(
+                                    //         color: getChaptersRead(
+                                    //                 snapshot.data[index].id)
+                                    //             ? settingsBox.get('darkMode',
+                                    //                     defaultValue: false)
+                                    //                 ? Colors.grey[700]
+                                    //                 : Colors.grey[400]
+                                    //             : null),
+                                    //     maxLines: 1,
+                                    //     overflow: TextOverflow.ellipsis),
+                                  ],
+                                ),
+                                onTap: () {
+                                  if (!chaptersRead.containsKey(
+                                      '${snapshot.data[index].id}')) {
+                                    chaptersRead.addAll({
+                                      snapshot.data[index].id: {
+                                        'read': false,
+                                        'page': 0
+                                      }
+                                    });
+                                    chaptersReadBox.put(
+                                        widget.id, chaptersRead);
+                                    chaptersRead =
+                                        chaptersReadBox.get(widget.id);
+                                  }
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (context) {
+                                      return ChapterView(
+                                        id: snapshot.data[index].id,
+                                        mangaId: widget.id,
+                                        mangaTitle: widget.title,
+                                        isWebtoon: source.isWebtoon(tags),
+                                        title: snapshot.data[index].title,
+                                        chapterCount: chapterCount,
+                                        order: chapterCount - index,
+                                        chapters: chaptersPassed,
+                                        index: index,
+                                        url: snapshot.data[index].url == null
+                                            ? ""
+                                            : snapshot.data[index].url,
+                                        source: widget.source,
+                                      );
+                                    }),
+                                  );
+                                },
+                              );
+                            }),
+                          );
+                        }
+                      }),
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 100.0,
+                    ),
+                  )
+                ],
+              ),
             ),
           ),
         ),
