@@ -4,19 +4,15 @@ import 'package:hive_flutter/hive_flutter.dart';
 Box settingsBox = Hive.box("settings");
 
 ThemeData lightTheme = ThemeData(
-  brightness: Brightness.dark,
+  // brightness: Brightness.dark,
   appBarTheme: const AppBarTheme(
     backgroundColor: Colors.black,
-    titleTextStyle: TextStyle(
-        color: Colors.white, fontSize: 20.0, fontWeight: FontWeight.bold),
-    toolbarTextStyle: TextStyle(color: Colors.white),
-    iconTheme: IconThemeData(color: Colors.white),
   ),
-  textTheme: Typography().white,
+  // textTheme: Typography().white,
   scaffoldBackgroundColor: Colors.black,
-  iconTheme: const IconThemeData(
-    color: Colors.white,
-  ),
+  // iconTheme: const IconThemeData(
+  //   color: Colors.white,
+  // ),
   chipTheme: ChipThemeData(
       backgroundColor: Colors.black,
       labelStyle: TextStyle(color: Colors.white)),
@@ -25,19 +21,19 @@ ThemeData lightTheme = ThemeData(
   useMaterial3: true,
 );
 ThemeData darkTheme = ThemeData(
-  brightness: Brightness.light,
-  appBarTheme: const AppBarTheme(
-    backgroundColor: Colors.white,
-    titleTextStyle: TextStyle(
-        color: Colors.black, fontSize: 20.0, fontWeight: FontWeight.bold),
-    toolbarTextStyle: TextStyle(color: Colors.black),
-    iconTheme: IconThemeData(color: Colors.black),
-  ),
-  textTheme: Typography().black,
-  scaffoldBackgroundColor: Colors.white,
-  iconTheme: const IconThemeData(
-    color: Colors.black,
-  ),
+  // brightness: Brightness.light,
+  // appBarTheme: const AppBarTheme(
+  //   backgroundColor: Colors.white,
+  //   titleTextStyle: TextStyle(
+  //       color: Colors.black, fontSize: 20.0, fontWeight: FontWeight.bold),
+  //   toolbarTextStyle: TextStyle(color: Colors.black),
+  //   iconTheme: IconThemeData(color: Colors.black),
+  // ),
+  // textTheme: Typography().black,
+  // scaffoldBackgroundColor: Colors.white,
+  // iconTheme: const IconThemeData(
+  //   color: Colors.black,
+  // ),
   chipTheme: ChipThemeData(
       backgroundColor: Colors.white,
       labelStyle: TextStyle(color: Colors.black)),
