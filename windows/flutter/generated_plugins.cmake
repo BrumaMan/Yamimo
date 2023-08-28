@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   auto_update
+  permission_handler_windows
   share_plus
   url_launcher_windows
 )
