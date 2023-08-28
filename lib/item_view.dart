@@ -5,6 +5,7 @@ import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/model/chapter.dart';
 import 'package:first_app/source/model/manga_details.dart';
 import 'package:first_app/source/source_helper.dart';
+import 'package:first_app/util/downloader.dart';
 import 'package:first_app/util/globals.dart';
 import 'package:first_app/util/status_icons.dart';
 import 'package:first_app/webview.dart';
@@ -64,6 +65,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   late List<Color> gradientColors;
   late Color appBarColor;
   late Animation<Color?> _animation;
+  List<String> currentDownload = [];
 
   double sensitivityFactor = 20.0;
 
@@ -143,6 +145,15 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       final chapterResponse = await source.chapterListRequest(widget.id);
 
       chapters = await source.chapterListParse(chapterResponse);
+      if (mangaChaptersBox.containsKey(widget.id)) {
+        List<Chapter> tempChapters =
+            List<Chapter>.from(mangaChaptersBox.get(widget.id));
+        tempChapters.removeWhere((element) => element.downloaded == false);
+        for (var chap in tempChapters) {
+          chapters[chapters.indexWhere((element) => element.id == chap.id)]
+              .setDownloaded(true);
+        }
+      }
       mangaChaptersBox.put(widget.id, List<Chapter>.from(chapters));
     }
 
@@ -391,16 +402,19 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
         },
         child: ScrollbarTheme(
           data: ScrollbarThemeData(
-              thumbColor: MaterialStatePropertyAll(
-                  Theme.of(context).colorScheme.primary),
-              crossAxisMargin: 6.0),
+            thumbColor:
+                MaterialStatePropertyAll(Theme.of(context).colorScheme.primary),
+            crossAxisMargin: 6.0,
+          ),
           child: Scrollbar(
             radius: Radius.circular(8.0),
             thickness: 8.0,
             child: RefreshIndicator(
               onRefresh: () {
                 return Future.delayed(Duration(seconds: 1), () {
-                  chapters = getRequest(refresh: true);
+                  if (currentDownload == "") {
+                    chapters = getRequest(refresh: true);
+                  }
                 });
               },
               child: CustomScrollView(
@@ -639,24 +653,31 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                         Text('$chapterCount Chapters',
                                             style: const TextStyle(
                                                 fontWeight: FontWeight.bold)),
-                                        // FilledButton(
-                                        //     onPressed: chapterCount == 0
-                                        //         ? null
-                                        //         : () {
-                                        //             continueReading(context);
-                                        //           },
-                                        //     child: Row(
-                                        //       children: [
-                                        //         Padding(
-                                        //           padding:
-                                        //               const EdgeInsets.only(right: 8.0),
-                                        //           child: Icon(Icons.play_arrow),
-                                        //         ),
-                                        //         started
-                                        //             ? Text('Continue')
-                                        //             : Text('Start'),
-                                        //       ],
-                                        //     ))
+                                        IconButton(
+                                            onPressed: () {
+                                              Downloader(
+                                                      chapters: chaptersPassed)
+                                                  .downloadAll(
+                                                      widget.source,
+                                                      widget.title,
+                                                      widget.id,
+                                                      chaptersRead,
+                                                      (count,
+                                                              total,
+                                                              downloading,
+                                                              currentChapter) =>
+                                                          setState(() {
+                                                            if (downloading) {
+                                                              currentDownload.add(
+                                                                  currentChapter);
+                                                            } else {
+                                                              currentDownload
+                                                                  .remove(
+                                                                      currentChapter);
+                                                            }
+                                                          }));
+                                            },
+                                            icon: Icon(Icons.download_outlined))
                                       ],
                                     ),
                                   ),
@@ -674,30 +695,115 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                         if (!snapshot.hasData) {
                           return SliverToBoxAdapter();
                         } else {
-                          return SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                                addAutomaticKeepAlives: false,
-                                addRepaintBoundaries: false,
-                                childCount: chapterCount, (context, index) {
-                              return ListTile(
-                                // tileColor: Colors.black,
-                                contentPadding:
-                                    EdgeInsets.symmetric(horizontal: 8.0),
-                                // trailing: IconButton(
-                                //     onPressed: () {},
-                                //     icon: Icon(
-                                //         Icons.download_for_offline_outlined)),
-                                title: Row(
-                                  children: [
-                                    Expanded(
-                                      child: ValueListenableBuilder(
-                                        valueListenable:
-                                            chaptersReadBox.listenable(),
-                                        builder: (context, value, child) =>
-                                            Text(
-                                          snapshot.data[index].title,
-                                          overflow: TextOverflow.ellipsis,
+                          return ValueListenableBuilder(
+                            valueListenable: mangaChaptersBox.listenable(),
+                            builder: (context, value, child) => SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                  addAutomaticKeepAlives: false,
+                                  addRepaintBoundaries: false,
+                                  childCount: chapterCount, (context, index) {
+                                return ListTile(
+                                  // tileColor: Colors.black,
+                                  contentPadding:
+                                      EdgeInsets.symmetric(horizontal: 8.0),
+                                  trailing: currentDownload
+                                          .contains(snapshot.data[index].id)
+                                      ? CircularProgressIndicator()
+                                      : IconButton(
+                                          onPressed: () {
+                                            snapshot.data[index].downloaded ==
+                                                    false
+                                                ? Downloader(
+                                                        chapters:
+                                                            chaptersPassed)
+                                                    .downloadChapter(
+                                                    widget.source,
+                                                    widget.title,
+                                                    widget.id,
+                                                    snapshot.data[index],
+                                                    (count, total,
+                                                        downloading) {
+                                                      setState(() {
+                                                        if (downloading) {
+                                                          currentDownload.add(
+                                                              snapshot
+                                                                  .data[index]
+                                                                  .id);
+                                                        } else {
+                                                          currentDownload
+                                                              .remove(snapshot
+                                                                  .data[index]
+                                                                  .id);
+                                                        }
+                                                      });
+                                                    },
+                                                  )
+                                                : null;
+                                          },
+                                          icon: Icon(snapshot
+                                                  .data[index].downloaded
+                                              ? Icons.download_done
+                                              : Icons
+                                                  .download_for_offline_outlined)),
+                                  title: Row(
+                                    children: [
+                                      Expanded(
+                                        child: ValueListenableBuilder(
+                                          valueListenable:
+                                              chaptersReadBox.listenable(),
+                                          builder: (context, value, child) =>
+                                              Text(
+                                            snapshot.data[index].title,
+                                            overflow: TextOverflow.ellipsis,
+                                            softWrap: true,
+                                            style: TextStyle(
+                                                color: getChaptersRead(
+                                                        snapshot.data[index].id)
+                                                    ? settingsBox.get(
+                                                            'darkMode',
+                                                            defaultValue: false)
+                                                        ? Colors.grey[700]
+                                                        : Colors.grey[400]
+                                                    : null),
+                                          ),
+                                        ),
+                                      ),
+                                      // Text(
+                                      //   '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago',
+                                      //   style: TextStyle(
+                                      //       color: chaptersRead["chapter"] >=
+                                      //               chapterCount - index
+                                      //           ? Colors.grey[700]
+                                      //           : null),
+                                      // ),
+                                    ],
+                                  ),
+                                  subtitle: Row(
+                                    // mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Text(
+                                      //     '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago '),
+                                      snapshot.data[index].officialScan == true
+                                          ? Icon(
+                                              Icons.done_all,
+                                              color: getChaptersRead(
+                                                      snapshot.data[index].id)
+                                                  ? settingsBox.get('darkMode',
+                                                          defaultValue: false)
+                                                      ? Colors.grey[700]
+                                                      : Colors.grey[400]
+                                                  : null,
+                                            )
+                                          : Text(''),
+                                      Expanded(
+                                        child: Text(
+                                          ' ${snapshot.data[index].scanGroup == null ? "Unknown group" : snapshot.data[index].scanGroup}${getChapterPagesRead(snapshot.data[index].id, snapshot.data[index].pages)}${DateTime.now().difference(DateTime.parse(snapshot.data[index].readableAt)).inDays < 7 ? ' | ${DateTimeFormat.relative(
+                                              DateTime.parse(snapshot
+                                                  .data[index].readableAt),
+                                            )}' : getChapterDate(snapshot.data[index].readableAt)}',
                                           softWrap: true,
+                                          overflow: TextOverflow.ellipsis,
+                                          // maxLines: 2,
                                           style: TextStyle(
                                               color: getChaptersRead(
                                                       snapshot.data[index].id)
@@ -708,120 +814,74 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                                   : null),
                                         ),
                                       ),
-                                    ),
-                                    // Text(
-                                    //   '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago',
-                                    //   style: TextStyle(
-                                    //       color: chaptersRead["chapter"] >=
-                                    //               chapterCount - index
-                                    //           ? Colors.grey[700]
-                                    //           : null),
-                                    // ),
-                                  ],
-                                ),
-                                subtitle: Row(
-                                  // mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Text(
-                                    //     '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago '),
-                                    snapshot.data[index].officialScan == true
-                                        ? Icon(
-                                            Icons.done_all,
-                                            color: getChaptersRead(
-                                                    snapshot.data[index].id)
-                                                ? settingsBox.get('darkMode',
-                                                        defaultValue: false)
-                                                    ? Colors.grey[700]
-                                                    : Colors.grey[400]
-                                                : null,
-                                          )
-                                        : Text(''),
-                                    Expanded(
-                                      child: Text(
-                                        ' ${snapshot.data[index].scanGroup == null ? "Unknown group" : snapshot.data[index].scanGroup}${getChapterPagesRead(snapshot.data[index].id, snapshot.data[index].pages)}${DateTime.now().difference(DateTime.parse(snapshot.data[index].readableAt)).inDays < 7 ? ' | ${DateTimeFormat.relative(
-                                            DateTime.parse(snapshot
-                                                .data[index].readableAt),
-                                          )}' : getChapterDate(snapshot.data[index].readableAt)}',
-                                        softWrap: true,
-                                        overflow: TextOverflow.ellipsis,
-                                        // maxLines: 2,
-                                        style: TextStyle(
-                                            color: getChaptersRead(
-                                                    snapshot.data[index].id)
-                                                ? settingsBox.get('darkMode',
-                                                        defaultValue: false)
-                                                    ? Colors.grey[700]
-                                                    : Colors.grey[400]
-                                                : null),
-                                      ),
-                                    ),
-                                    // Text(
-                                    //   getChapterPagesRead(snapshot.data[index].id,
-                                    //       snapshot.data[index].pages),
-                                    //   maxLines: 1,
-                                    //   overflow: TextOverflow.ellipsis,
-                                    // ),
-                                    // Text(
-                                    //     DateTime.now()
-                                    //                 .difference(DateTime.parse(
-                                    //                     snapshot.data[index]
-                                    //                         .readableAt))
-                                    //                 .inDays <
-                                    //             7
-                                    //         ? ' | ${DateTimeFormat.relative(
-                                    //             DateTime.parse(snapshot
-                                    //                 .data[index].readableAt),
-                                    //           )}'
-                                    //         : getChapterDate(
-                                    //             snapshot.data[index].readableAt),
-                                    //     style: TextStyle(
-                                    //         color: getChaptersRead(
-                                    //                 snapshot.data[index].id)
-                                    //             ? settingsBox.get('darkMode',
-                                    //                     defaultValue: false)
-                                    //                 ? Colors.grey[700]
-                                    //                 : Colors.grey[400]
-                                    //             : null),
-                                    //     maxLines: 1,
-                                    //     overflow: TextOverflow.ellipsis),
-                                  ],
-                                ),
-                                onTap: () {
-                                  if (!chaptersRead.containsKey(
-                                      '${snapshot.data[index].id}')) {
-                                    chaptersRead.addAll({
-                                      snapshot.data[index].id: {
-                                        'read': false,
-                                        'page': 0
-                                      }
-                                    });
-                                    chaptersReadBox.put(
-                                        widget.id, chaptersRead);
-                                    chaptersRead =
-                                        chaptersReadBox.get(widget.id);
-                                  }
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (context) {
-                                      return ChapterView(
-                                        id: snapshot.data[index].id,
-                                        mangaId: widget.id,
-                                        mangaTitle: widget.title,
-                                        isWebtoon: source.isWebtoon(tags),
-                                        title: snapshot.data[index].title,
-                                        chapterCount: chapterCount,
-                                        order: chapterCount - index,
-                                        chapters: chaptersPassed,
-                                        index: index,
-                                        url: snapshot.data[index].url == null
-                                            ? ""
-                                            : snapshot.data[index].url,
-                                        source: widget.source,
-                                      );
-                                    }),
-                                  );
-                                },
-                              );
-                            }),
+                                      // Text(
+                                      //   getChapterPagesRead(snapshot.data[index].id,
+                                      //       snapshot.data[index].pages),
+                                      //   maxLines: 1,
+                                      //   overflow: TextOverflow.ellipsis,
+                                      // ),
+                                      // Text(
+                                      //     DateTime.now()
+                                      //                 .difference(DateTime.parse(
+                                      //                     snapshot.data[index]
+                                      //                         .readableAt))
+                                      //                 .inDays <
+                                      //             7
+                                      //         ? ' | ${DateTimeFormat.relative(
+                                      //             DateTime.parse(snapshot
+                                      //                 .data[index].readableAt),
+                                      //           )}'
+                                      //         : getChapterDate(
+                                      //             snapshot.data[index].readableAt),
+                                      //     style: TextStyle(
+                                      //         color: getChaptersRead(
+                                      //                 snapshot.data[index].id)
+                                      //             ? settingsBox.get('darkMode',
+                                      //                     defaultValue: false)
+                                      //                 ? Colors.grey[700]
+                                      //                 : Colors.grey[400]
+                                      //             : null),
+                                      //     maxLines: 1,
+                                      //     overflow: TextOverflow.ellipsis),
+                                    ],
+                                  ),
+                                  onTap: () {
+                                    if (!chaptersRead.containsKey(
+                                        '${snapshot.data[index].id}')) {
+                                      chaptersRead.addAll({
+                                        snapshot.data[index].id: {
+                                          'read': false,
+                                          'page': 0
+                                        }
+                                      });
+                                      chaptersReadBox.put(
+                                          widget.id, chaptersRead);
+                                      chaptersRead =
+                                          chaptersReadBox.get(widget.id);
+                                    }
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (context) {
+                                        return ChapterView(
+                                          id: snapshot.data[index].id,
+                                          mangaId: widget.id,
+                                          mangaTitle: widget.title,
+                                          isWebtoon: source.isWebtoon(tags),
+                                          title: snapshot.data[index].title,
+                                          chapterCount: chapterCount,
+                                          order: chapterCount - index,
+                                          chapters: chaptersPassed,
+                                          index: index,
+                                          url: snapshot.data[index].url == null
+                                              ? ""
+                                              : snapshot.data[index].url,
+                                          source: widget.source,
+                                        );
+                                      }),
+                                    );
+                                  },
+                                );
+                              }),
+                            ),
                           );
                         }
                       }),
