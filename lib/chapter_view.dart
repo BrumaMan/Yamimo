@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/model/chapter.dart';
 import 'package:first_app/source/source_helper.dart';
+import 'package:first_app/util/downloader.dart';
 import 'package:first_app/webview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -178,10 +179,15 @@ class _ChapterViewState extends State<ChapterView>
     //replace your restFull API here.
     Chapter chapter = widget.chapters[widget.index + chapterOffset];
     // chapterInitialPage = 0;
-    final response = await source.pageListRequest(chapter);
-
     List<String> pages = [];
-    pages = source.pageListParse(response);
+    if (chapter.downloaded) {
+      pages = await Downloader(chapters: widget.chapters as List<Chapter>)
+          .getDownladedPages(widget.source, widget.mangaTitle, chapter.title);
+    } else {
+      final response = await source.pageListRequest(chapter);
+
+      pages = source.pageListParse(response);
+    }
     // chapters.reversed;
     setState(() {
       pageCount = pages.length;
@@ -341,14 +347,13 @@ class _ChapterViewState extends State<ChapterView>
             offset: Offset(0, -_controller.value * 140),
             child: Container(
               decoration: BoxDecoration(
-                  color: settingsBox.get('darkMode', defaultValue: false)
-                      ? Colors.black
-                      : Colors.white),
+                  color: Theme.of(context).colorScheme.background),
               padding: EdgeInsets.only(top: 50.0),
               child: AppBar(
                 // titleTextStyle: TextStyle(color: Colors.white, fontSize: 16.0),
                 // iconTheme: IconThemeData(color: Colors.white),
-                backgroundColor: Colors.transparent,
+                backgroundColor:
+                    Theme.of(context).colorScheme.background.withOpacity(0.7),
                 surfaceTintColor: Colors.white.withOpacity(0.7),
                 title: Text(widget.chapters.length - 1 <
                         widget.index + chapterOffset
@@ -429,9 +434,7 @@ class _ChapterViewState extends State<ChapterView>
               future: pages,
               builder: ((context, snapshot) {
                 if (snapshot.data == null) {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
+                  return Container();
                 } else {
                   return !hasNextChapter || !hasPrevChapter
                       ? Center(
@@ -502,8 +505,15 @@ class _ChapterViewState extends State<ChapterView>
                                                 backgroundColor:
                                                     Colors.transparent,
                                                 opacityScrollBars: 0.0,
-                                                child: Image.network(
-                                                  snapshot.data![index],
+                                                child: Image(
+                                                  image: snapshot.data![index]
+                                                          .startsWith(
+                                                              '/storage')
+                                                      ? FileImage(File(snapshot
+                                                          .data![index]))
+                                                      : NetworkImage(snapshot
+                                                              .data![index])
+                                                          as ImageProvider,
                                                   width: MediaQuery.of(context)
                                                       .size
                                                       .width,
@@ -521,6 +531,30 @@ class _ChapterViewState extends State<ChapterView>
                                                       child: Text(
                                                           "Can't load page"),
                                                     );
+                                                  },
+                                                  loadingBuilder: (context,
+                                                      child, loadingProgress) {
+                                                    if (loadingProgress ==
+                                                        null) {
+                                                      return child;
+                                                    }
+                                                    return Center(
+                                                        child: SizedBox(
+                                                      height: 100.0,
+                                                      width: 100.0,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                        strokeWidth: 10.0,
+                                                        value: loadingProgress
+                                                                    .expectedTotalBytes !=
+                                                                null
+                                                            ? loadingProgress
+                                                                    .cumulativeBytesLoaded /
+                                                                loadingProgress
+                                                                    .expectedTotalBytes!
+                                                            : null,
+                                                      ),
+                                                    ));
                                                   },
                                                 ),
                                               ),
@@ -672,7 +706,7 @@ class _ChapterViewState extends State<ChapterView>
         builder: (context, child) => Transform.translate(
           offset: Offset(0, _controller.value * 120),
           child: BottomAppBar(
-            color: Colors.black,
+            color: Theme.of(context).colorScheme.background.withOpacity(0.7),
             surfaceTintColor: Colors.transparent,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
