@@ -160,203 +160,218 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin {
             //     icon: Icon(Icons.filter_list))
           ],
         ),
-        body: Scrollbar(
-          radius: Radius.circular(8.0),
-          thickness: 6.0,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 5.0),
-            child: CustomScrollView(
-              controller: homeScrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                // SliverAppBar(
-                //   title: Text(updateCount == 0
-                //       ? 'Library'
-                //       : 'Library($updateCount of ${libraryBox.length})'),
-                //   floating: true,
-                //   actions: [
-                //     IconButton(
-                //         onPressed: () => updateLibraryItems(),
-                //         icon: Icon(Icons.refresh))
-                //     // IconButton(
-                //     //     onPressed: () {
-                //     //       showBottomSheet(
-                //     //         context: context,
-                //     //         builder: (context) => LibraryFilter(),
-                //     //       );
-                //     //     },
-                //     //     icon: Icon(Icons.filter_list))
-                //   ],
-                // ),
-                ValueListenableBuilder(
-                    valueListenable: chaptersReadBox.listenable(),
-                    builder: (context, value, child) {
-                      return ValueListenableBuilder(
-                          valueListenable: libraryBox.listenable(),
-                          builder: ((context, value, child) {
-                            if (libraryBox.isEmpty) {
-                              return SliverFillRemaining(
-                                child: Center(
-                                  // heightFactor: 30,
-                                  child: Text("No manga in library"),
-                                ),
-                              );
-                            } else {
-                              return SliverGrid.builder(
-                                  // controller: homeScrollController,
-                                  // padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                                  gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: itemsPerRow,
-                                    childAspectRatio: 0.67,
-                                    mainAxisSpacing: 2.5,
-                                    crossAxisSpacing: 2.5,
+        body: ScrollbarTheme(
+          data: ScrollbarThemeData(
+            thumbColor:
+                MaterialStatePropertyAll(Theme.of(context).colorScheme.primary),
+            crossAxisMargin: 6.0,
+          ),
+          child: Scrollbar(
+            radius: Radius.circular(8.0),
+            thickness: 8.0,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 5.0),
+              child: CustomScrollView(
+                controller: homeScrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  // SliverAppBar(
+                  //   title: Text(updateCount == 0
+                  //       ? 'Library'
+                  //       : 'Library($updateCount of ${libraryBox.length})'),
+                  //   floating: true,
+                  //   actions: [
+                  //     IconButton(
+                  //         onPressed: () => updateLibraryItems(),
+                  //         icon: Icon(Icons.refresh))
+                  //     // IconButton(
+                  //     //     onPressed: () {
+                  //     //       showBottomSheet(
+                  //     //         context: context,
+                  //     //         builder: (context) => LibraryFilter(),
+                  //     //       );
+                  //     //     },
+                  //     //     icon: Icon(Icons.filter_list))
+                  //   ],
+                  // ),
+                  ValueListenableBuilder(
+                      valueListenable: chaptersReadBox.listenable(),
+                      builder: (context, value, child) {
+                        return ValueListenableBuilder(
+                            valueListenable: libraryBox.listenable(),
+                            builder: ((context, value, child) {
+                              if (libraryBox.isEmpty) {
+                                return SliverFillRemaining(
+                                  child: Center(
+                                    // heightFactor: 30,
+                                    child: Text("No manga in library"),
                                   ),
-                                  itemCount: libraryItems.length,
-                                  itemBuilder: ((context, index) {
-                                    return GestureDetector(
-                                      child: Card(
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(4.0))),
-                                        clipBehavior: Clip.hardEdge,
-                                        child: Stack(
-                                          fit: StackFit.expand,
-                                          children: [
-                                            Hero(
-                                              tag: libraryItems[index]["cover"],
-                                              child: OptimizedCacheImage(
-                                                placeholder: (context, url) =>
-                                                    Container(),
-                                                imageUrl: libraryItems[index]
+                                );
+                              } else {
+                                return SliverGrid.builder(
+                                    // controller: homeScrollController,
+                                    // padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: itemsPerRow,
+                                      childAspectRatio: 0.67,
+                                      mainAxisSpacing: 2.5,
+                                      crossAxisSpacing: 2.5,
+                                    ),
+                                    itemCount: libraryItems.length,
+                                    itemBuilder: ((context, index) {
+                                      return GestureDetector(
+                                        child: Card(
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(4.0))),
+                                          clipBehavior: Clip.hardEdge,
+                                          child: Stack(
+                                            fit: StackFit.expand,
+                                            children: [
+                                              Hero(
+                                                tag: libraryItems[index]
                                                     ["cover"],
-                                                fit: BoxFit.cover,
-                                                errorWidget: (context, error,
-                                                        stackTrace) =>
-                                                    Center(
-                                                  child:
-                                                      Text("Can't load cover"),
-                                                ),
-                                                // height: 60.0,
-                                              ),
-                                            ),
-                                            Visibility(
-                                              visible: chapterBox.get(
-                                                          libraryItems[index]
-                                                              ['id']) -
-                                                      chaptersRead(
-                                                          libraryItems[index]
-                                                              ["id"]) !=
-                                                  0,
-                                              child: Positioned(
-                                                  top: 0.0,
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .primary,
-                                                        borderRadius:
-                                                            BorderRadius.all(
-                                                                Radius.circular(
-                                                                    5.0))),
-                                                    margin: EdgeInsets.all(8.0),
-                                                    padding:
-                                                        EdgeInsets.all(3.0),
-                                                    // clipBehavior: Clip.hardEdge,
-                                                    // color: Colors.blue,
-                                                    child: Text(
-                                                      "${chapterBox.get(libraryItems[index]['id']) - chaptersRead(libraryItems[index]["id"])}",
-                                                      style: TextStyle(
-                                                          color: settingsBox.get(
-                                                                  "darkMode",
-                                                                  defaultValue:
-                                                                      false)
-                                                              ? Colors.black
-                                                              : Colors.white),
-                                                    ),
-                                                  )),
-                                            ),
-                                            Positioned(
-                                              child: Container(
-                                                alignment: Alignment.bottomLeft,
-                                                decoration: BoxDecoration(
-                                                    gradient: LinearGradient(
-                                                        begin: Alignment
-                                                            .bottomCenter,
-                                                        end:
-                                                            Alignment.topCenter,
-                                                        colors: [
-                                                      Colors.black
-                                                          .withOpacity(0.8),
-                                                      Colors.black
-                                                          .withOpacity(0.0)
-                                                    ])),
-                                                padding: EdgeInsets.all(5.0),
-                                                height: 80,
-                                                width: MediaQuery.of(context)
-                                                            .size
-                                                            .width /
-                                                        itemsPerRow -
-                                                    13,
-                                                child: Text(
-                                                  libraryItems[index]["title"],
-                                                  softWrap: true,
-                                                  maxLines: 2,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: TextStyle(
-                                                      color: Colors.white,
-                                                      shadows: [
-                                                        Shadow(
-                                                            color: Colors.black
-                                                                .withOpacity(
-                                                                    0.8),
-                                                            offset:
-                                                                Offset(0, 1))
-                                                      ]),
-                                                ),
-                                              ),
-                                              bottom: 0.0,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      onTap: () {
-                                        Navigator.of(context).push(
-                                            PageAnimationTransition(
-                                                page: ItemView(
-                                                  id: libraryItems[index]["id"],
-                                                  title: libraryItems[index]
-                                                      ["title"],
-                                                  cover: libraryItems[index]
+                                                child: OptimizedCacheImage(
+                                                  placeholder: (context, url) =>
+                                                      Container(),
+                                                  imageUrl: libraryItems[index]
                                                       ["cover"],
-                                                  url: libraryItems[index]
-                                                          ["url"] ??
-                                                      libraryItems[index]
-                                                          ["title"],
-                                                  source: libraryItems[index]
-                                                      ["source"],
-                                                  // scrapeDate: snapshot.data[index].scrapeDate,
+                                                  fit: BoxFit.cover,
+                                                  errorWidget: (context, error,
+                                                          stackTrace) =>
+                                                      Center(
+                                                    child: Text(
+                                                        "Can't load cover"),
+                                                  ),
+                                                  // height: 60.0,
                                                 ),
-                                                pageAnimationType:
-                                                    FadeAnimationTransition()));
-                                      },
-                                      onLongPress: () {
-                                        deleteFromLibrary(
-                                            libraryItems[index]["id"]);
-                                        // debugPrint(index.toString());
-                                      },
-                                    );
-                                  }));
-                            }
-                          }));
-                    }),
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 10.0,
-                  ),
-                )
-              ],
+                                              ),
+                                              Visibility(
+                                                visible: chapterBox.get(
+                                                            libraryItems[index]
+                                                                ['id']) -
+                                                        chaptersRead(
+                                                            libraryItems[index]
+                                                                ["id"]) !=
+                                                    0,
+                                                child: Positioned(
+                                                    top: 0.0,
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .primary,
+                                                          borderRadius:
+                                                              BorderRadius.all(
+                                                                  Radius
+                                                                      .circular(
+                                                                          5.0))),
+                                                      margin:
+                                                          EdgeInsets.all(8.0),
+                                                      padding:
+                                                          EdgeInsets.all(3.0),
+                                                      // clipBehavior: Clip.hardEdge,
+                                                      // color: Colors.blue,
+                                                      child: Text(
+                                                        "${chapterBox.get(libraryItems[index]['id']) - chaptersRead(libraryItems[index]["id"])}",
+                                                        style: TextStyle(
+                                                            color: settingsBox.get(
+                                                                    "darkMode",
+                                                                    defaultValue:
+                                                                        false)
+                                                                ? Colors.black
+                                                                : Colors.white),
+                                                      ),
+                                                    )),
+                                              ),
+                                              Positioned(
+                                                child: Container(
+                                                  alignment:
+                                                      Alignment.bottomLeft,
+                                                  decoration: BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                          begin: Alignment
+                                                              .bottomCenter,
+                                                          end: Alignment
+                                                              .topCenter,
+                                                          colors: [
+                                                        Colors.black
+                                                            .withOpacity(0.8),
+                                                        Colors.black
+                                                            .withOpacity(0.0)
+                                                      ])),
+                                                  padding: EdgeInsets.all(5.0),
+                                                  height: 80,
+                                                  width: MediaQuery.of(context)
+                                                              .size
+                                                              .width /
+                                                          itemsPerRow -
+                                                      13,
+                                                  child: Text(
+                                                    libraryItems[index]
+                                                        ["title"],
+                                                    softWrap: true,
+                                                    maxLines: 2,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                        color: Colors.white,
+                                                        shadows: [
+                                                          Shadow(
+                                                              color: Colors
+                                                                  .black
+                                                                  .withOpacity(
+                                                                      0.8),
+                                                              offset:
+                                                                  Offset(0, 1))
+                                                        ]),
+                                                  ),
+                                                ),
+                                                bottom: 0.0,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                              PageAnimationTransition(
+                                                  page: ItemView(
+                                                    id: libraryItems[index]
+                                                        ["id"],
+                                                    title: libraryItems[index]
+                                                        ["title"],
+                                                    cover: libraryItems[index]
+                                                        ["cover"],
+                                                    url: libraryItems[index]
+                                                            ["url"] ??
+                                                        libraryItems[index]
+                                                            ["title"],
+                                                    source: libraryItems[index]
+                                                        ["source"],
+                                                    // scrapeDate: snapshot.data[index].scrapeDate,
+                                                  ),
+                                                  pageAnimationType:
+                                                      FadeAnimationTransition()));
+                                        },
+                                        onLongPress: () {
+                                          deleteFromLibrary(
+                                              libraryItems[index]["id"]);
+                                          // debugPrint(index.toString());
+                                        },
+                                      );
+                                    }));
+                              }
+                            }));
+                      }),
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 10.0,
+                    ),
+                  )
+                ],
+              ),
             ),
           ),
         ));
