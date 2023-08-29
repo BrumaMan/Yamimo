@@ -65,7 +65,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   late List<Color> gradientColors;
   late Color appBarColor;
   late Animation<Color?> _animation;
-  List<String> currentDownload = [];
+  Map<String, double> currentDownloads = {};
 
   double sensitivityFactor = 20.0;
 
@@ -412,7 +412,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
             child: RefreshIndicator(
               onRefresh: () {
                 return Future.delayed(Duration(seconds: 1), () {
-                  if (currentDownload == "") {
+                  if (currentDownloads.isEmpty) {
                     chapters = getRequest(refresh: true);
                   }
                 });
@@ -662,14 +662,15 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                                 widget.title,
                                                 widget.id,
                                                 chaptersRead,
-                                                (count, total, downloading,
+                                                (total, downloading,
                                                         currentChapter) =>
                                                     setState(() {
                                                   if (downloading) {
-                                                    currentDownload
-                                                        .add(currentChapter);
+                                                    currentDownloads.addAll({
+                                                      currentChapter: total
+                                                    });
                                                   } else {
-                                                    currentDownload
+                                                    currentDownloads
                                                         .remove(currentChapter);
                                                   }
                                                 }),
@@ -723,9 +724,11 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                   // tileColor: Colors.black,
                                   contentPadding:
                                       EdgeInsets.symmetric(horizontal: 8.0),
-                                  trailing: currentDownload
-                                          .contains(snapshot.data[index].id)
-                                      ? CircularProgressIndicator()
+                                  trailing: currentDownloads
+                                          .containsKey(snapshot.data[index].id)
+                                      ? CircularProgressIndicator(
+                                          value: currentDownloads[
+                                              snapshot.data[index].id])
                                       : IconButton(
                                           onPressed: () {
                                             snapshot.data[index].downloaded ==
@@ -738,16 +741,16 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                                     widget.title,
                                                     widget.id,
                                                     snapshot.data[index],
-                                                    (count, total,
-                                                        downloading) {
+                                                    (total, downloading) {
                                                       setState(() {
                                                         if (downloading) {
-                                                          currentDownload.add(
-                                                              snapshot
-                                                                  .data[index]
-                                                                  .id);
+                                                          currentDownloads
+                                                              .addAll({
+                                                            snapshot.data[index]
+                                                                .id: total
+                                                          });
                                                         } else {
-                                                          currentDownload
+                                                          currentDownloads
                                                               .remove(snapshot
                                                                   .data[index]
                                                                   .id);

@@ -24,7 +24,7 @@ class Downloader {
       String title,
       String mangaID,
       Chapter chapter,
-      Function(int count, int total, bool downloading) onProgress,
+      Function(double total, bool downloading) onProgress,
       Function(String error) onError) async {
     try {
       if (await requestPermission(Permission.manageExternalStorage)) {
@@ -52,17 +52,15 @@ class Downloader {
             onReceiveProgress: (count, total) {
               if (total != -1) {
                 // debugPrint((count / total * 100).toStringAsFixed(0) + '%');
-                if (!downloading) {
-                  downloading = true;
-                  onProgress(count, total, downloading);
-                }
               }
             },
           );
+          downloading = true;
+          onProgress(index / pages.length, downloading);
           index += 1;
         }
         downloading = false;
-        onProgress(0, 0, downloading);
+        onProgress(1.0, downloading);
         chapters[chapters.indexWhere((element) => element.id == chapter.id)]
             .setDownloaded(true);
         // debugPrint(
@@ -72,7 +70,7 @@ class Downloader {
       }
     } catch (e) {
       debugPrint(e.toString());
-      onProgress(0, 0, false);
+      onProgress(1.0, false);
       onError(e.toString());
     }
     return false;
@@ -83,21 +81,21 @@ class Downloader {
       String title,
       String mangaID,
       Map<dynamic, dynamic> chaptersRead,
-      Function(int count, int total, bool downloading, String currentChapter)
+      Function(double total, bool downloading, String currentChapter)
           onDownloadProgress,
       Function(String error) onErrorRecieved) async {
     try {
       chaptersRead.removeWhere((key, value) => value['read'] == false);
       for (var chapter in chapters) {
-        if (chapter.downloaded) {
+        if (!chapter.downloaded) {
           if (!chaptersRead.containsKey(chapter.id)) {
             await downloadChapter(
               source,
               title,
               mangaID,
               chapter,
-              (count, total, downloading) =>
-                  onDownloadProgress(count, total, downloading, chapter.id),
+              (total, downloading) =>
+                  onDownloadProgress(total, downloading, chapter.id),
               (error) => onErrorRecieved(error),
             );
           } else {
@@ -109,7 +107,7 @@ class Downloader {
       }
     } catch (e) {
       debugPrint(e.toString());
-      onDownloadProgress(0, 0, false, "");
+      onDownloadProgress(1.0, false, "");
       onErrorRecieved(e.toString());
     }
     return false;
