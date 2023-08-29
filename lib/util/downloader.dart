@@ -113,6 +113,38 @@ class Downloader {
     return false;
   }
 
+  Future<bool> deletePages(
+    String source,
+    String title,
+    String mangaID,
+    Chapter chapter,
+    Function(double total, bool downloading) onProgress,
+  ) async {
+    Directory dir = await getExternalStorageDirectory() as Directory;
+    downloadsDir =
+        Directory("${dir.path}/downloads/$source/$title/${chapter.title}");
+
+    if (await downloadsDir.exists()) {
+      List<FileSystemEntity> pages = downloadsDir.listSync();
+      int index = pages.length;
+      for (FileSystemEntity page in pages) {
+        if (index > 0) {
+          onProgress(index / pages.length, true);
+          debugPrint("deleting: ${page.path}");
+          await page.delete();
+          index -= 1;
+        }
+        // debugPrint(page.path);
+      }
+      onProgress(0.0, false);
+      chapters[chapters.indexWhere((element) => element.id == chapter.id)]
+          .setDownloaded(false);
+      mangaChaptersBox.put(mangaID, List<Chapter>.from(chapters));
+      return true;
+    }
+    return false;
+  }
+
   Future<List<String>> getDownladedPages(
     String source,
     String title,

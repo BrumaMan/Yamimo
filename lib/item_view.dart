@@ -768,7 +768,29 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                                       ));
                                                     },
                                                   )
-                                                : null;
+                                                : Downloader(
+                                                        chapters:
+                                                            chaptersPassed)
+                                                    .deletePages(
+                                                        widget.source,
+                                                        widget.title,
+                                                        widget.id,
+                                                        snapshot.data[index],
+                                                        (total, downloading) {
+                                                    setState(() {
+                                                      if (downloading) {
+                                                        currentDownloads
+                                                            .addAll({
+                                                          snapshot.data[index]
+                                                              .id: total
+                                                        });
+                                                      } else {
+                                                        currentDownloads.remove(
+                                                            snapshot.data[index]
+                                                                .id);
+                                                      }
+                                                    });
+                                                  });
                                           },
                                           icon: Icon(snapshot
                                                   .data[index].downloaded
