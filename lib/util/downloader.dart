@@ -24,7 +24,8 @@ class Downloader {
       String title,
       String mangaID,
       Chapter chapter,
-      Function(int count, int total, bool downloading) onProgress) async {
+      Function(int count, int total, bool downloading) onProgress,
+      Function(String error) onError) async {
     try {
       if (await requestPermission(Permission.manageExternalStorage)) {
         Directory dir = await getExternalStorageDirectory() as Directory;
@@ -72,6 +73,7 @@ class Downloader {
     } catch (e) {
       debugPrint(e.toString());
       onProgress(0, 0, false);
+      onError(e.toString());
     }
     return false;
   }
@@ -82,19 +84,22 @@ class Downloader {
       String mangaID,
       Map<dynamic, dynamic> chaptersRead,
       Function(int count, int total, bool downloading, String currentChapter)
-          onDownloadProgress) async {
+          onDownloadProgress,
+      Function(String error) onErrorRecieved) async {
     try {
       chaptersRead.removeWhere((key, value) => value['read'] == false);
       for (var chapter in chapters) {
         if (chapter.downloaded) {
           if (!chaptersRead.containsKey(chapter.id)) {
             await downloadChapter(
-                source,
-                title,
-                mangaID,
-                chapter,
-                (count, total, downloading) =>
-                    onDownloadProgress(count, total, downloading, chapter.id));
+              source,
+              title,
+              mangaID,
+              chapter,
+              (count, total, downloading) =>
+                  onDownloadProgress(count, total, downloading, chapter.id),
+              (error) => onErrorRecieved(error),
+            );
           } else {
             continue;
           }
@@ -105,6 +110,7 @@ class Downloader {
     } catch (e) {
       debugPrint(e.toString());
       onDownloadProgress(0, 0, false, "");
+      onErrorRecieved(e.toString());
     }
     return false;
   }

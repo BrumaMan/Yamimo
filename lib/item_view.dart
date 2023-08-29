@@ -658,24 +658,41 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                               Downloader(
                                                       chapters: chaptersPassed)
                                                   .downloadAll(
-                                                      widget.source,
-                                                      widget.title,
-                                                      widget.id,
-                                                      chaptersRead,
-                                                      (count,
-                                                              total,
-                                                              downloading,
-                                                              currentChapter) =>
-                                                          setState(() {
-                                                            if (downloading) {
-                                                              currentDownload.add(
-                                                                  currentChapter);
-                                                            } else {
-                                                              currentDownload
-                                                                  .remove(
-                                                                      currentChapter);
-                                                            }
-                                                          }));
+                                                widget.source,
+                                                widget.title,
+                                                widget.id,
+                                                chaptersRead,
+                                                (count, total, downloading,
+                                                        currentChapter) =>
+                                                    setState(() {
+                                                  if (downloading) {
+                                                    currentDownload
+                                                        .add(currentChapter);
+                                                  } else {
+                                                    currentDownload
+                                                        .remove(currentChapter);
+                                                  }
+                                                }),
+                                                (error) {
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (context) =>
+                                                        AlertDialog(
+                                                      title: Text('Error'),
+                                                      content: Text(error),
+                                                      scrollable: true,
+                                                      actions: [
+                                                        TextButton(
+                                                            onPressed: () =>
+                                                                Navigator.pop(
+                                                                    context),
+                                                            child:
+                                                                Text('Close'))
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                              );
                                             },
                                             icon: Icon(Icons.download_outlined))
                                       ],
@@ -736,6 +753,16 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                                                   .id);
                                                         }
                                                       });
+                                                    },
+                                                    (error) {
+                                                      snackbarKey.currentState
+                                                          ?.showSnackBar(
+                                                              SnackBar(
+                                                        content: Text(error),
+                                                        behavior:
+                                                            SnackBarBehavior
+                                                                .floating,
+                                                      ));
                                                     },
                                                   )
                                                 : null;
