@@ -4,13 +4,12 @@ import 'package:first_app/item_view.dart';
 import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/source_helper.dart';
 import 'package:first_app/util/globals.dart';
+import 'package:first_app/util/page_animation_wrapper.dart';
 // import 'package:first_app/widgets/library_filter_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart';
-import 'package:page_animation_transition/animations/fade_animation_transition.dart';
-import 'package:page_animation_transition/page_animation_transition.dart';
 import 'package:optimized_cached_image/optimized_cached_image.dart';
 
 class Home extends StatefulWidget {
@@ -335,25 +334,22 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin {
                                           ),
                                         ),
                                         onTap: () {
-                                          Navigator.of(context).push(
-                                              PageAnimationTransition(
-                                                  page: ItemView(
-                                                    id: libraryItems[index]
-                                                        ["id"],
-                                                    title: libraryItems[index]
-                                                        ["title"],
-                                                    cover: libraryItems[index]
-                                                        ["cover"],
-                                                    url: libraryItems[index]
-                                                            ["url"] ??
-                                                        libraryItems[index]
-                                                            ["title"],
-                                                    source: libraryItems[index]
-                                                        ["source"],
-                                                    // scrapeDate: snapshot.data[index].scrapeDate,
-                                                  ),
-                                                  pageAnimationType:
-                                                      FadeAnimationTransition()));
+                                          Navigator.of(context)
+                                              .push(PageAnimationWrapper(
+                                            key: ValueKey('Manga details'),
+                                            screen: ItemView(
+                                              id: libraryItems[index]["id"],
+                                              title: libraryItems[index]
+                                                  ["title"],
+                                              cover: libraryItems[index]
+                                                  ["cover"],
+                                              url: libraryItems[index]["url"] ??
+                                                  libraryItems[index]["title"],
+                                              source: libraryItems[index]
+                                                  ["source"],
+                                              // scrapeDate: snapshot.data[index].scrapeDate,
+                                            ),
+                                          ));
                                         },
                                         onLongPress: () {
                                           deleteFromLibrary(

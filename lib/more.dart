@@ -1,11 +1,10 @@
 import 'package:first_app/about.dart';
 import 'package:first_app/overview.dart';
 import 'package:first_app/settings.dart';
+import 'package:first_app/util/page_animation_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:page_animation_transition/animations/fade_animation_transition.dart';
-import 'package:page_animation_transition/page_animation_transition.dart';
 
 class More extends StatefulWidget {
   const More({super.key});
@@ -74,9 +73,10 @@ class _MoreState extends State<More> {
             leading: Icon(Icons.bar_chart,
                 color: Theme.of(context).colorScheme.primary),
             onTap: () {
-              Navigator.of(context).push(PageAnimationTransition(
-                  page: Overview(),
-                  pageAnimationType: FadeAnimationTransition()));
+              Navigator.of(context).push(PageAnimationWrapper(
+                key: ValueKey('Overview'),
+                screen: Overview(),
+              ));
             },
           ),
           ListTile(
@@ -84,9 +84,10 @@ class _MoreState extends State<More> {
             leading: Icon(Icons.settings_outlined,
                 color: Theme.of(context).colorScheme.primary),
             onTap: () {
-              Navigator.of(context).push(PageAnimationTransition(
-                  page: const Settings(),
-                  pageAnimationType: FadeAnimationTransition()));
+              Navigator.of(context).push(PageAnimationWrapper(
+                key: ValueKey('Settings'),
+                screen: const Settings(),
+              ));
             },
           ),
           ListTile(
@@ -94,9 +95,10 @@ class _MoreState extends State<More> {
             leading: Icon(Icons.info_outline,
                 color: Theme.of(context).colorScheme.primary),
             onTap: () {
-              Navigator.of(context).push(PageAnimationTransition(
-                  page: const AboutScreen(),
-                  pageAnimationType: FadeAnimationTransition()));
+              Navigator.of(context).push(PageAnimationWrapper(
+                key: ValueKey('About'),
+                screen: const AboutScreen(),
+              ));
             },
           )
         ],

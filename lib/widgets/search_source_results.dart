@@ -2,12 +2,11 @@ import 'package:first_app/item_view.dart';
 import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/model/manga.dart';
 import 'package:first_app/source/source_helper.dart';
+import 'package:first_app/util/page_animation_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:optimized_cached_image/optimized_cached_image.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:page_animation_transition/animations/fade_animation_transition.dart';
-import 'package:page_animation_transition/page_animation_transition.dart';
 
 class SearchSourceResults extends StatefulWidget {
   const SearchSourceResults(
@@ -118,16 +117,17 @@ class _SearchSourceResultsState extends State<SearchSourceResults> {
                       ),
                     ),
                     onTap: () {
-                      Navigator.of(context).push(PageAnimationTransition(
-                          page: ItemView(
-                            id: snapshot.data[index].id,
-                            title: snapshot.data[index].title,
-                            cover: snapshot.data[index].cover,
-                            url: snapshot.data[index].url,
-                            source: widget.name,
-                            // scrapeDate: snapshot.data[index].scrapeDate,
-                          ),
-                          pageAnimationType: FadeAnimationTransition()));
+                      Navigator.of(context).push(PageAnimationWrapper(
+                        key: ValueKey('Manga details'),
+                        screen: ItemView(
+                          id: snapshot.data[index].id,
+                          title: snapshot.data[index].title,
+                          cover: snapshot.data[index].cover,
+                          url: snapshot.data[index].url,
+                          source: widget.name,
+                          // scrapeDate: snapshot.data[index].scrapeDate,
+                        ),
+                      ));
                     },
                   );
                 });

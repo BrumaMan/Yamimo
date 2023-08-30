@@ -7,6 +7,7 @@ import 'package:first_app/source/model/manga_details.dart';
 import 'package:first_app/source/source_helper.dart';
 import 'package:first_app/util/downloader.dart';
 import 'package:first_app/util/globals.dart';
+import 'package:first_app/util/page_animation_wrapper.dart';
 import 'package:first_app/util/status_icons.dart';
 import 'package:first_app/webview.dart';
 import 'package:flutter/material.dart';
@@ -359,14 +360,12 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
           ),
           IconButton(
               onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) {
-                    return WebView(
+                Navigator.of(context).push(PageAnimationWrapper(
+                    key: ValueKey('WebView'),
+                    screen: WebView(
                       url: widget.url,
                       title: widget.title,
-                    );
-                  },
-                ));
+                    )));
               },
               icon: Icon(Icons.public_outlined)),
           IconButton(
@@ -912,23 +911,24 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                           chaptersReadBox.get(widget.id);
                                     }
                                     Navigator.of(context).push(
-                                      MaterialPageRoute(builder: (context) {
-                                        return ChapterView(
-                                          id: snapshot.data[index].id,
-                                          mangaId: widget.id,
-                                          mangaTitle: widget.title,
-                                          isWebtoon: source.isWebtoon(tags),
-                                          title: snapshot.data[index].title,
-                                          chapterCount: chapterCount,
-                                          order: chapterCount - index,
-                                          chapters: chaptersPassed,
-                                          index: index,
-                                          url: snapshot.data[index].url == null
-                                              ? ""
-                                              : snapshot.data[index].url,
-                                          source: widget.source,
-                                        );
-                                      }),
+                                      PageAnimationWrapper(
+                                          key: ValueKey('Manga reader'),
+                                          screen: ChapterView(
+                                            id: snapshot.data[index].id,
+                                            mangaId: widget.id,
+                                            mangaTitle: widget.title,
+                                            isWebtoon: source.isWebtoon(tags),
+                                            title: snapshot.data[index].title,
+                                            chapterCount: chapterCount,
+                                            order: chapterCount - index,
+                                            chapters: chaptersPassed,
+                                            index: index,
+                                            url:
+                                                snapshot.data[index].url == null
+                                                    ? ""
+                                                    : snapshot.data[index].url,
+                                            source: widget.source,
+                                          )),
                                     );
                                   },
                                 );
