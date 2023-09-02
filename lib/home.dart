@@ -5,6 +5,7 @@ import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/source_helper.dart';
 import 'package:first_app/util/globals.dart';
 import 'package:first_app/util/page_animation_wrapper.dart';
+import 'package:first_app/widgets/manga_longpress_modal.dart';
 // import 'package:first_app/widgets/library_filter_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -352,8 +353,28 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin {
                                           ));
                                         },
                                         onLongPress: () {
-                                          deleteFromLibrary(
-                                              libraryItems[index]["id"]);
+                                          showModalBottomSheet(
+                                            context: context,
+                                            builder: (context) {
+                                              return LongPressModal(
+                                                imageURL: libraryItems[index]
+                                                    ['cover'],
+                                                title: libraryItems[index]
+                                                    ['title'],
+                                                url: libraryItems[index]['url'],
+                                                read: chaptersRead(
+                                                    libraryItems[index]["id"]),
+                                                total: chapterBox.get(
+                                                    libraryItems[index]['id']),
+                                                source: libraryItems[index]
+                                                    ['source'],
+                                                onDelete: () =>
+                                                    deleteFromLibrary(
+                                                        libraryItems[index]
+                                                            ["id"]),
+                                              );
+                                            },
+                                          );
                                           // debugPrint(index.toString());
                                         },
                                       );
