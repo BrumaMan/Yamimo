@@ -1,11 +1,10 @@
-import 'package:auto_update/auto_update.dart';
-import 'package:filesize/filesize.dart';
+import 'package:first_app/update_screen.dart';
+import 'package:first_app/util/page_animation_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:line_icons/line_icon.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'dart:convert';
@@ -160,38 +159,41 @@ class _AboutScreenState extends State<AboutScreen> {
                   } else {
                     /* update url found */
                     debugPrint("${_updateInfo}");
-                    showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            icon: Icon(Icons.system_security_update),
-                            title: Text(
-                              'New version available',
-                              style: TextStyle(fontSize: 16.0),
-                            ),
-                            actions: [
-                              TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text('Close')),
-                              TextButton(
-                                  onPressed: () async {
-                                    await AutoUpdate.downloadAndUpdate(
-                                        _updateInfo['assetUrl']);
-                                  },
-                                  child: Text('Download'))
-                            ],
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                    "New version: ${_updateInfo['tag'].split('v')[1]}"),
-                                Text('Size: ${filesize(_updateInfo['size'])}'),
-                                MarkdownBody(data: _updateInfo['body'])
-                              ],
-                            ),
-                          );
-                        });
+                    // showDialog(
+                    //     context: context,
+                    //     builder: (context) {
+                    //       return AlertDialog(
+                    //         icon: Icon(Icons.system_security_update),
+                    //         title: Text(
+                    //           'New version available',
+                    //           style: TextStyle(fontSize: 16.0),
+                    //         ),
+                    //         actions: [
+                    //           TextButton(
+                    //               onPressed: () => Navigator.pop(context),
+                    //               child: Text('Close')),
+                    //           TextButton(
+                    //               onPressed: () async {
+                    //                 await AutoUpdate.downloadAndUpdate(
+                    //                     _updateInfo['assetUrl']);
+                    //               },
+                    //               child: Text('Download'))
+                    //         ],
+                    //         content: Column(
+                    //           mainAxisSize: MainAxisSize.min,
+                    //           crossAxisAlignment: CrossAxisAlignment.start,
+                    //           children: [
+                    //             Text(
+                    //                 "New version: ${_updateInfo['tag'].split('v')[1]}"),
+                    //             Text('Size: ${filesize(_updateInfo['size'])}'),
+                    //             MarkdownBody(data: _updateInfo['body'])
+                    //           ],
+                    //         ),
+                    //       );
+                    //     });
+                    Navigator.of(context).push(PageAnimationWrapper(
+                        key: ValueKey('Update'),
+                        screen: UpdateScreen(updateInfo: _updateInfo)));
                   }
                 }
               },
@@ -209,13 +211,14 @@ class _AboutScreenState extends State<AboutScreen> {
               },
             ),
             ListTile(
-              title: Text("Open source licenses"),
+              title: Text("Open source licences"),
               onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: ((context) => LicensePage(
-                          applicationName: '${info?.appName}',
-                          applicationVersion: '${info?.version}',
-                        ))));
+                Navigator.of(context).push(PageAnimationWrapper(
+                    key: ValueKey('Licences'),
+                    screen: LicensePage(
+                      applicationName: '${info?.appName}',
+                      applicationVersion: '${info?.version}',
+                    )));
               },
             ),
             Row(
