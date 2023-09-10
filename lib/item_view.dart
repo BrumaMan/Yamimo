@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:first_app/chapter_view.dart';
+import 'package:first_app/manga_cover_view.dart';
 import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/model/chapter.dart';
 import 'package:first_app/source/model/manga_details.dart';
@@ -13,9 +14,11 @@ import 'package:first_app/webview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:date_time_format/date_time_format.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ItemView extends StatefulWidget {
@@ -41,7 +44,7 @@ class ItemView extends StatefulWidget {
 }
 
 class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
-  late ScrollController scrollViewController;
+  late AutoScrollController scrollViewController;
   late AnimationController _controller;
   Box settingsBox = Hive.box('settings');
   Box libraryBox = Hive.box('library');
@@ -84,7 +87,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       chaptersReadBox.delete(widget.id);
       chaptersRead = chaptersReadBox.get(widget.id, defaultValue: {});
     }
-    scrollViewController = ScrollController();
+    scrollViewController = AutoScrollController();
     _controller =
         AnimationController(vsync: this, duration: Duration(milliseconds: 200));
     // textController = TextEditingController(text: widget.searchTerm);
@@ -121,9 +124,9 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
     return tagsWidgets;
   }
 
-  Future<MangaDetails> getMangaDetails() async {
+  Future<MangaDetails> getMangaDetails({refresh = false}) async {
     late MangaDetails mangaDetails;
-    if (mangaDetailsBox.containsKey(widget.id)) {
+    if (mangaDetailsBox.containsKey(widget.id) && refresh == false) {
       mangaDetails = mangaDetailsBox.get(widget.id);
     } else {
       final mangaDetailsResponse = await source.mangaDetailsRequest(widget.id);
@@ -266,50 +269,19 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   }
 
   void continueReading(BuildContext context) {
-    List<Chapter> allChapters = chaptersPassed;
-    List<Chapter> tempChapters = List.from(chaptersPassed);
-    Map<dynamic, dynamic> chaptersRead =
-        chaptersReadBox.get(widget.id, defaultValue: {});
-    int index = 0;
-    int pageIndex = chapterCount - 1;
-    // debugPrint('$tempChapters');
-
-    // tempChapters.removeWhere((element) => chaptersRead.containsKey(element.id));
-
-    for (var chapter in allChapters) {
-      if (chaptersRead.containsKey(chapter.id)) {
-        chaptersRead[chapter.id]['read'] ? tempChapters.removeAt(index) : null;
-        chaptersRead[chapter.id]['read'] ? pageIndex-- : null;
+    int smallestIdx = chaptersPassed.length - 1;
+    for (var key in chaptersRead.keys) {
+      if (chaptersRead[key]['read']) {
+        int idx = chaptersPassed.indexWhere((element) => element.id == key);
+        smallestIdx = idx < smallestIdx ? idx : smallestIdx;
       }
-      index++;
     }
-    Chapter last = tempChapters.last;
-    // index--;
-
-    if (!chaptersRead.containsKey(last.id)) {
-      chaptersRead.addAll({
-        last.id: {'read': false, 'page': 0}
-      });
-      chaptersReadBox.put(widget.id, chaptersRead);
-      chaptersRead = chaptersReadBox.get(widget.id);
-    }
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) {
-        return ChapterView(
-          id: last.id,
-          mangaId: widget.id,
-          mangaTitle: widget.title,
-          isWebtoon: source.isWebtoon(tags),
-          title: last.title,
-          chapterCount: chapterCount,
-          order: chapterCount - pageIndex,
-          chapters: List.from(chaptersPassed),
-          index: pageIndex,
-          url: last.url ?? "",
-          source: widget.source,
-        );
-      }),
-    );
+    scrollViewController.scrollToIndex(smallestIdx,
+        duration: Duration(milliseconds: 50),
+        preferPosition: AutoScrollPosition.middle);
+    position = 200.0;
+    _controller.forward();
+    scrollViewController.highlight(smallestIdx);
   }
 
   @override
@@ -381,7 +353,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
               ScrollDirection.reverse) {
             position = scrollInfo.metrics.pixels;
             // debugPrint('$position');
-            position > 0.0 && position <= 10.0 ? _controller.forward() : null;
+            position > 0.0 && position <= 100.0 ? _controller.forward() : null;
             setState(() {
               isUp = false;
             });
@@ -412,6 +384,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
               onRefresh: () {
                 return Future.delayed(Duration(seconds: 1), () {
                   if (currentDownloads.isEmpty) {
+                    mangaDetails = getMangaDetails(refresh: true);
                     chapters = getRequest(refresh: true);
                   }
                 });
@@ -459,16 +432,28 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                       mainAxisSize: MainAxisSize.min,
                                       // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                       children: [
-                                        Card(
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(4.0)),
-                                          clipBehavior: Clip.hardEdge,
-                                          child: CachedNetworkImage(
-                                              imageUrl: widget.cover,
-                                              height: 150,
-                                              width: 100,
-                                              fit: BoxFit.cover),
+                                        GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                                context,
+                                                PageAnimationWrapper(
+                                                    key:
+                                                        ValueKey('Manga cover'),
+                                                    screen: MangaCoverView(
+                                                        imageUrl:
+                                                            widget.cover)));
+                                          },
+                                          child: Card(
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(4.0)),
+                                            clipBehavior: Clip.hardEdge,
+                                            child: CachedNetworkImage(
+                                                imageUrl: widget.cover,
+                                                height: 150,
+                                                width: 100,
+                                                fit: BoxFit.cover),
+                                          ),
                                         ),
                                         Flexible(
                                           child: Column(
@@ -631,7 +616,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                   ),
                                 ),
                                 SizedBox(
-                                  height: 40,
+                                  height: 35,
                                   child: ListView(
                                     padding:
                                         EdgeInsets.only(left: 8.0, right: 6.0),
@@ -653,8 +638,8 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                             style: const TextStyle(
                                                 fontWeight: FontWeight.bold)),
                                         IconButton(
-                                            onPressed: () {
-                                              Downloader(
+                                            onPressed: () async {
+                                              await Downloader(
                                                       chapters: chaptersPassed)
                                                   .downloadAll(
                                                 widget.source,
@@ -674,23 +659,15 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                                   }
                                                 }),
                                                 (error) {
-                                                  showDialog(
-                                                    context: context,
-                                                    builder: (context) =>
-                                                        AlertDialog(
-                                                      title: Text('Error'),
-                                                      content: Text(error),
-                                                      scrollable: true,
-                                                      actions: [
-                                                        TextButton(
-                                                            onPressed: () =>
-                                                                Navigator.pop(
-                                                                    context),
-                                                            child:
-                                                                Text('Close'))
-                                                      ],
-                                                    ),
-                                                  );
+                                                  Fluttertoast.showToast(
+                                                      msg: error,
+                                                      gravity:
+                                                          ToastGravity.BOTTOM,
+                                                      toastLength:
+                                                          Toast.LENGTH_LONG,
+                                                      backgroundColor:
+                                                          Theme.of(context)
+                                                              .highlightColor);
                                                 },
                                               );
                                             },
@@ -719,28 +696,70 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                   addAutomaticKeepAlives: false,
                                   addRepaintBoundaries: false,
                                   childCount: chapterCount, (context, index) {
-                                return ListTile(
-                                  // tileColor: Colors.black,
-                                  contentPadding:
-                                      EdgeInsets.symmetric(horizontal: 8.0),
-                                  trailing: currentDownloads
-                                          .containsKey(snapshot.data[index].id)
-                                      ? CircularProgressIndicator(
-                                          value: currentDownloads[
-                                              snapshot.data[index].id])
-                                      : IconButton(
-                                          onPressed: () {
-                                            snapshot.data[index].downloaded ==
-                                                    false
-                                                ? Downloader(
-                                                        chapters:
-                                                            chaptersPassed)
-                                                    .downloadChapter(
-                                                    widget.source,
-                                                    widget.title,
-                                                    widget.id,
-                                                    snapshot.data[index],
-                                                    (total, downloading) {
+                                return AutoScrollTag(
+                                  key: ValueKey(index),
+                                  controller: scrollViewController,
+                                  index: index,
+                                  highlightColor:
+                                      Theme.of(context).highlightColor,
+                                  child: ListTile(
+                                    // tileColor: Colors.black,
+                                    contentPadding:
+                                        EdgeInsets.symmetric(horizontal: 8.0),
+                                    trailing: currentDownloads.containsKey(
+                                            snapshot.data[index].id)
+                                        ? CircularProgressIndicator(
+                                            value: currentDownloads[
+                                                snapshot.data[index].id])
+                                        : IconButton(
+                                            onPressed: () async {
+                                              snapshot.data[index].downloaded ==
+                                                      false
+                                                  ? await Downloader(
+                                                          chapters:
+                                                              chaptersPassed)
+                                                      .downloadChapter(
+                                                      widget.source,
+                                                      widget.title,
+                                                      widget.id,
+                                                      snapshot.data[index],
+                                                      (total, downloading) {
+                                                        setState(() {
+                                                          if (downloading) {
+                                                            currentDownloads
+                                                                .addAll({
+                                                              snapshot
+                                                                  .data[index]
+                                                                  .id: total
+                                                            });
+                                                          } else {
+                                                            currentDownloads
+                                                                .remove(snapshot
+                                                                    .data[index]
+                                                                    .id);
+                                                          }
+                                                        });
+                                                      },
+                                                      (error) {
+                                                        snackbarKey.currentState
+                                                            ?.showSnackBar(
+                                                                SnackBar(
+                                                          content: Text(error),
+                                                          behavior:
+                                                              SnackBarBehavior
+                                                                  .floating,
+                                                        ));
+                                                      },
+                                                    )
+                                                  : Downloader(
+                                                          chapters:
+                                                              chaptersPassed)
+                                                      .deletePages(
+                                                          widget.source,
+                                                          widget.title,
+                                                          widget.id,
+                                                          snapshot.data[index],
+                                                          (total, downloading) {
                                                       setState(() {
                                                         if (downloading) {
                                                           currentDownloads
@@ -755,58 +774,76 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                                                   .id);
                                                         }
                                                       });
-                                                    },
-                                                    (error) {
-                                                      snackbarKey.currentState
-                                                          ?.showSnackBar(
-                                                              SnackBar(
-                                                        content: Text(error),
-                                                        behavior:
-                                                            SnackBarBehavior
-                                                                .floating,
-                                                      ));
-                                                    },
-                                                  )
-                                                : Downloader(
-                                                        chapters:
-                                                            chaptersPassed)
-                                                    .deletePages(
-                                                        widget.source,
-                                                        widget.title,
-                                                        widget.id,
-                                                        snapshot.data[index],
-                                                        (total, downloading) {
-                                                    setState(() {
-                                                      if (downloading) {
-                                                        currentDownloads
-                                                            .addAll({
-                                                          snapshot.data[index]
-                                                              .id: total
-                                                        });
-                                                      } else {
-                                                        currentDownloads.remove(
-                                                            snapshot.data[index]
-                                                                .id);
-                                                      }
                                                     });
-                                                  });
-                                          },
-                                          icon: Icon(snapshot
-                                                  .data[index].downloaded
-                                              ? Icons.download_done
-                                              : Icons
-                                                  .download_for_offline_outlined)),
-                                  title: Row(
-                                    children: [
-                                      Expanded(
-                                        child: ValueListenableBuilder(
-                                          valueListenable:
-                                              chaptersReadBox.listenable(),
-                                          builder: (context, value, child) =>
-                                              Text(
-                                            snapshot.data[index].title,
-                                            overflow: TextOverflow.ellipsis,
+                                            },
+                                            icon: Icon(snapshot
+                                                    .data[index].downloaded
+                                                ? Icons.download_done
+                                                : Icons
+                                                    .download_for_offline_outlined)),
+                                    title: Row(
+                                      children: [
+                                        Expanded(
+                                          child: ValueListenableBuilder(
+                                            valueListenable:
+                                                chaptersReadBox.listenable(),
+                                            builder: (context, value, child) =>
+                                                Text(
+                                              snapshot.data[index].title,
+                                              overflow: TextOverflow.ellipsis,
+                                              softWrap: true,
+                                              style: TextStyle(
+                                                  color: getChaptersRead(
+                                                          snapshot
+                                                              .data[index].id)
+                                                      ? settingsBox.get(
+                                                              'darkMode',
+                                                              defaultValue:
+                                                                  false)
+                                                          ? Colors.grey[700]
+                                                          : Colors.grey[400]
+                                                      : null),
+                                            ),
+                                          ),
+                                        ),
+                                        // Text(
+                                        //   '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago',
+                                        //   style: TextStyle(
+                                        //       color: chaptersRead["chapter"] >=
+                                        //               chapterCount - index
+                                        //           ? Colors.grey[700]
+                                        //           : null),
+                                        // ),
+                                      ],
+                                    ),
+                                    subtitle: Row(
+                                      // mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        // Text(
+                                        //     '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago '),
+                                        snapshot.data[index].officialScan ==
+                                                true
+                                            ? Icon(
+                                                Icons.done_all,
+                                                color: getChaptersRead(
+                                                        snapshot.data[index].id)
+                                                    ? settingsBox.get(
+                                                            'darkMode',
+                                                            defaultValue: false)
+                                                        ? Colors.grey[700]
+                                                        : Colors.grey[400]
+                                                    : null,
+                                              )
+                                            : Text(''),
+                                        Expanded(
+                                          child: Text(
+                                            ' ${snapshot.data[index].scanGroup == null ? "Unknown group" : snapshot.data[index].scanGroup}${getChapterPagesRead(snapshot.data[index].id, snapshot.data[index].pages)}${DateTime.now().difference(DateTime.parse(snapshot.data[index].readableAt)).inDays < 7 ? ' | ${DateTimeFormat.relative(
+                                                DateTime.parse(snapshot
+                                                    .data[index].readableAt),
+                                              )}' : getChapterDate(snapshot.data[index].readableAt)}',
                                             softWrap: true,
+                                            overflow: TextOverflow.ellipsis,
+                                            // maxLines: 2,
                                             style: TextStyle(
                                                 color: getChaptersRead(
                                                         snapshot.data[index].id)
@@ -818,119 +855,73 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                                     : null),
                                           ),
                                         ),
-                                      ),
-                                      // Text(
-                                      //   '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago',
-                                      //   style: TextStyle(
-                                      //       color: chaptersRead["chapter"] >=
-                                      //               chapterCount - index
-                                      //           ? Colors.grey[700]
-                                      //           : null),
-                                      // ),
-                                    ],
+                                        // Text(
+                                        //   getChapterPagesRead(snapshot.data[index].id,
+                                        //       snapshot.data[index].pages),
+                                        //   maxLines: 1,
+                                        //   overflow: TextOverflow.ellipsis,
+                                        // ),
+                                        // Text(
+                                        //     DateTime.now()
+                                        //                 .difference(DateTime.parse(
+                                        //                     snapshot.data[index]
+                                        //                         .readableAt))
+                                        //                 .inDays <
+                                        //             7
+                                        //         ? ' | ${DateTimeFormat.relative(
+                                        //             DateTime.parse(snapshot
+                                        //                 .data[index].readableAt),
+                                        //           )}'
+                                        //         : getChapterDate(
+                                        //             snapshot.data[index].readableAt),
+                                        //     style: TextStyle(
+                                        //         color: getChaptersRead(
+                                        //                 snapshot.data[index].id)
+                                        //             ? settingsBox.get('darkMode',
+                                        //                     defaultValue: false)
+                                        //                 ? Colors.grey[700]
+                                        //                 : Colors.grey[400]
+                                        //             : null),
+                                        //     maxLines: 1,
+                                        //     overflow: TextOverflow.ellipsis),
+                                      ],
+                                    ),
+                                    onTap: () {
+                                      if (!chaptersRead.containsKey(
+                                          '${snapshot.data[index].id}')) {
+                                        chaptersRead.addAll({
+                                          snapshot.data[index].id: {
+                                            'read': false,
+                                            'page': 0
+                                          }
+                                        });
+                                        chaptersReadBox.put(
+                                            widget.id, chaptersRead);
+                                        chaptersRead =
+                                            chaptersReadBox.get(widget.id);
+                                      }
+                                      Navigator.of(context).push(
+                                        PageAnimationWrapper(
+                                            key: ValueKey('Manga reader'),
+                                            screen: ChapterView(
+                                              id: snapshot.data[index].id,
+                                              mangaId: widget.id,
+                                              mangaTitle: widget.title,
+                                              isWebtoon: source.isWebtoon(tags),
+                                              title: snapshot.data[index].title,
+                                              chapterCount: chapterCount,
+                                              order: chapterCount - index,
+                                              chapters: chaptersPassed,
+                                              index: index,
+                                              url: snapshot.data[index].url ==
+                                                      null
+                                                  ? ""
+                                                  : snapshot.data[index].url,
+                                              source: widget.source,
+                                            )),
+                                      );
+                                    },
                                   ),
-                                  subtitle: Row(
-                                    // mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      // Text(
-                                      //     '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago '),
-                                      snapshot.data[index].officialScan == true
-                                          ? Icon(
-                                              Icons.done_all,
-                                              color: getChaptersRead(
-                                                      snapshot.data[index].id)
-                                                  ? settingsBox.get('darkMode',
-                                                          defaultValue: false)
-                                                      ? Colors.grey[700]
-                                                      : Colors.grey[400]
-                                                  : null,
-                                            )
-                                          : Text(''),
-                                      Expanded(
-                                        child: Text(
-                                          ' ${snapshot.data[index].scanGroup == null ? "Unknown group" : snapshot.data[index].scanGroup}${getChapterPagesRead(snapshot.data[index].id, snapshot.data[index].pages)}${DateTime.now().difference(DateTime.parse(snapshot.data[index].readableAt)).inDays < 7 ? ' | ${DateTimeFormat.relative(
-                                              DateTime.parse(snapshot
-                                                  .data[index].readableAt),
-                                            )}' : getChapterDate(snapshot.data[index].readableAt)}',
-                                          softWrap: true,
-                                          overflow: TextOverflow.ellipsis,
-                                          // maxLines: 2,
-                                          style: TextStyle(
-                                              color: getChaptersRead(
-                                                      snapshot.data[index].id)
-                                                  ? settingsBox.get('darkMode',
-                                                          defaultValue: false)
-                                                      ? Colors.grey[700]
-                                                      : Colors.grey[400]
-                                                  : null),
-                                        ),
-                                      ),
-                                      // Text(
-                                      //   getChapterPagesRead(snapshot.data[index].id,
-                                      //       snapshot.data[index].pages),
-                                      //   maxLines: 1,
-                                      //   overflow: TextOverflow.ellipsis,
-                                      // ),
-                                      // Text(
-                                      //     DateTime.now()
-                                      //                 .difference(DateTime.parse(
-                                      //                     snapshot.data[index]
-                                      //                         .readableAt))
-                                      //                 .inDays <
-                                      //             7
-                                      //         ? ' | ${DateTimeFormat.relative(
-                                      //             DateTime.parse(snapshot
-                                      //                 .data[index].readableAt),
-                                      //           )}'
-                                      //         : getChapterDate(
-                                      //             snapshot.data[index].readableAt),
-                                      //     style: TextStyle(
-                                      //         color: getChaptersRead(
-                                      //                 snapshot.data[index].id)
-                                      //             ? settingsBox.get('darkMode',
-                                      //                     defaultValue: false)
-                                      //                 ? Colors.grey[700]
-                                      //                 : Colors.grey[400]
-                                      //             : null),
-                                      //     maxLines: 1,
-                                      //     overflow: TextOverflow.ellipsis),
-                                    ],
-                                  ),
-                                  onTap: () {
-                                    if (!chaptersRead.containsKey(
-                                        '${snapshot.data[index].id}')) {
-                                      chaptersRead.addAll({
-                                        snapshot.data[index].id: {
-                                          'read': false,
-                                          'page': 0
-                                        }
-                                      });
-                                      chaptersReadBox.put(
-                                          widget.id, chaptersRead);
-                                      chaptersRead =
-                                          chaptersReadBox.get(widget.id);
-                                    }
-                                    Navigator.of(context).push(
-                                      PageAnimationWrapper(
-                                          key: ValueKey('Manga reader'),
-                                          screen: ChapterView(
-                                            id: snapshot.data[index].id,
-                                            mangaId: widget.id,
-                                            mangaTitle: widget.title,
-                                            isWebtoon: source.isWebtoon(tags),
-                                            title: snapshot.data[index].title,
-                                            chapterCount: chapterCount,
-                                            order: chapterCount - index,
-                                            chapters: chaptersPassed,
-                                            index: index,
-                                            url:
-                                                snapshot.data[index].url == null
-                                                    ? ""
-                                                    : snapshot.data[index].url,
-                                            source: widget.source,
-                                          )),
-                                    );
-                                  },
                                 );
                               }),
                             ),
