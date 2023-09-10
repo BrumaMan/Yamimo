@@ -171,6 +171,9 @@ class ComickFun implements MangaSource {
   Future<http.Response> mangaDetailsRequest(String id) async {
     Uri url = Uri.https(baseURL, "/comic/$id");
     final response = await http.get(url);
+    if (response.statusCode != 200) {
+      throw Exception('Status code: ${response.statusCode}');
+    }
     return response;
   }
 
@@ -205,6 +208,9 @@ class ComickFun implements MangaSource {
     Uri url = Uri.https(
         baseURL, "/comic/$id/chapters", {'lang': 'en', 'page': '$page'});
     final response = await http.get(url);
+    if (response.statusCode != 200) {
+      throw Exception('Status code: ${response.statusCode}');
+    }
     return response;
   }
 
@@ -323,6 +329,7 @@ class ComickFun implements MangaSource {
         child: ActionChip(
           label: Text(tag["name"],
               style: TextStyle(
+                fontWeight: FontWeight.w700,
                 fontSize: 12,
               )),
           onPressed: () {},

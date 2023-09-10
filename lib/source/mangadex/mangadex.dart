@@ -174,6 +174,9 @@ class MangaDex implements MangaSource {
       // 'includes[]': 'author',
     });
     final response = await http.get(url);
+    if (response.statusCode != 200) {
+      throw Exception('Status code: ${response.statusCode}');
+    }
     return response;
   }
 
@@ -218,6 +221,9 @@ class MangaDex implements MangaSource {
       'limit': '100'
     });
     final response = await http.get(url);
+    if (response.statusCode != 200) {
+      throw Exception('Status code: ${response.statusCode}');
+    }
     return response;
   }
 
@@ -341,6 +347,7 @@ class MangaDex implements MangaSource {
         child: ActionChip(
           label: Text(tag["attributes"]["name"]["en"],
               style: TextStyle(
+                fontWeight: FontWeight.w700,
                 fontSize: 12,
               )),
           onPressed: () {},
