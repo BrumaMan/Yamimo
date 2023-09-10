@@ -14,12 +14,14 @@ import 'package:first_app/source/model/manga_details.dart';
 import 'package:first_app/update_screen.dart';
 import 'package:first_app/util/globals.dart';
 import 'package:first_app/util/page_animation_wrapper.dart';
+import 'package:first_app/util/tasks.dart';
 import 'package:first_app/util/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:bottom_bar_page_transition/bottom_bar_page_transition.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:workmanager/workmanager.dart';
 
 void main() async {
   await Hive.initFlutter();
@@ -33,6 +35,12 @@ void main() async {
   var chaptersRead_Box = await Hive.openBox('chaptersRead');
   var mangaDetails_Box = await Hive.openBox<MangaDetails>('mangaDetails');
   var mangaChapters_Box = await Hive.openBox<List<dynamic>>('mangaChapters');
+  Workmanager().initialize(callbackDispatcher);
+  Workmanager().registerPeriodicTask('chaptersUpdate', 'Update_chapters',
+      frequency: Duration(days: 1),
+      constraints: Constraints(networkType: NetworkType.unmetered),
+      backoffPolicy: BackoffPolicy.exponential,
+      backoffPolicyDelay: Duration(minutes: 10));
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(systemNavigationBarColor: Colors.transparent));
@@ -48,6 +56,18 @@ class MyCustomScrollBehavior extends MaterialScrollBehavior {
         PointerDeviceKind.trackpad
         // etc.
       };
+}
+
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((taskName, inputData) {
+    switch (taskName) {
+      case 'Update_chapters':
+        updateChaptersTask();
+        break;
+    }
+    return Future.value(true);
+  });
 }
 
 class MyApp extends StatelessWidget {
