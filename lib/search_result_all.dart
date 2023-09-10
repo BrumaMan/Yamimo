@@ -144,99 +144,103 @@ class _SearchResultState extends State<SearchResultAll>
           debugPrint('${notification.metrics.pixels.ceil()}');
           return true;
         },
-        child: CustomScrollView(
-            controller: scrollViewController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              FutureBuilder(
-                future: comics,
-                builder: (BuildContext ctx, AsyncSnapshot snapshot) {
-                  if (snapshot.data == null) {
-                    return SliverFillRemaining(
-                      child: const Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  } else {
-                    return SliverGrid(
-                      // padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: itemsPerRow,
-                        childAspectRatio: 0.67,
-                        mainAxisSpacing: 2.5,
-                        crossAxisSpacing: 2.5,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          return GestureDetector(
-                            child: Card(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4.0)),
-                              clipBehavior: Clip.hardEdge,
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  CachedImage(
-                                    cover: snapshot.data[index].cover,
-                                  ),
-                                  Positioned(
-                                    child: Container(
-                                      alignment: Alignment.bottomLeft,
-                                      decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                              begin: Alignment.bottomCenter,
-                                              end: Alignment.topCenter,
-                                              colors: [
-                                            Colors.black.withOpacity(0.8),
-                                            Colors.black.withOpacity(0.0)
-                                          ])),
-                                      padding: EdgeInsets.all(5.0),
-                                      height: 80,
-                                      width: MediaQuery.of(context).size.width /
-                                              itemsPerRow -
-                                          9,
-                                      child: Text(
-                                        snapshot.data[index].title ??
-                                            'Unknown title',
-                                        softWrap: true,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(color: Colors.white),
-                                      ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+          child: CustomScrollView(
+              controller: scrollViewController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                FutureBuilder(
+                  future: comics,
+                  builder: (BuildContext ctx, AsyncSnapshot snapshot) {
+                    if (snapshot.data == null) {
+                      return SliverFillRemaining(
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    } else {
+                      return SliverGrid(
+                        // padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: itemsPerRow,
+                          childAspectRatio: 0.67,
+                          mainAxisSpacing: 5.0,
+                          crossAxisSpacing: 5.0,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            return GestureDetector(
+                              child: Card(
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4.0)),
+                                clipBehavior: Clip.hardEdge,
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    CachedImage(
+                                      cover: snapshot.data[index].cover,
                                     ),
-                                    bottom: 0.0,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            onTap: () {
-                              Navigator.of(context).push(PageAnimationWrapper(
-                                key: ValueKey('Manga details'),
-                                screen: ItemView(
-                                  id: snapshot.data[index].id,
-                                  title: snapshot.data[index].title ??
-                                      'Unknown title',
-                                  cover: snapshot.data[index].cover,
-                                  url: snapshot.data[index].url,
-                                  source: widget.name,
-                                  // scrapeDate: snapshot.data[index].scrapeDate,
+                                    Positioned(
+                                      child: Container(
+                                        alignment: Alignment.bottomLeft,
+                                        decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                                begin: Alignment.bottomCenter,
+                                                end: Alignment.topCenter,
+                                                colors: [
+                                              Colors.black.withOpacity(0.8),
+                                              Colors.black.withOpacity(0.0)
+                                            ])),
+                                        padding: EdgeInsets.all(5.0),
+                                        height: 80,
+                                        width:
+                                            MediaQuery.of(context).size.width /
+                                                    itemsPerRow -
+                                                9,
+                                        child: Text(
+                                          snapshot.data[index].title ??
+                                              'Unknown title',
+                                          softWrap: true,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
+                                      bottom: 0.0,
+                                    ),
+                                  ],
                                 ),
-                              ));
-                            },
-                          );
-                        },
-                        childCount: snapshot.data.length,
-                      ),
-                    );
-                  }
-                },
-              ),
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 20.0,
+                              ),
+                              onTap: () {
+                                Navigator.of(context).push(PageAnimationWrapper(
+                                  key: ValueKey('Manga details'),
+                                  screen: ItemView(
+                                    id: snapshot.data[index].id,
+                                    title: snapshot.data[index].title ??
+                                        'Unknown title',
+                                    cover: snapshot.data[index].cover,
+                                    url: snapshot.data[index].url,
+                                    source: widget.name,
+                                    // scrapeDate: snapshot.data[index].scrapeDate,
+                                  ),
+                                ));
+                              },
+                            );
+                          },
+                          childCount: snapshot.data.length,
+                        ),
+                      );
+                    }
+                  },
                 ),
-              )
-            ]),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 20.0,
+                  ),
+                )
+              ]),
+        ),
       ),
       // floatingActionButton: FloatingActionButton(
       //     child: Icon(Icons.filter_list), onPressed: () {}),
