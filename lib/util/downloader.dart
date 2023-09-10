@@ -4,8 +4,10 @@ import 'package:dio/dio.dart';
 import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/model/chapter.dart';
 import 'package:first_app/source/source_helper.dart';
+import 'package:first_app/util/notification_service.dart';
 import 'package:first_app/util/request_permission.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -14,6 +16,8 @@ class Downloader {
   Downloader({required this.chapters});
 
   final List<Chapter> chapters;
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   Dio dio = Dio();
   late Directory downloadsDir;
   bool downloading = false;
@@ -84,11 +88,24 @@ class Downloader {
       Function(double total, bool downloading, String currentChapter)
           onDownloadProgress,
       Function(String error) onErrorRecieved) async {
+    NotificationService.initalize(flutterLocalNotificationsPlugin);
+    int idx = 1;
+
     try {
       chaptersRead.removeWhere((key, value) => value['read'] == false);
       for (var chapter in chapters) {
         if (!chapter.downloaded) {
           if (!chaptersRead.containsKey(chapter.id)) {
+            NotificationService.showNotification(
+                1,
+                title,
+                '${chapter.title} ($idx/${chapters.length - chaptersRead.length})',
+                flutterLocalNotificationsPlugin,
+                'Chapter_download',
+                'Chapter Downloads',
+                showProgress: true,
+                maxProgress: chapters.length - chaptersRead.length,
+                progress: idx);
             await downloadChapter(
               source,
               title,
@@ -98,17 +115,35 @@ class Downloader {
                   onDownloadProgress(total, downloading, chapter.id),
               (error) => onErrorRecieved(error),
             );
+            idx += 1;
           } else {
             continue;
           }
         } else {
+          idx += 1;
           continue;
         }
       }
+      NotificationService.showNotification(
+        1,
+        title,
+        '$idx chapter(s) downloaded',
+        flutterLocalNotificationsPlugin,
+        'Chapter_download',
+        'Chapter Downloads',
+      );
     } catch (e) {
       debugPrint(e.toString());
       onDownloadProgress(1.0, false, "");
       onErrorRecieved(e.toString());
+      NotificationService.showNotification(
+        1,
+        title,
+        '$idx chapter(s) downloaded and failed on chapter ${chapters.length - idx}',
+        flutterLocalNotificationsPlugin,
+        'Chapter_download',
+        'Chapter Downloads',
+      );
     }
     return false;
   }

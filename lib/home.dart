@@ -4,11 +4,13 @@ import 'package:first_app/item_view.dart';
 import 'package:first_app/source/manga_source.dart';
 import 'package:first_app/source/source_helper.dart';
 import 'package:first_app/util/globals.dart';
+import 'package:first_app/util/notification_service.dart';
 import 'package:first_app/util/page_animation_wrapper.dart';
 import 'package:first_app/widgets/manga_longpress_modal.dart';
 // import 'package:first_app/widgets/library_filter_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart';
 import 'package:optimized_cached_image/optimized_cached_image.dart';
@@ -38,7 +40,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin {
   late int itemsPerRow;
   LibraryDeleteNotifier libraryDeleteNotifier = LibraryDeleteNotifier();
   int updateCount = 0;
-
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   @override
   bool get wantKeepAlive => true;
 
@@ -48,6 +51,7 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin {
     super.initState();
     itemsPerRow = settingsBox.get('rowItems', defaultValue: 2);
     libraryItems = getLibraryItems();
+    NotificationService.initalize(flutterLocalNotificationsPlugin);
 
     // debugPrint('$libraryItems');
   }
@@ -149,10 +153,10 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin {
           actions: [
             IconButton(
                 onPressed: () => updateLibraryItems(),
-                icon: Icon(Icons.refresh))
+                icon: Icon(Icons.refresh)),
             // IconButton(
             //     onPressed: () {
-            //       showBottomSheet(
+            //       showModalBottomSheet(
             //         context: context,
             //         builder: (context) => LibraryFilter(),
             //       );
@@ -215,8 +219,8 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin {
                                         SliverGridDelegateWithFixedCrossAxisCount(
                                       crossAxisCount: itemsPerRow,
                                       childAspectRatio: 0.67,
-                                      mainAxisSpacing: 2.5,
-                                      crossAxisSpacing: 2.5,
+                                      mainAxisSpacing: 5.0,
+                                      crossAxisSpacing: 5.0,
                                     ),
                                     itemCount: libraryItems.length,
                                     itemBuilder: ((context, index) {
