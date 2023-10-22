@@ -7,6 +7,7 @@ class Overview extends StatelessWidget {
   final Box libraryBox = Hive.box('library');
   final Box chapterBox = Hive.box('chapters');
   final Box chaptersReadBox = Hive.box('chaptersRead');
+  final Box mangaChaptersBox = Hive.box<List<dynamic>>('mangaChapters');
 
   int getCompletedCount({bool started = false}) {
     int completed = 0;
@@ -32,7 +33,7 @@ class Overview extends StatelessWidget {
     return completed;
   }
 
-  num getTotalAmount({bool read = false}) {
+  num getTotalAmount({bool read = false, bool downloaded = false}) {
     num totalChapters = 0;
     int chaptersRead = 0;
 
@@ -47,6 +48,15 @@ class Overview extends StatelessWidget {
       }
 
       return chaptersRead;
+    } else if (downloaded) {
+      for (var chapters in mangaChaptersBox.values) {
+        for (var chapter in chapters) {
+          if (chapter.downloaded) {
+            totalChapters += 1;
+          }
+        }
+      }
+      return totalChapters;
     } else {
       for (var numChapters in chapterBox.values) {
         totalChapters += numChapters;
@@ -142,17 +152,17 @@ class Overview extends StatelessWidget {
                         Text('Read')
                       ],
                     ),
-                    // Column(
-                    //   mainAxisSize: MainAxisSize.min,
-                    //   children: [
-                    //     Text(
-                    //       getCompletedCount(started: true).toString(),
-                    //       style: TextStyle(
-                    //           fontWeight: FontWeight.bold, fontSize: 20.0),
-                    //     ),
-                    //     Text('Started')
-                    //   ],
-                    // )
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          getTotalAmount(downloaded: true).toString(),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 20.0),
+                        ),
+                        Text('Downloaded')
+                      ],
+                    )
                   ],
                 ),
               ),
