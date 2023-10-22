@@ -273,13 +273,15 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin {
                                                                       .circular(
                                                                           5.0))),
                                                       margin:
-                                                          EdgeInsets.all(8.0),
-                                                      padding:
-                                                          EdgeInsets.all(3.0),
+                                                          EdgeInsets.all(4.0),
+                                                      padding: const EdgeInsets
+                                                              .symmetric(
+                                                          horizontal: 5.0,
+                                                          vertical: 2.0),
                                                       // clipBehavior: Clip.hardEdge,
                                                       // color: Colors.blue,
                                                       child: Text(
-                                                        "${chapterBox.get(libraryItems[index]['id']) - chaptersRead(libraryItems[index]["id"])}",
+                                                        "${chaptersRead(libraryItems[index]["id"])}/${chapterBox.get(libraryItems[index]['id'])}",
                                                         style: TextStyle(
                                                             color: settingsBox.get(
                                                                     "darkMode",
