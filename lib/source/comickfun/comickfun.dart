@@ -327,7 +327,7 @@ class ComickFun implements MangaSource {
       tags.add(Padding(
         padding: const EdgeInsets.only(right: 6.0),
         child: ActionChip(
-          label: Text(tag["md_genres"]["name"],
+          label: Text(tag["md_genres"]?["name"] ?? "",
               style: TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 12,
