@@ -189,7 +189,7 @@ class ComickFun implements MangaSource {
           ? 'Year unknown'
           : '${responseData["comic"]["year"]}',
       status: parseStatus(responseData["comic"]["status"]),
-      tags: responseData["genres"],
+      tags: responseData["comic"]["md_comic_md_genres"],
       author: responseData['authors'].isNotEmpty
           ? responseData['authors'][0]['name']
           : 'Unknown author',
@@ -327,7 +327,7 @@ class ComickFun implements MangaSource {
       tags.add(Padding(
         padding: const EdgeInsets.only(right: 6.0),
         child: ActionChip(
-          label: Text(tag["name"],
+          label: Text(tag["md_genres"]["name"],
               style: TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 12,
