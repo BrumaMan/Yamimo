@@ -133,7 +133,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
       mangaDetails = source.mangaDetailsParse(mangaDetailsResponse);
       mangaDetailsBox.put(widget.id, mangaDetails);
     }
-    tagsWidget = getTags(mangaDetails.tags!);
+    tagsWidget = getTags(mangaDetails.tags ?? []);
     // debugPrint(mangaDetails.synopsis);
     return mangaDetails;
   }
@@ -601,11 +601,13 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                                   margin: EdgeInsets.only(
                                                       bottom: 16.0),
                                                   padding: EdgeInsets.all(12.0),
-                                                  child: Text(
-                                                    snapshot.data.synopsis,
-                                                    softWrap: true,
-                                                    style: TextStyle(
-                                                        color: Colors.white),
+                                                  child: SingleChildScrollView(
+                                                    child: Text(
+                                                      snapshot.data.synopsis,
+                                                      softWrap: true,
+                                                      style: TextStyle(
+                                                          color: Colors.white),
+                                                    ),
                                                   ),
                                                 );
                                               });
