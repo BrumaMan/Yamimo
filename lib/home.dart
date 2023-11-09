@@ -238,15 +238,20 @@ class _HomeState extends State<Home> with AutomaticKeepAliveClientMixin {
                                                     ["cover"],
                                                 child: OptimizedCacheImage(
                                                   placeholder: (context, url) =>
-                                                      Container(),
+                                                      Icon(
+                                                    Icons.image_outlined,
+                                                    size: 50.0,
+                                                  ),
                                                   imageUrl: libraryItems[index]
                                                       ["cover"],
                                                   fit: BoxFit.cover,
                                                   errorWidget: (context, error,
                                                           stackTrace) =>
                                                       Center(
-                                                    child: Text(
-                                                        "Can't load cover"),
+                                                    child: Icon(
+                                                      Icons.broken_image,
+                                                      size: 50.0,
+                                                    ),
                                                   ),
                                                   // height: 60.0,
                                                 ),

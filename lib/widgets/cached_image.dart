@@ -20,10 +20,17 @@ class _CachedImageState extends State<CachedImage>
   @override
   Widget build(BuildContext context) {
     return OptimizedCacheImage(
+      placeholder: (context, url) => Icon(
+        Icons.image_outlined,
+        size: 50.0,
+      ),
       imageUrl: widget.cover,
       fit: BoxFit.cover,
       errorWidget: (context, error, stackTrace) => Center(
-        child: Text("Can't load cover"),
+        child: Icon(
+          Icons.broken_image,
+          size: 50.0,
+        ),
       ),
       // height: 60.0,
     );
