@@ -77,7 +77,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     gradientColors = settingsBox.get('darkMode', defaultValue: false)
-        ? [Colors.black, Colors.black.withOpacity(0.7)]
+        ? [Colors.black, Colors.black.withOpacity(0.6)]
         : [Colors.white, Colors.white.withOpacity(0.6)];
     appBarColor = settingsBox.get('darkMode', defaultValue: false)
         ? Colors.black
