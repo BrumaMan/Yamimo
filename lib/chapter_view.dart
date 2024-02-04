@@ -31,7 +31,8 @@ class ChapterView extends StatefulWidget {
       required this.chapters,
       required this.index,
       required this.url,
-      required this.source});
+      required this.source,
+      this.jumpToPage = 0});
 
   final String id;
   final String mangaId;
@@ -44,6 +45,7 @@ class ChapterView extends StatefulWidget {
   final int index;
   final String url;
   final String source;
+  final int jumpToPage;
 
   @override
   State<ChapterView> createState() => _ChapterViewState();
@@ -58,6 +60,7 @@ class _ChapterViewState extends State<ChapterView>
   var pages;
   Box settingsBox = Hive.box('settings');
   Box chaptersReadBox = Hive.box('chaptersRead');
+  Box bookmarkedPagesBox = Hive.box('bookmarkedPages');
   List<String> pageViews = [];
   Map<MenuItems, IconData> readerIcons = {
     MenuItems.Default: Icons.app_settings_alt_outlined,
@@ -68,6 +71,7 @@ class _ChapterViewState extends State<ChapterView>
   };
   var chapterInitialPage = 0;
   var chaptersRead;
+  List<dynamic> bookmarkedPages = [];
   bool visible = true;
   int order = 0;
   int pageCount = 1;
@@ -111,6 +115,7 @@ class _ChapterViewState extends State<ChapterView>
     );
     source = SourceHelper().getSource(widget.source);
     pages = getRequest();
+    bookmarkedPages = getBookmarkedPages();
     settingsBox.get('showReaderMode', defaultValue: true) && !Platform.isWindows
         ? Fluttertoast.showToast(
             msg: '${selectedMenu.toString().split('.')[1]}',
@@ -138,6 +143,20 @@ class _ChapterViewState extends State<ChapterView>
         ? KeepScreenOn.turnOff()
         : null;
     super.dispose();
+  }
+
+  List<dynamic> getBookmarkedPages() {
+    if (bookmarkedPagesBox.containsKey(widget.mangaId)) {
+      List<dynamic> bookmarks = [];
+      for (var page
+          in bookmarkedPagesBox.get(widget.mangaId, defaultValue: [])) {
+        if (page['chapter'].id == widget.id) {
+          bookmarks.add(page);
+        }
+      }
+      return bookmarks;
+    }
+    return [];
   }
 
   void getReaderMode() {
@@ -269,6 +288,16 @@ class _ChapterViewState extends State<ChapterView>
         : StatusBarControl.setStyle(StatusBarStyle.DARK_CONTENT);
   }
 
+  Widget getIcons() {
+    if (bookmarkedPages.indexWhere((element) => pageViews.isNotEmpty
+            ? element['page'] == pageViews[chapterInitialPage]
+            : element['page'] == '') >=
+        0) {
+      return Icon(Icons.bookmark, color: Theme.of(context).colorScheme.primary);
+    }
+    return Icon(Icons.bookmark_outline);
+  }
+
   Color getBgColor() {
     String bgColor = settingsBox.get('readerBgColor', defaultValue: 'Black');
 
@@ -286,6 +315,31 @@ class _ChapterViewState extends State<ChapterView>
     }
   }
 
+  void addPageToBookmark(String page) {
+    List<dynamic> pages =
+        bookmarkedPagesBox.get(widget.mangaId, defaultValue: []);
+    if (bookmarkedPages.indexWhere((element) => element['page'] == page) >= 0) {
+      bookmarkedPages.removeWhere((element) => element['page'] == page);
+      pages.removeWhere((element) => element['page'] == page);
+      bookmarkedPagesBox.put(widget.mangaId, pages);
+    } else {
+      bookmarkedPages.add({
+        'chapter': widget.chapters[widget.index + chapterOffset],
+        'page': page,
+        'pageNum': chapterInitialPage + 1,
+        'chapterIndex': widget.index + chapterOffset,
+      });
+      pages.add({
+        'chapter': widget.chapters[widget.index + chapterOffset],
+        'page': page,
+        'pageNum': chapterInitialPage + 1,
+        'chapterIndex': widget.index + chapterOffset,
+      });
+      debugPrint('$bookmarkedPages');
+      bookmarkedPagesBox.put(widget.mangaId, pages);
+    }
+  }
+
   void addChapterToRead(String id) {
     if (!chaptersRead.containsKey(id)) {
       chaptersRead.addAll({
@@ -293,9 +347,9 @@ class _ChapterViewState extends State<ChapterView>
       });
     }
     debugPrint('${widget.index}');
-    chapterInitialPage = chaptersRead[id]['page'] == 0
-        ? chaptersRead[id]['page']
-        : chaptersRead[id]['page'] - 1;
+    int page =
+        widget.jumpToPage == 0 ? chaptersRead[id]['page'] : widget.jumpToPage;
+    chapterInitialPage = page == 0 ? page : page - 1;
   }
 
   void updateChapter() {
@@ -365,6 +419,14 @@ class _ChapterViewState extends State<ChapterView>
                 //   height: 40.0,
                 // ),
                 actions: [
+                  ValueListenableBuilder(
+                    valueListenable: bookmarkedPagesBox.listenable(),
+                    builder: (context, value, child) => IconButton(
+                        onPressed: () {
+                          addPageToBookmark(pageViews[chapterInitialPage]);
+                        },
+                        icon: getIcons()),
+                  ),
                   IconButton(
                       onPressed: () {
                         Share.share(
