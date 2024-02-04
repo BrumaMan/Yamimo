@@ -35,6 +35,7 @@ void main() async {
   var chaptersRead_Box = await Hive.openBox('chaptersRead');
   var mangaDetails_Box = await Hive.openBox<MangaDetails>('mangaDetails');
   var mangaChapters_Box = await Hive.openBox<List<dynamic>>('mangaChapters');
+  var bookmarkedPages_Box = await Hive.openBox('bookmarkedPages');
   Workmanager().initialize(callbackDispatcher);
   Workmanager().registerPeriodicTask('chaptersUpdate', 'Update_chapters',
       frequency: Duration(days: 1),
