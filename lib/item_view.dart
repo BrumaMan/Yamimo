@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:first_app/chapter_view.dart';
@@ -52,6 +53,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   Box chaptersReadBox = Hive.box('chaptersRead');
   Box mangaDetailsBox = Hive.box<MangaDetails>('mangaDetails');
   Box mangaChaptersBox = Hive.box<List<dynamic>>('mangaChapters');
+  Box bookmarkedPagesBox = Hive.box('bookmarkedPages');
   List<Widget> tagsWidget = [];
   List<dynamic> tags = [];
   var chaptersRead;
@@ -59,6 +61,7 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
   var nextChapters;
   var chaptersPassed;
   var mangaDetails;
+  List<dynamic> bookmarkedPages = [];
   int missingChapters = 0;
   int chapterCount = 0;
   double position = 0.0;
@@ -627,9 +630,159 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                     children: tagsWidget,
                                   ),
                                 ),
+                                ValueListenableBuilder(
+                                    valueListenable:
+                                        bookmarkedPagesBox.listenable(),
+                                    builder: (context, value, child) {
+                                      bookmarkedPages = bookmarkedPagesBox
+                                          .get(widget.id, defaultValue: []);
+                                      return Visibility(
+                                        visible: bookmarkedPages.isNotEmpty,
+                                        child: SizedBox(
+                                          height: 130,
+                                          child: ListView.builder(
+                                            scrollDirection: Axis.horizontal,
+                                            padding: EdgeInsets.only(
+                                                top: 8.0,
+                                                left: 8.0,
+                                                right: 6.0),
+                                            itemCount: bookmarkedPages.length,
+                                            itemBuilder: (context, index) =>
+                                                GestureDetector(
+                                                    onTap: () {
+                                                      Navigator.of(context)
+                                                          .push(
+                                                        PageAnimationWrapper(
+                                                            key: ValueKey(
+                                                                'Manga reader'),
+                                                            screen: ChapterView(
+                                                              id: bookmarkedPages[
+                                                                          index]
+                                                                      [
+                                                                      'chapter']
+                                                                  .id,
+                                                              mangaId:
+                                                                  widget.id,
+                                                              mangaTitle:
+                                                                  widget.title,
+                                                              isWebtoon: source
+                                                                  .isWebtoon(
+                                                                      tags),
+                                                              title: bookmarkedPages[
+                                                                          index]
+                                                                      [
+                                                                      'chapter']
+                                                                  .title,
+                                                              chapterCount:
+                                                                  chapterCount,
+                                                              order: (chapterCount -
+                                                                      bookmarkedPages[
+                                                                              index]
+                                                                          [
+                                                                          'chapterIndex'])
+                                                                  .toInt(),
+                                                              chapters:
+                                                                  chaptersPassed,
+                                                              index: bookmarkedPages[
+                                                                      index][
+                                                                  'chapterIndex'],
+                                                              url: bookmarkedPages[index]
+                                                                              [
+                                                                              'chapter']
+                                                                          .url ==
+                                                                      null
+                                                                  ? ""
+                                                                  : bookmarkedPages[
+                                                                              index]
+                                                                          [
+                                                                          'chapter']
+                                                                      .url,
+                                                              source:
+                                                                  widget.source,
+                                                              jumpToPage:
+                                                                  bookmarkedPages[
+                                                                          index]
+                                                                      [
+                                                                      'pageNum'],
+                                                            )),
+                                                      );
+                                                    },
+                                                    child: !bookmarkedPages[
+                                                                index]['page']
+                                                            .startsWith(
+                                                                "/storage")
+                                                        ? Card(
+                                                            shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            8.0)),
+                                                            clipBehavior:
+                                                                Clip.hardEdge,
+                                                            child:
+                                                                CachedNetworkImage(
+                                                              imageUrl:
+                                                                  bookmarkedPages[
+                                                                          index]
+                                                                      ['page'],
+                                                              height: 120,
+                                                              width: 80,
+                                                              fit: BoxFit.cover,
+                                                              placeholder:
+                                                                  (context,
+                                                                          url) =>
+                                                                      Icon(
+                                                                Icons
+                                                                    .image_outlined,
+                                                                size: 50.0,
+                                                              ),
+                                                              errorWidget: (context,
+                                                                      error,
+                                                                      stackTrace) =>
+                                                                  Center(
+                                                                child: Icon(
+                                                                  Icons
+                                                                      .broken_image,
+                                                                  size: 50.0,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          )
+                                                        : Card(
+                                                            shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            8.0)),
+                                                            clipBehavior:
+                                                                Clip.hardEdge,
+                                                            child: Image.file(
+                                                              File(
+                                                                  bookmarkedPages[
+                                                                          index]
+                                                                      ['page']),
+                                                              height: 120,
+                                                              width: 80,
+                                                              fit: BoxFit.cover,
+                                                              errorBuilder:
+                                                                  (context,
+                                                                          error,
+                                                                          stackTrace) =>
+                                                                      Center(
+                                                                child: Icon(
+                                                                  Icons
+                                                                      .broken_image,
+                                                                  size: 50.0,
+                                                                ),
+                                                              ),
+                                                            ))),
+                                          ),
+                                        ),
+                                      );
+                                    }),
                                 Padding(
                                   padding: const EdgeInsets.only(
-                                      top: 8.0, left: 8.0, right: 8.0),
+                                      left: 8.0, right: 8.0),
                                   child: Visibility(
                                     visible: !fetchingData,
                                     child: Row(
@@ -837,84 +990,93 @@ class _ItemViewState extends State<ItemView> with TickerProviderStateMixin {
                                               // ),
                                             ],
                                           ),
-                                          subtitle: Row(
-                                            // mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              // Text(
-                                              //     '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago '),
-                                              snapshot.data[index]
-                                                          .officialScan ==
-                                                      true
-                                                  ? Icon(
-                                                      Icons.done_all,
-                                                      color: getChaptersRead(
-                                                              snapshot
-                                                                  .data[index]
-                                                                  .id)
-                                                          ? settingsBox.get(
-                                                                  'darkMode',
-                                                                  defaultValue:
-                                                                      false)
-                                                              ? Colors.grey[700]
-                                                              : Colors.grey[400]
-                                                          : null,
-                                                    )
-                                                  : Text(''),
-                                              Expanded(
-                                                child: Text(
-                                                  ' ${snapshot.data[index].scanGroup == null ? "Unknown group" : snapshot.data[index].scanGroup}${getChapterPagesRead(snapshot.data[index].id, snapshot.data[index].pages)}${DateTime.now().difference(DateTime.parse(snapshot.data[index].readableAt)).inDays < 7 ? ' | ${DateTimeFormat.relative(
-                                                      DateTime.parse(snapshot
-                                                          .data[index]
-                                                          .readableAt),
-                                                    )}' : getChapterDate(snapshot.data[index].readableAt)}',
-                                                  softWrap: true,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  // maxLines: 2,
-                                                  style: TextStyle(
-                                                      color: getChaptersRead(
-                                                              snapshot
-                                                                  .data[index]
-                                                                  .id)
-                                                          ? settingsBox.get(
-                                                                  'darkMode',
-                                                                  defaultValue:
-                                                                      false)
-                                                              ? Colors.grey[700]
-                                                              : Colors.grey[400]
-                                                          : null),
+                                          subtitle: ValueListenableBuilder(
+                                            valueListenable:
+                                                chaptersReadBox.listenable(),
+                                            builder: (context, value, child) =>
+                                                Row(
+                                              // mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                // Text(
+                                                //     '${DateTimeFormat.relative(DateTime.parse(snapshot.data[index].publishAt))} ago '),
+                                                snapshot.data[index]
+                                                            .officialScan ==
+                                                        true
+                                                    ? Icon(
+                                                        Icons.done_all,
+                                                        color: getChaptersRead(
+                                                                snapshot
+                                                                    .data[index]
+                                                                    .id)
+                                                            ? settingsBox.get(
+                                                                    'darkMode',
+                                                                    defaultValue:
+                                                                        false)
+                                                                ? Colors
+                                                                    .grey[700]
+                                                                : Colors
+                                                                    .grey[400]
+                                                            : null,
+                                                      )
+                                                    : Text(''),
+                                                Expanded(
+                                                  child: Text(
+                                                    ' ${snapshot.data[index].scanGroup == null ? "Unknown group" : snapshot.data[index].scanGroup}${getChapterPagesRead(snapshot.data[index].id, snapshot.data[index].pages)}${DateTime.now().difference(DateTime.parse(snapshot.data[index].readableAt)).inDays < 7 ? ' | ${DateTimeFormat.relative(
+                                                        DateTime.parse(snapshot
+                                                            .data[index]
+                                                            .readableAt),
+                                                      )}' : getChapterDate(snapshot.data[index].readableAt)}',
+                                                    softWrap: true,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    // maxLines: 2,
+                                                    style: TextStyle(
+                                                        color: getChaptersRead(
+                                                                snapshot
+                                                                    .data[index]
+                                                                    .id)
+                                                            ? settingsBox.get(
+                                                                    'darkMode',
+                                                                    defaultValue:
+                                                                        false)
+                                                                ? Colors
+                                                                    .grey[700]
+                                                                : Colors
+                                                                    .grey[400]
+                                                            : null),
+                                                  ),
                                                 ),
-                                              ),
-                                              // Text(
-                                              //   getChapterPagesRead(snapshot.data[index].id,
-                                              //       snapshot.data[index].pages),
-                                              //   maxLines: 1,
-                                              //   overflow: TextOverflow.ellipsis,
-                                              // ),
-                                              // Text(
-                                              //     DateTime.now()
-                                              //                 .difference(DateTime.parse(
-                                              //                     snapshot.data[index]
-                                              //                         .readableAt))
-                                              //                 .inDays <
-                                              //             7
-                                              //         ? ' | ${DateTimeFormat.relative(
-                                              //             DateTime.parse(snapshot
-                                              //                 .data[index].readableAt),
-                                              //           )}'
-                                              //         : getChapterDate(
-                                              //             snapshot.data[index].readableAt),
-                                              //     style: TextStyle(
-                                              //         color: getChaptersRead(
-                                              //                 snapshot.data[index].id)
-                                              //             ? settingsBox.get('darkMode',
-                                              //                     defaultValue: false)
-                                              //                 ? Colors.grey[700]
-                                              //                 : Colors.grey[400]
-                                              //             : null),
-                                              //     maxLines: 1,
-                                              //     overflow: TextOverflow.ellipsis),
-                                            ],
+                                                // Text(
+                                                //   getChapterPagesRead(snapshot.data[index].id,
+                                                //       snapshot.data[index].pages),
+                                                //   maxLines: 1,
+                                                //   overflow: TextOverflow.ellipsis,
+                                                // ),
+                                                // Text(
+                                                //     DateTime.now()
+                                                //                 .difference(DateTime.parse(
+                                                //                     snapshot.data[index]
+                                                //                         .readableAt))
+                                                //                 .inDays <
+                                                //             7
+                                                //         ? ' | ${DateTimeFormat.relative(
+                                                //             DateTime.parse(snapshot
+                                                //                 .data[index].readableAt),
+                                                //           )}'
+                                                //         : getChapterDate(
+                                                //             snapshot.data[index].readableAt),
+                                                //     style: TextStyle(
+                                                //         color: getChaptersRead(
+                                                //                 snapshot.data[index].id)
+                                                //             ? settingsBox.get('darkMode',
+                                                //                     defaultValue: false)
+                                                //                 ? Colors.grey[700]
+                                                //                 : Colors.grey[400]
+                                                //             : null),
+                                                //     maxLines: 1,
+                                                //     overflow: TextOverflow.ellipsis),
+                                              ],
+                                            ),
                                           ),
                                           onTap: () {
                                             if (!chaptersRead.containsKey(
